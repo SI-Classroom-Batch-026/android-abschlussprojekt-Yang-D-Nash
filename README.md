@@ -48,6 +48,6 @@ Abschlussprojekt – Prototyp zur Demonstration der Technologie.
 Erweiterbar und skalierbar.
 👤 Kontakt
 Projekt von: Yang D. Nash
-E-Mail: [deine E-Mail einfügen]
+E-Mail: nash.lioncorna@gmail.com
 ⭐ Kernbotschaft
 SmartVision erkennt die Welt – und macht sie für jeden verständlich.
