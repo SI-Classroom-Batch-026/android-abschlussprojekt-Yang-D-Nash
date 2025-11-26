@@ -20,12 +20,19 @@ datastorePreferences = "1.1.1"
 roomRuntime = "2.6.0"
 kspVersion = "2.0.21-1.0.25"
 workRuntimeKtx = "2.9.1"
-uiGraphics = "1.9.5"
 mapsCompose = "2.13.0"
 playServicesMaps = "18.1.0"
-coil = "3.1.0"
 gson = "2.10.1"
 firebase-bom = "34.6.0"
+camerax = "1.4.1"
+
+mlkit-object = "17.3.0"
+mlkit-text = "17.1.0"
+mlkit-translate = "17.0.2"
+
+okhttp = "5.0.0"
+
+
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -61,11 +68,21 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "roomRuntime" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 google-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-auth = { module = "com.google.firebase:firebase-auth" }
+
+camerax-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "camerax" }
+camerax-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "camerax" }
+camerax-view = { module = "androidx.camera:camera-view", version.ref = "camerax" }
+
+mlkit-object = { group = "com.google.mlkit", name = "object-detection", version.ref = "mlkit-object" }
+mlkit-text = { module = "com.google.mlkit:text-recognition", version.ref = "mlkit-text" }
+mlkit-translate = { module = "com.google.mlkit:translate", version.ref = "mlkit-translate" }
+
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

@@ -53,11 +53,13 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
@@ -69,10 +71,8 @@ dependencies {
     implementation(libs.koin.androidx.compose)
 
     implementation(libs.moshi)
-
     implementation(libs.retrofit)
     implementation(libs.converterMoshi)
-
     implementation(libs.logging.interceptor)
 
     implementation(libs.coil.compose)
@@ -92,17 +92,20 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.google.maps.compose)
-
     implementation(libs.play.services.maps)
-
-    implementation(libs.play.services.location)
-
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
 
     implementation(libs.gson)
 
     implementation(platform(libs.firebase.bom))
-
     implementation(libs.firebase.auth)
+
+    implementation(libs.camerax.camera2)
+    implementation(libs.camerax.lifecycle)
+    implementation(libs.camerax.view)
+
+    implementation(libs.mlkit.`object`)
+    implementation(libs.mlkit.text)
+    implementation(libs.mlkit.translate)
+
+    implementation(libs.okhttp)
 }
