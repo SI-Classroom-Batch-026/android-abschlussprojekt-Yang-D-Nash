@@ -2,8 +2,10 @@
 SmartVision bringt Zukunftstechnologie auf jedes Android-Smartphone.
 Die App erkennt Objekte und Texte in Echtzeit über die Kamera – und kann gefundene Texte sofort übersetzen.
 Damit wird schon heute erlebbar, was später in Smart Glasses und AR-Brillen Standard sein wird.
+
 🌍 Für wen?
 Für alle.
+
 Weil jeder davon profitieren kann:
 👁️ Alltag – Dinge und Texte schneller erfassen & verstehen
 📚 Lernen – neue Begriffe & Gegenstände entdecken, Sprachen leichter lernen
@@ -19,11 +21,13 @@ Weil jeder davon profitieren kann:
 ✅ Visuelle & textbasierte Ausgabe
 ✅ Zukunfts-ready für Smart Glasses
 ✅ Einfache Bedienung
+
 🎯 Warum?
 Viele Technologien sind teuer oder nur für spezielle Geräte verfügbar.
 SmartVision macht Erkennung und Übersetzung mobil, zugänglich und direkt nutzbar.
 Kurz gesagt:
 🔹 High-Tech nicht für wenige – sondern für alle.
+
 🧩 Technologie
 Android (Kotlin/Java)
 Kamera-Streaming
@@ -38,16 +42,20 @@ Sofortübersetzung des erkannten Textes
 Anzeige von Objektname, Text & Position
 Minimalistisches UI
 Offline-Modelle möglich (je nach Setup)
+
 🔭 Zukunft
 Sprach-Ausgabe (Text-to-Speech)
 Brillen-Integration (HUD-Display)
 Kontext-Infos & Navigation
 Branchen-Optimierungen (Logistik, Reisen, Bildung)
+
 📄 Projektstatus
 Abschlussprojekt – Prototyp zur Demonstration der Technologie.
 Erweiterbar und skalierbar.
+
 👤 Kontakt
 Projekt von: Yang D. Nash
 E-Mail: nash.lioncorna@gmail.com
+
 ⭐ Kernbotschaft
 SmartVision erkennt die Welt – und macht sie für jeden verständlich.
