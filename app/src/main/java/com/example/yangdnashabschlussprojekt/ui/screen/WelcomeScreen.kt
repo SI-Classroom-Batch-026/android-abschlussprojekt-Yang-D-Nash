@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -31,7 +32,7 @@ fun WelcomeScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { androidx.compose.material3.Text("Willkommen") })
+            TopAppBar(title = {Text("Willkommen") })
         }
     ) { padding ->
         Column(

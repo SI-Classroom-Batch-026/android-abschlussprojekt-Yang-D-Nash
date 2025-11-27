@@ -26,7 +26,7 @@ fun AppNavHost(navController: NavHostController) {
             composable(WelcomeRoute.route) {
                 WelcomeScreen(
                     viewModel = koinViewModel(),
-                    onOpenSettings = { navController.navigate(SettingsRoute) }
+                    onOpenSettings = { navController.navigate(SettingsRoute.route) }
                 )
             }
             composable(ARScreenRoute.route) {
