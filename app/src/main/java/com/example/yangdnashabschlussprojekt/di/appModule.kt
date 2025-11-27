@@ -1,9 +1,10 @@
 package com.example.yangdnashabschlussprojekt.di
 
-import com.example.yangdnashabschlussprojekt.data.api.CloudApi
-import com.example.yangdnashabschlussprojekt.data.api.RetrofitInstance
-import com.example.yangdnashabschlussprojekt.data.repository.CloudRepository
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.AnalyzerViewModel
+import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -14,10 +15,15 @@ val appModule = module {
 
     single { FirebaseAuth.getInstance() }
 
-    single<CloudApi> { RetrofitInstance.api }
+    single { UserRepository(get()) }
 
-    single{
-        CloudRepository()
-    }
-    viewModelOf(::AnalyzerViewModel)
+    viewModelOf(::WelcomeViewModel)
+
+    viewModelOf(::SettingsViewModel)
+
+    viewModelOf(::ARViewModel)
+
+    viewModelOf(::TextViewModel)
+
 }
+
