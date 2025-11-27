@@ -1,6 +1,9 @@
 package com.example.yangdnashabschlussprojekt.ui.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,29 +15,37 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun AppNavHost(navController: NavHostController) {
-    NavHost(
-        navController = navController,
-        startDestination = WelcomeRoute
-    ) {
-
-        composable<WelcomeRoute> {
-            WelcomeScreen(
-                viewModel = koinViewModel(),
-                onOpenSettings = { navController.navigate(SettingsRoute) }
-            )
+    Scaffold(
+        bottomBar = { BottomNavigationBar(navController) }
+    ) { innerPadding ->
+        NavHost(
+            modifier = Modifier.padding(innerPadding),
+            navController = navController,
+            startDestination = WelcomeRoute.route
+        ) {
+            composable(WelcomeRoute.route) {
+                WelcomeScreen(
+                    viewModel = koinViewModel(),
+                    onOpenSettings = { navController.navigate(SettingsRoute) }
+                )
+            }
+            composable(ARScreenRoute.route) {
+                ARScreen(
+                    viewModel = koinViewModel(),
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(SettingsRoute.route){
+                SettingsScreen(
+                    viewModel = koinViewModel(),
+                )
+            }
+            composable(TextScreenRoute.route) {
+                TextScreen(
+                    viewModel = koinViewModel(),
+                    onBack = { navController.popBackStack() }
+                )
+            }
         }
-
-        composable<SettingsRoute> {
-            SettingsScreen(viewModel = koinViewModel())
-        }
-
-        composable<ARScreenRoute> { ARScreen(
-            viewModel = koinViewModel(),
-            onBack = { navController.popBackStack() }
-        ) }
-        composable<TextScreenRoute> { TextScreen(
-            viewModel = koinViewModel(),
-            onBack = { navController.popBackStack() }
-        ) }
     }
 }

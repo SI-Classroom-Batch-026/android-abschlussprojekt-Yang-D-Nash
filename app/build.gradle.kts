@@ -1,3 +1,4 @@
+import org.gradle.kotlin.dsl.implementation
 import java.util.Properties
 
 plugins {
@@ -106,6 +107,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.object1.detection)
+    implementation(libs.androidx.compose.foundation.layout)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
@@ -147,4 +149,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(libs.retrofit.converter.gson)
+
+    implementation(libs.compose.material3)
+    implementation(libs.compose.material.icons.extended)
 }
