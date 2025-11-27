@@ -1,24 +1,28 @@
-import com.android.build.api.dsl.Packaging
+import java.util.Properties
 
 plugins {
-    // ------------------------
-    // Core Plugins
-    // ------------------------
-    alias(libs.plugins.android.application)          // Android Application Plugin
-    alias(libs.plugins.kotlin.android)               // Kotlin Android Plugin
-    alias(libs.plugins.kotlin.compose)               // Kotlin Compose Plugin
-    alias(libs.plugins.jetbrains.kotlin.serialization) // Kotlin Serialization Plugin
-    alias(libs.plugins.kotlin.ksp)                   // Kotlin Symbol Processing (Room Compiler)
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.jetbrains.kotlin.serialization)
+    alias(libs.plugins.kotlin.ksp)
+    id("com.google.gms.google-services")
+}
 
-    // ------------------------
-    // Firebase Services
-    // ------------------------
-    id("com.google.gms.google-services")            // Firebase plugin
+val props = Properties()
+val localPropsFile = rootProject.file("local.properties")
+
+if (localPropsFile.exists()) {
+    props.load(localPropsFile.inputStream())
 }
 
 android {
     namespace = "com.example.yangdnashabschlussprojekt"
     compileSdk = 36
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.example.yangdnashabschlussprojekt"
@@ -28,6 +32,17 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "CLOUD_VISION_API_KEY",
+            "\"AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY\""
+        )
+        buildConfigField(
+            "String",
+            "CLOUD_TRANSLATE_API_KEY",
+            "\"AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY\""
+        )
     }
 
     buildTypes {
@@ -61,8 +76,10 @@ android {
         kotlinCompilerExtensionVersion = libs.versions.composeBom.get()
     }
 
-    fun Packaging.() {
-        resources.excludes.add("META-INF/*")
+    packaging {
+        resources {
+            excludes += "META-INF/*"
+        }
     }
 }
 
@@ -99,6 +116,7 @@ dependencies {
     // ------------------------
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.object1.detection)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
@@ -162,5 +180,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 }

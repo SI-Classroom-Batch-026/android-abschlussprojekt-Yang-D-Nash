@@ -80,6 +80,7 @@ mlkit-translate = "17.0.3"
 # ARCore / Brillen-ready
 # ------------------------
 arCore = "1.51.0"
+objectDetection = "17.0.2"
 
 [libraries]
 # ------------------------
@@ -176,6 +177,7 @@ arcore = { group = "com.google.ar", name = "core", version.ref = "arCore" }
 
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+object1-detection = { group = "com.google.mlkit", name = "object-detection", version.ref = "objectDetection" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
