@@ -14,13 +14,13 @@ import org.koin.androidx.compose.koinViewModel
 fun AppNavHost(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = WelcomeRoute.key
+        startDestination = WelcomeRoute
     ) {
 
         composable<WelcomeRoute> {
             WelcomeScreen(
                 viewModel = koinViewModel(),
-                onOpenSettings = { navController.navigate(SettingsRoute.key) }
+                onOpenSettings = { navController.navigate(SettingsRoute) }
             )
         }
 
@@ -30,11 +30,11 @@ fun AppNavHost(navController: NavHostController) {
 
         composable<ARScreenRoute> { ARScreen(
             viewModel = koinViewModel(),
-            onBack = TODO()
+            onBack = { navController.popBackStack() }
         ) }
         composable<TextScreenRoute> { TextScreen(
             viewModel = koinViewModel(),
-            onBack = TODO()
+            onBack = { navController.popBackStack() }
         ) }
     }
 }
