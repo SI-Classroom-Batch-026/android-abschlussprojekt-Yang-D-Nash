@@ -1,8 +1,15 @@
 package com.example.yangdnashabschlussprojekt.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -12,10 +19,18 @@ import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
 import org.koin.androidx.compose.koinViewModel
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(navController: NavHostController) {
+
+    var topBarTitle by remember { mutableStateOf("") }
+
     Scaffold(
+        topBar = {
+            if (topBarTitle.isNotEmpty()) {
+                TopAppBar(title = { Text(topBarTitle) })
+            }
+        },
         bottomBar = { BottomNavigationBar(navController) }
     ) { innerPadding ->
         NavHost(
@@ -23,24 +38,30 @@ fun AppNavHost(navController: NavHostController) {
             navController = navController,
             startDestination = WelcomeRoute.route
         ) {
+
             composable(WelcomeRoute.route) {
+                topBarTitle = "Willkommen"
                 WelcomeScreen(
                     viewModel = koinViewModel(),
                     onOpenSettings = { navController.navigate(SettingsRoute.route) }
                 )
             }
+
             composable(ARScreenRoute.route) {
+                topBarTitle = "AR"
                 ARScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(SettingsRoute.route){
-                SettingsScreen(
-                    viewModel = koinViewModel(),
-                )
+
+            composable(SettingsRoute.route) {
+                topBarTitle = "Einstellungen"
+                SettingsScreen(viewModel = koinViewModel())
             }
+
             composable(TextScreenRoute.route) {
+                topBarTitle = "Text"
                 TextScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
