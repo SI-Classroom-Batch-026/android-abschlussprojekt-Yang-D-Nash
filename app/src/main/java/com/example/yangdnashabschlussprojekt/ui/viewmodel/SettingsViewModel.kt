@@ -20,7 +20,6 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
     val registrationResult: State<RegistrationResult?> = _registrationResult
 
     private val _authResult = MutableStateFlow<String?>(null)
-    val authResult: StateFlow<String?> = _authResult
 
     fun registerUser(
         email: String,
