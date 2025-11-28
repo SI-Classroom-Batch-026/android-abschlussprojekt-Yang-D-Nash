@@ -40,7 +40,6 @@ fun AppNavHost(navController: NavHostController) {
         ) {
 
             composable(WelcomeRoute.route) {
-                topBarTitle = "Willkommen"
                 WelcomeScreen(
                     viewModel = koinViewModel(),
                     onOpenSettings = { navController.navigate(SettingsRoute.route) }
@@ -48,7 +47,6 @@ fun AppNavHost(navController: NavHostController) {
             }
 
             composable(ARScreenRoute.route) {
-                topBarTitle = "AR"
                 ARScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
@@ -56,12 +54,10 @@ fun AppNavHost(navController: NavHostController) {
             }
 
             composable(SettingsRoute.route) {
-                topBarTitle = "Einstellungen"
                 SettingsScreen(viewModel = koinViewModel())
             }
 
             composable(TextScreenRoute.route) {
-                topBarTitle = "Text"
                 TextScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
