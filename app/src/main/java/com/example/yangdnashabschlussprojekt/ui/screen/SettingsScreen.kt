@@ -1,8 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,9 +10,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -22,89 +21,113 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationManagerCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.navigation.NavController
+import com.example.yangdnashabschlussprojekt.ui.component.PermissionsCard
 import com.example.yangdnashabschlussprojekt.ui.component.user.LoginForm
 import com.example.yangdnashabschlussprojekt.ui.component.user.ProfileImage
-import com.example.yangdnashabschlussprojekt.ui.component.user.RegistrationForm
 import com.example.yangdnashabschlussprojekt.ui.component.user.UserInfo
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
+import com.example.yangdnashabschlussprojekt.util.isPermissionGranted
+import com.example.yangdnashabschlussprojekt.util.openAppSettings
 import org.koin.androidx.compose.koinViewModel
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
-    viewModel: SettingsViewModel = koinViewModel()
+    navController: NavController,
+    settingsViewModel: SettingsViewModel = koinViewModel(),
+    onNavigateToRegister: () -> Unit = { navController.navigate("register") }
 ) {
-    val currentUser by viewModel.currentUser.collectAsState()
-    val registrationResult by viewModel.registrationResult.collectAsState()
-    val authResult by viewModel.authResult.collectAsState()
+    val context = LocalContext.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val currentUser by settingsViewModel.currentUser.collectAsState()
+
+    var notificationsEnabled by remember { mutableStateOf(false) }
+    var cameraGranted by remember { mutableStateOf(false) }
+    var locationGranted by remember { mutableStateOf(false) }
+    var microphoneGranted by remember { mutableStateOf(false) }
+
+    fun refreshSystemPermissions() {
+        notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
+        cameraGranted = isPermissionGranted(context, Manifest.permission.CAMERA)
+        locationGranted = isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
+        microphoneGranted = isPermissionGranted(context, Manifest.permission.RECORD_AUDIO)
+    }
+
+    LaunchedEffect(Unit) { refreshSystemPermissions() }
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                refreshSystemPermissions()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var displayName by remember { mutableStateOf("") }
-    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
-
-    val pickImageLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
-    ) { uri: Uri? ->
-        profileImageUri = uri
-    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         ProfileImage()
-
-        Spacer(modifier = Modifier.height(16.dp))
-
+        Spacer(Modifier.height(16.dp))
         UserInfo(currentUser?.name ?: "Gast")
+        Spacer(Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
 
         if (currentUser != null) {
-            Button(onClick = { viewModel.logout() }) { Text("Ausloggen") }
+            Button(onClick = { settingsViewModel.logout() }) {
+                Text("Ausloggen")
+            }
+        } else {
+            Button(onClick = onNavigateToRegister) { Text("Registrieren") }
 
-            Spacer(modifier = Modifier.height(32.dp))
-        }
+            Spacer(Modifier.height(16.dp))
 
-        Spacer(modifier = Modifier.height(32.dp))
-
-
-            RegistrationForm(
+            LoginForm(
                 email = email,
                 onEmailChange = { email = it },
                 password = password,
                 onPasswordChange = { password = it },
-                displayName = displayName,
-                onDisplayNameChange = { displayName = it },
-                onRegisterClick = {
-                    viewModel.registerUser(
-                        email.trim(),
-                        password.trim(),
-                        displayName.trim(),
-                        profileImageUri
-                    )
+                onLoginClick = {
+                    settingsViewModel.login(email.trim(), password.trim())
                 }
             )
+        }
+
+        Spacer(Modifier.height(32.dp))
 
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        if (currentUser != null) {
-
-            LoginForm(
-            email = email,
-            onEmailChange = { email = it },
-            password = password,
-            onPasswordChange = { password = it },
-            onLoginClick = { viewModel.login(email.trim(), password.trim()) }
+        PermissionsCard(
+            notificationsEnabled = notificationsEnabled,
+            cameraGranted = cameraGranted,
+            locationGranted = locationGranted,
+            microphoneGranted = microphoneGranted,
+            onOpenSettings = { openAppSettings(context) }
         )
-}
-        registrationResult.second?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-        authResult?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
     }
 }
+
+
+
+
+
+
+
+

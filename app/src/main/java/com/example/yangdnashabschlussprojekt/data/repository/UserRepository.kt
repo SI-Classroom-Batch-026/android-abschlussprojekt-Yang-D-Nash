@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.asStateFlow
 class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
-    val userName = _userName.asStateFlow()
 
     private val _currentUser = MutableStateFlow<AppUser?>(null)
     val currentUser = _currentUser.asStateFlow()
@@ -33,6 +32,8 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                         .build()
                     user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
                         if (updateTask.isSuccessful) {
+                            val localUser = firebaseToLocalUser(user)
+                            _currentUser.value = localUser
                             _userName.value = displayName
                             onComplete(true, null)
                         } else onComplete(false, updateTask.exception?.localizedMessage)
@@ -63,5 +64,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
     fun logout() {
         firebaseAuth.signOut()
         _userName.value = "Gast"
+        _currentUser.value = null
     }
 }

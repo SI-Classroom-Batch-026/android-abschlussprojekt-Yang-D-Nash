@@ -26,6 +26,7 @@ fun WelcomeScreen(
     onOpenSettings: () -> Unit
 ) {
     val userName by viewModel.userName.collectAsState(initial = "Gast")
+    val currentUser by viewModel.currentUser.collectAsState(initial = null)
 
     Column(
         modifier = Modifier
@@ -39,7 +40,8 @@ fun WelcomeScreen(
         Spacer(modifier = Modifier.height(24.dp))
         WelcomeGreeting(userName)
         Spacer(modifier = Modifier.height(32.dp))
-        SettingsButton(onClick = onOpenSettings)
+        if (currentUser == null) {
+            SettingsButton(onClick = onOpenSettings)
+        }
     }
 }
-

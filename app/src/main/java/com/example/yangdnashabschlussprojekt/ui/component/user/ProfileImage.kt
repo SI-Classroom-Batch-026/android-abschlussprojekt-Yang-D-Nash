@@ -23,7 +23,7 @@ import coil3.compose.rememberAsyncImagePainter
 @Composable
 fun ProfileImage(
     profileImageUri: Uri? = null,
-    onImageSelected: (Uri) -> Unit = {}
+    onImageSelected: (Uri) -> Unit = {},
 ) {
     var selectedImage by remember { mutableStateOf(profileImageUri) }
 

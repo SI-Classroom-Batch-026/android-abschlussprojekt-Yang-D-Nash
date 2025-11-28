@@ -21,7 +21,7 @@ fun RegistrationForm(
     onPasswordChange: (String) -> Unit,
     displayName: String,
     onDisplayNameChange: (String) -> Unit,
-    onRegisterClick: () -> Unit
+    onRegisterClick: () -> Unit // keine @Composable hier
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
@@ -47,8 +47,12 @@ fun RegistrationForm(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onRegisterClick, modifier = Modifier.fillMaxWidth()) {
+        Button(
+            onClick = onRegisterClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Registrieren / Update")
         }
     }
 }
+

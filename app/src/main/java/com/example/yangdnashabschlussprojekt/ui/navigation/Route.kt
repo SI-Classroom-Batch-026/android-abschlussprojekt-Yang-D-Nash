@@ -27,3 +27,9 @@ object TextScreenRoute : NavRoute{
     override val route = "textscreen"
     override val label = "Text"
 }
+
+@Serializable
+object RegisterRoute : NavRoute{
+    override val route = "register"
+    override val label = "Register"
+}

@@ -15,6 +15,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
+import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
@@ -54,11 +55,21 @@ fun AppNavHost(navController: NavHostController) {
             }
 
             composable(SettingsRoute.route) {
-                SettingsScreen(viewModel = koinViewModel())
+                SettingsScreen(
+                    onNavigateToRegister = { navController.navigate(RegisterRoute.route) },
+                    navController = navController,
+                    settingsViewModel = koinViewModel(),
+                )
             }
 
             composable(TextScreenRoute.route) {
                 TextScreen(
+                    viewModel = koinViewModel(),
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(RegisterRoute.route) {
+                RegistrationScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
