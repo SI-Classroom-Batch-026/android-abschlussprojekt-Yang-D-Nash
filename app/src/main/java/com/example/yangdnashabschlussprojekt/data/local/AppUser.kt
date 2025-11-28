@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.model
+package com.example.yangdnashabschlussprojekt.data.local
 
 import com.google.firebase.auth.FirebaseUser
 

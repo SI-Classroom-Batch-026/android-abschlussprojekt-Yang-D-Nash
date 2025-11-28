@@ -14,7 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.yangdnashabschlussprojekt.ui.component.SettingsButton
+import com.example.yangdnashabschlussprojekt.ui.component.welcome.SettingsButton
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeGreeting
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeImage
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel

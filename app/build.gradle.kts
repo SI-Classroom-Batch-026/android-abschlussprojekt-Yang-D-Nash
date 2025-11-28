@@ -27,7 +27,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.yangdnashabschlussprojekt"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -79,6 +79,12 @@ android {
 
     packaging {
         resources {
+            excludes += "google/api/logging.proto"
+
+            excludes += "google/api/annotations.proto"
+            excludes += "google/api/http.proto"
+            excludes += "google/protobuf/**"
+            excludes += "META-INF/DEPENDENCIES"
             excludes += "META-INF/*"
         }
     }
@@ -113,6 +119,9 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.ui)
     implementation(libs.firebase.storage)
+    implementation(libs.androidx.compose.ui.geometry)
+    implementation(libs.sceneform.base)
+    implementation(libs.genai.common)
 
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
@@ -158,4 +167,21 @@ dependencies {
 
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
+
+    implementation(libs.guava)
+
+    implementation("com.google.mediapipe:tasks-vision:latest.release")
+
+    implementation(libs.okio)
+
+    implementation(libs.mediapipe.vision.detector)
+
+    implementation(libs.mlkit.barcode)       // Barcode Scanning
+    implementation(libs.mlkit.face)          // Face Detection
+    implementation(libs.mlkit.label)         // Image Labeling
+    implementation(libs.mlkit.pose)          // Pose Detection
+
+    // Optional: eigenes Modell
+    implementation(libs.mlkit.custom)        // Custom Model
+
 }

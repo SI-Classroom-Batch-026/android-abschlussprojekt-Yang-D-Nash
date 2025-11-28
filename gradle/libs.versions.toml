@@ -26,7 +26,8 @@ roomRuntime = "2.8.4"
 datastorePreferences = "1.2.0"
 workRuntimeKtx = "2.11.0"
 firebase-bom = "34.6.0"
-camerax = "1.5.1"
+#noinspection GradleDependency
+camerax = "1.4.1"
 mlkit-text = "16.0.1"
 mlkit-translate = "17.0.3"
 arCore = "1.51.0"
@@ -37,6 +38,17 @@ compose = "1.7.8"
 material3 = "1.4.0"
 ui = "1.9.5"
 firebaseStorage = "22.0.1"
+uiGeometry = "1.9.5"
+sceneformBase = "1.17.1"
+guava = "33.5.0-android"
+cloud-vision = "3.78.0"
+mediapipe = "0.10.1"
+genaiCommon = "1.0.0-beta2"
+mlkit-barcode = "17.3.0"
+mlkit-face = "16.1.7"
+mlkit-label = "17.0.9"
+mlkit-pose = "18.0.0-beta5"
+mlkit-custom = "17.0.4"
 
 [libraries]
 
@@ -106,6 +118,22 @@ compose-material-icons-extended = { module = "androidx.compose.material:material
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore" }
 androidx-ui = { group = "androidx.compose.ui", name = "ui", version.ref = "ui" }
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
+androidx-compose-ui-geometry = { group = "androidx.compose.ui", name = "ui-geometry", version.ref = "uiGeometry" }
+sceneform-base = { group = "com.google.ar.sceneform", name = "sceneform-base", version.ref = "sceneformBase" }
+
+guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
+
+google-cloud-vision = { module = "com.google.cloud:google-cloud-vision", version.ref = "cloud-vision" }
+okio = { module = "com.squareup.okio:okio", version = "3.16.4" }
+mediapipe-vision-detector = { module = "com.google.mediapipe:tasks-vision", version.ref = "mediapipe" }
+genai-common = { group = "com.google.mlkit", name = "genai-common", version.ref = "genaiCommon" }
+
+#noinspection Aligned16KB
+mlkit-barcode = { group = "com.google.mlkit", name = "barcode-scanning", version.ref = "mlkit-barcode" }
+mlkit-face = { group = "com.google.mlkit", name = "face-detection", version.ref = "mlkit-face" }
+mlkit-label = { group = "com.google.mlkit", name = "image-labeling", version.ref = "mlkit-label" }
+mlkit-pose = { group = "com.google.mlkit", name = "pose-detection", version.ref = "mlkit-pose" }
+mlkit-custom = { group = "com.google.mlkit", name = "object-detection-custom", version = "17.0.2" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

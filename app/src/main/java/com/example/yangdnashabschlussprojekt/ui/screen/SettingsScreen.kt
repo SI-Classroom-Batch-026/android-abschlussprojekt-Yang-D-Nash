@@ -27,7 +27,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
-import com.example.yangdnashabschlussprojekt.ui.component.PermissionsCard
+import com.example.yangdnashabschlussprojekt.ui.component.service.PermissionsCard
 import com.example.yangdnashabschlussprojekt.ui.component.user.LoginForm
 import com.example.yangdnashabschlussprojekt.ui.component.user.ProfileImage
 import com.example.yangdnashabschlussprojekt.ui.component.user.UserInfo

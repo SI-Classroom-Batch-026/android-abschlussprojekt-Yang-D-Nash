@@ -50,7 +50,6 @@ fun AppNavHost(navController: NavHostController) {
             composable(ARScreenRoute.route) {
                 ARScreen(
                     viewModel = koinViewModel(),
-                    onBack = { navController.popBackStack() }
                 )
             }
 

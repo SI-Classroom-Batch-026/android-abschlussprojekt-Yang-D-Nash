@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component
+package com.example.yangdnashabschlussprojekt.ui.component.welcome
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
