@@ -2,7 +2,6 @@ package com.example.yangdnashabschlussprojekt.ui.component.user
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,10 +9,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -25,18 +20,13 @@ fun ProfileImage(
     profileImageUri: Uri? = null,
     onImageSelected: (Uri) -> Unit = {},
 ) {
-    var selectedImage by remember { mutableStateOf(profileImageUri) }
-
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickVisualMedia()
+        contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        uri?.let {
-            selectedImage = it
-            onImageSelected(it)
-        }
+        uri?.let { onImageSelected(it) }
     }
 
-    val painter = rememberAsyncImagePainter(model = selectedImage)
+    val painter = rememberAsyncImagePainter(model = profileImageUri)
 
     Image(
         painter = painter,
@@ -45,8 +35,6 @@ fun ProfileImage(
             .size(100.dp)
             .clip(CircleShape)
             .background(Color.Gray)
-            .clickable {
-                launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-            }
+            .clickable { launcher.launch("image/*") }
     )
 }

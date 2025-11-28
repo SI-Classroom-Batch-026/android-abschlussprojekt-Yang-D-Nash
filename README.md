@@ -1,3 +1,7 @@
+Link zum Figma Pitch
+
+https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
+
 📱 SmartVision – Objekterkennung & Texterkennung für alle
 SmartVision bringt Zukunftstechnologie auf jedes Android-Smartphone.
 Die App erkennt Objekte und Texte in Echtzeit über die Kamera – und kann gefundene Texte sofort übersetzen.

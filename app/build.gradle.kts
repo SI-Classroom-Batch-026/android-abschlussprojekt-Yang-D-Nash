@@ -112,6 +112,7 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.ui)
+    implementation(libs.firebase.storage)
 
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)

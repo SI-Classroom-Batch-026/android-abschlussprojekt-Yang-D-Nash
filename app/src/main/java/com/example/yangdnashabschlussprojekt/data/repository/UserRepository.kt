@@ -5,15 +5,24 @@ import com.example.yangdnashabschlussprojekt.data.model.AppUser
 import com.example.yangdnashabschlussprojekt.data.model.firebaseToLocalUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
-
     private val _currentUser = MutableStateFlow<AppUser?>(null)
     val currentUser = _currentUser.asStateFlow()
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val storage = FirebaseStorage.getInstance()
+    private val scope = CoroutineScope(Dispatchers.IO)
 
     fun registerUser(
         email: String,
@@ -26,21 +35,64 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
                     val user = firebaseAuth.currentUser
-                    val profileUpdates = UserProfileChangeRequest.Builder()
-                        .setDisplayName(displayName)
-                        .apply { profileImageUri?.let { photoUri = it } }
-                        .build()
-                    user?.updateProfile(profileUpdates)?.addOnCompleteListener { updateTask ->
-                        if (updateTask.isSuccessful) {
+                    if (user == null) {
+                        onComplete(false, "Firebase User ist null")
+                        return@addOnCompleteListener
+                    }
+
+                    // 1️⃣ Profilbild hochladen, falls vorhanden
+                    scope.launch {
+                        var profileImageUrl: String? = null
+                        profileImageUri?.let { uri ->
+                            profileImageUrl = try {
+                                val ref = storage.reference.child("profileImages/${user.uid}/profile.jpg")
+                                ref.putFile(uri).await()
+                                ref.downloadUrl.await().toString()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                null
+                            }
+                        }
+
+                        // 2️⃣ Firestore Dokument für den Benutzer erstellen
+                        val userMap = hashMapOf(
+                            "displayName" to displayName,
+                            "email" to email,
+                            "profileImageUrl" to profileImageUrl
+                        )
+                        try {
+                            firestore.collection("users")
+                                .document(user.uid)
+                                .set(userMap)
+                                .await()
+
+                            // 3️⃣ Firebase Auth Profil aktualisieren
+                            val profileUpdates = UserProfileChangeRequest.Builder()
+                                .setDisplayName(displayName)
+                                .apply { profileImageUrl?.let { photoUri = Uri.parse(it) } }
+                                .build()
+
+                            user.updateProfile(profileUpdates).await()
+
+                            // 4️⃣ Lokales State aktualisieren
                             val localUser = firebaseToLocalUser(user)
                             _currentUser.value = localUser
                             _userName.value = displayName
+
                             onComplete(true, null)
-                        } else onComplete(false, updateTask.exception?.localizedMessage)
+
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            onComplete(false, e.localizedMessage)
+                        }
                     }
-                } else onComplete(false, task.exception?.localizedMessage)
+
+                } else {
+                    onComplete(false, task.exception?.localizedMessage)
+                }
             }
     }
+
     fun login(
         email: String,
         password: String,
@@ -52,15 +104,16 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                     val firebaseUser = firebaseAuth.currentUser
                     if (firebaseUser != null) {
                         val localUser = firebaseToLocalUser(firebaseUser)
-
                         _currentUser.value = localUser
-
                         _userName.value = localUser.name
                     }
                     onComplete(true, null)
-                } else onComplete(false, task.exception?.localizedMessage)
+                } else {
+                    onComplete(false, task.exception?.localizedMessage)
+                }
             }
     }
+
     fun logout() {
         firebaseAuth.signOut()
         _userName.value = "Gast"
