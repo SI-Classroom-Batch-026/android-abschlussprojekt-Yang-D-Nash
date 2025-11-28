@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.data.repository
 
 import android.net.Uri
+import com.example.yangdnashabschlussprojekt.data.model.AppUser
+import com.example.yangdnashabschlussprojekt.data.model.firebaseToLocalUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +12,8 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
     val userName = _userName.asStateFlow()
+
+    private val _currentUser = MutableStateFlow<AppUser?>(null)
 
     fun registerUser(
         email: String,
@@ -35,7 +39,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                 } else onComplete(false, task.exception?.localizedMessage)
             }
     }
-
     fun login(
         email: String,
         password: String,
@@ -44,12 +47,18 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         firebaseAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    _userName.value = firebaseAuth.currentUser?.displayName ?: "Gast"
+                    val firebaseUser = firebaseAuth.currentUser
+                    if (firebaseUser != null) {
+                        val localUser = firebaseToLocalUser(firebaseUser)
+
+                        _currentUser.value = localUser
+
+                        _userName.value = localUser.name
+                    }
                     onComplete(true, null)
                 } else onComplete(false, task.exception?.localizedMessage)
             }
     }
-
     fun logout() {
         firebaseAuth.signOut()
         _userName.value = "Gast"
