@@ -14,6 +14,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
     val userName = _userName.asStateFlow()
 
     private val _currentUser = MutableStateFlow<AppUser?>(null)
+    val currentUser = _currentUser.asStateFlow()
 
     fun registerUser(
         email: String,

@@ -3,6 +3,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.model.AppUser
 import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +11,7 @@ import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val userRepository: UserRepository) : ViewModel() {
 
-    val userName: StateFlow<String> = userRepository.userName
+    var currentUser: StateFlow<AppUser?> = userRepository.currentUser
 
     private val _registrationResult = MutableStateFlow<Pair<Boolean, String?>>(false to null)
     val registrationResult: StateFlow<Pair<Boolean, String?>> = _registrationResult
@@ -33,8 +34,8 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
             }
         }
     }
-
     fun logout() {
         userRepository.logout()
+        currentUser = MutableStateFlow(null)
     }
 }

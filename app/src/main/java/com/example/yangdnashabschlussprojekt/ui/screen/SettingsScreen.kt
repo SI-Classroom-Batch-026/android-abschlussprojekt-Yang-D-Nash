@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,8 +32,10 @@ import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
-    val userName by viewModel.userName.collectAsState(initial = "Gast")
+fun SettingsScreen(
+    viewModel: SettingsViewModel = koinViewModel()
+) {
+    val currentUser by viewModel.currentUser.collectAsState()
     val registrationResult by viewModel.registrationResult.collectAsState()
     val authResult by viewModel.authResult.collectAsState()
 
@@ -40,6 +44,12 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
     var displayName by remember { mutableStateOf("") }
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        profileImageUri = uri
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -47,35 +57,54 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ProfileImage(profileImageUri) { profileImageUri = it }
+        ProfileImage()
+
         Spacer(modifier = Modifier.height(16.dp))
-        UserInfo(userName)
+
+        UserInfo(currentUser?.name ?: "Gast")
+
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { viewModel.logout() }) { Text("Ausloggen") }
+
+        if (currentUser != null) {
+            Button(onClick = { viewModel.logout() }) { Text("Ausloggen") }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
         Spacer(modifier = Modifier.height(32.dp))
 
-        RegistrationForm(
-            email = email,
-            onEmailChange = { email = it },
-            password = password,
-            onPasswordChange = { password = it },
-            displayName = displayName,
-            onDisplayNameChange = { displayName = it },
-            onRegisterClick = { viewModel.registerUser(email.trim(), password.trim(), displayName.trim(), profileImageUri) }
-        )
+
+            RegistrationForm(
+                email = email,
+                onEmailChange = { email = it },
+                password = password,
+                onPasswordChange = { password = it },
+                displayName = displayName,
+                onDisplayNameChange = { displayName = it },
+                onRegisterClick = {
+                    viewModel.registerUser(
+                        email.trim(),
+                        password.trim(),
+                        displayName.trim(),
+                        profileImageUri
+                    )
+                }
+            )
+
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        LoginForm(
+        if (currentUser != null) {
+
+            LoginForm(
             email = email,
             onEmailChange = { email = it },
             password = password,
             onPasswordChange = { password = it },
             onLoginClick = { viewModel.login(email.trim(), password.trim()) }
         )
-
+}
         registrationResult.second?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         authResult?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
     }
 }
-

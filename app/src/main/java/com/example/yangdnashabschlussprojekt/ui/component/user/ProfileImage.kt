@@ -2,6 +2,7 @@ package com.example.yangdnashabschlussprojekt.ui.component.user
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,7 +28,7 @@ fun ProfileImage(
     var selectedImage by remember { mutableStateOf(profileImageUri) }
 
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let {
             selectedImage = it
@@ -44,6 +45,8 @@ fun ProfileImage(
             .size(100.dp)
             .clip(CircleShape)
             .background(Color.Gray)
-            .clickable { launcher.launch("image/*") }
+            .clickable {
+                launcher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+            }
     )
 }
