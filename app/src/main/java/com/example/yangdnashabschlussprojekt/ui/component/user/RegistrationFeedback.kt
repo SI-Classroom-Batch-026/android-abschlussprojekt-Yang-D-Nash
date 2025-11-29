@@ -3,7 +3,7 @@ package com.example.yangdnashabschlussprojekt.ui.component.user
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import com.example.yangdnashabschlussprojekt.data.model.RegistrationResult
+import com.example.yangdnashabschlussprojekt.data.local.RegistrationResult
 
 @Composable
 fun RegistrationFeedback(result: RegistrationResult?) {

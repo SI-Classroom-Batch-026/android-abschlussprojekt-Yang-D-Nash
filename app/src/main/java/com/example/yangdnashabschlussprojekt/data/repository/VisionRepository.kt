@@ -3,10 +3,10 @@ package com.example.yangdnashabschlussprojekt.data.repository
 import android.graphics.Bitmap
 import android.util.Base64
 import com.example.yangdnashabschlussprojekt.data.api.VisionApiService
-import com.example.yangdnashabschlussprojekt.data.api.VisionFeature
-import com.example.yangdnashabschlussprojekt.data.api.VisionImage
-import com.example.yangdnashabschlussprojekt.data.api.VisionImageRequest
-import com.example.yangdnashabschlussprojekt.data.api.VisionRequest
+import com.example.yangdnashabschlussprojekt.data.model.VisionFeature
+import com.example.yangdnashabschlussprojekt.data.model.VisionImage
+import com.example.yangdnashabschlussprojekt.data.model.VisionImageRequest
+import com.example.yangdnashabschlussprojekt.data.model.VisionRequest
 import com.example.yangdnashabschlussprojekt.data.api.VisionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

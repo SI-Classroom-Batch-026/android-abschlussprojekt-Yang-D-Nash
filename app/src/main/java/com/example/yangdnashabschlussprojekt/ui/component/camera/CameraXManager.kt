@@ -1,67 +1,77 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
-import com.example.yangdnashabschlussprojekt.data.api.VisionResult
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import java.io.File
 import java.util.concurrent.Executor
-import android.util.Size
+import java.util.concurrent.Executors
 
 class CameraXManager(
     private val context: Context,
-    private val executor: Executor,
-    private val repository: VisionRepository,
-    private val onResult: (VisionResult) -> Unit
+    private val executor: Executor = Executors.newSingleThreadExecutor()
 ) {
 
-    fun startCamera(previewView: PreviewView) {
+    private var imageCapture: ImageCapture? = null
+    private var preview: Preview? = null
+    private var cameraProvider: ProcessCameraProvider? = null
+
+    fun startCamera(previewView: PreviewView, lifecycleOwner: LifecycleOwner, onReady: () -> Unit = {}) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-
         cameraProviderFuture.addListener({
-            val cameraProvider = cameraProviderFuture.get()
+            cameraProvider = cameraProviderFuture.get()
 
-            val preview = Preview.Builder().build()
-            preview.surfaceProvider = previewView.surfaceProvider
+            preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
 
-            @Suppress("DEPRECATION") val analyzer = ImageAnalysis.Builder()
-                .setTargetResolution(Size(1280, 720))
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+            @Suppress("DEPRECATION")
+            imageCapture = ImageCapture.Builder()
+                .setTargetResolution(android.util.Size(1280, 720))
                 .build()
 
-            analyzer.setAnalyzer(executor) { imageProxy ->
-
-                val bitmap = imageProxy.toBitmap()
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    val result = repository.recognizeText(bitmap)
-                    onResult(
-                        result.copy(
-                            width = bitmap.width,
-                            height = bitmap.height
-                        )
-                    )
-                }
-
-                imageProxy.close()
-            }
-
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
-                context as LifecycleOwner,
+            cameraProvider?.unbindAll()
+            cameraProvider?.bindToLifecycle(
+                lifecycleOwner,
                 CameraSelector.DEFAULT_BACK_CAMERA,
                 preview,
-                analyzer
+                imageCapture
             )
+
+            onReady()
         }, ContextCompat.getMainExecutor(context))
+    }
+
+    fun captureFrame(onCaptured: (Bitmap) -> Unit) {
+        val capture = imageCapture ?: return
+
+        val tempFile = createTempFile(context)
+
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
+
+        capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(context, it) }
+                    ?: BitmapFactory.decodeFile(tempFile.absolutePath)
+                onCaptured(bitmap)
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                exception.printStackTrace()
+            }
+        })
     }
 }
 
+fun createTempFile(context: Context): File =
+    File.createTempFile("capture_", ".jpg", context.cacheDir)
+
+fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? =
+    context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }

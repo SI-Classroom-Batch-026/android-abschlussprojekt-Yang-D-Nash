@@ -1,5 +1,7 @@
 package com.example.yangdnashabschlussprojekt.data.api
 
+import com.example.yangdnashabschlussprojekt.data.model.VisionRequest
+import com.example.yangdnashabschlussprojekt.data.model.VisionResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 import retrofit2.http.Query

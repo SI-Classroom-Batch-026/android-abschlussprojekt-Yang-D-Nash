@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.data.api
 
 import android.graphics.Rect
+import com.example.yangdnashabschlussprojekt.data.model.VisionResponse
 
 data class VisionResult(
     val text: String,

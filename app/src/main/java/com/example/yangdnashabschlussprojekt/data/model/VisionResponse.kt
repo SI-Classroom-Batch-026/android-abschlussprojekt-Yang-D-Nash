@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.api
+package com.example.yangdnashabschlussprojekt.data.model
 
 data class VisionResponse(
     val responses: List<VisionAnnotationResponse>
