@@ -4,15 +4,33 @@ import android.graphics.Rect
 import android.widget.Toast
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,10 +40,15 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.yangdnashabschlussprojekt.data.api.VisionResult
 import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.util.image.saveTextAsFile
+import com.example.yangdnashabschlussprojekt.util.scaleRect
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.Executors
 
@@ -38,41 +61,26 @@ fun TextScreen(
     val recognizedText by viewModel.recognizedText.collectAsState()
     val translatedText by viewModel.translatedText.collectAsState()
     var boundingBoxes by remember { mutableStateOf(listOf<Rect>()) }
-    var cameraBitmapSize by remember { mutableStateOf(Pair(1, 1)) } // width, height
+    var cameraBitmapSize by remember { mutableStateOf(Pair(1, 1)) }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
         AndroidView(factory = { ctx ->
             val previewView = PreviewView(ctx)
-            val manager = CameraXManager(
-                ctx, cameraExecutor,
-                visionRepository
-            ) { text, boxes, bitmapWidth, bitmapHeight ->
-                boundingBoxes = boxes
-                cameraBitmapSize = Pair(bitmapWidth, bitmapHeight)
-                viewModel.recognizeText(text)
-            }
-            manager.startCamera(previewView)
+            cameraManager.startCamera(previewView, ctx as androidx.lifecycle.LifecycleOwner)
             previewView
         }, modifier = Modifier.fillMaxSize())
 
-        // Canvas für Bounding Boxes
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val (bitmapWidth, bitmapHeight) = cameraBitmapSize
             val viewWidth = size.width
             val viewHeight = size.height
-            val (bitmapWidth, bitmapHeight) = cameraBitmapSize
 
             boundingBoxes.forEach { rect ->
-                val scaledRect = scaleRect(
-                    rect,
-                    bitmapWidth = bitmapWidth,
-                    bitmapHeight = bitmapHeight,
-                    viewWidth = viewWidth.toInt(),
-                    viewHeight = viewHeight.toInt()
-                )
-
+                val scaledRect = scaleRect(rect, bitmapWidth, bitmapHeight, viewWidth.toInt(), viewHeight.toInt())
                 drawRect(
                     color = Color.Yellow.copy(alpha = 0.3f),
                     topLeft = Offset(scaledRect.left.toFloat(), scaledRect.top.toFloat()),
@@ -82,7 +90,6 @@ fun TextScreen(
             }
         }
 
-        // Text Overlay Card
         Card(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -107,30 +114,32 @@ fun TextScreen(
             }
         }
 
-        // Floating Buttons
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            FloatingActionButton(
-                onClick = {
-                    recognizedText.let { viewModel.recognizeText(it) }
-                    Toast.makeText(context, "OCR erneut ausgelöst", Toast.LENGTH_SHORT).show()
+            FloatingActionButton(onClick = {
+                cameraManager.captureFrame { bitmap ->
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val result: VisionResult = visionRepository.recognizeText(bitmap)
+                        CoroutineScope(Dispatchers.Main).launch {
+                            boundingBoxes = result.boxes
+                            cameraBitmapSize = Pair(bitmap.width, bitmap.height)
+                            viewModel.recognizeText(result.text)
+                        }
+                    }
                 }
-            ) {
+                Toast.makeText(context, "Text erkannt!", Toast.LENGTH_SHORT).show()
+            }) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.Refresh, contentDescription = "OCR erneut", tint = Color.White)
-                    Text("OCR", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                    Text("Scan", color = Color.White, style = MaterialTheme.typography.labelSmall)
                 }
             }
 
-            FloatingActionButton(
-                onClick = {
-                    saveTextAsFile(context, recognizedText)
-                }
-            ) {
+            FloatingActionButton(onClick = { saveTextAsFile(context, recognizedText) }) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Default.Save, contentDescription = "Text speichern", tint = Color.White)
                     Text("Speichern", color = Color.White, style = MaterialTheme.typography.labelSmall)
@@ -138,23 +147,4 @@ fun TextScreen(
             }
         }
     }
-}
-
-// Skalierungsfunktion
-fun scaleRect(
-    rect: Rect,
-    bitmapWidth: Int,
-    bitmapHeight: Int,
-    viewWidth: Int,
-    viewHeight: Int
-): Rect {
-    val scaleX = viewWidth.toFloat() / bitmapWidth.toFloat()
-    val scaleY = viewHeight.toFloat() / bitmapHeight.toFloat()
-
-    return Rect(
-        (rect.left * scaleX).toInt(),
-        (rect.top * scaleY).toInt(),
-        (rect.right * scaleX).toInt(),
-        (rect.bottom * scaleY).toInt()
-    )
 }

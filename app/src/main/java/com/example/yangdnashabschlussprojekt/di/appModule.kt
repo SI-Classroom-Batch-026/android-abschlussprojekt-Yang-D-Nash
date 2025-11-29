@@ -1,7 +1,7 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.data.repository.VisionApiService
+import com.example.yangdnashabschlussprojekt.data.api.VisionApiService
 import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
@@ -29,6 +29,7 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
+
     single { VisionRepository(
         apiKey = API_KEY,
         api = get()
