@@ -12,7 +12,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -53,8 +52,6 @@ fun AppNavHost(navController: NavHostController) {
             }
 
             composable(ARScreenRoute.route) {
-                val lifecycleOwner = LocalLifecycleOwner.current
-
                 val detectedObjects = remember { mutableStateListOf<DetectedObject>() }
 
                 val analyzer = remember {
@@ -82,7 +79,6 @@ fun AppNavHost(navController: NavHostController) {
             composable(TextScreenRoute.route) {
                 TextScreen(
                     viewModel = koinViewModel(),
-                    onBack = { navController.popBackStack() }
                 )
             }
             composable(RegisterRoute.route) {

@@ -1,33 +1,61 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import android.os.Environment
+import androidx.camera.view.PreviewView
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import org.koin.compose.viewmodel.koinViewModel
+import java.io.File
+import java.util.concurrent.Executors
 
 @Composable
-fun TextScreen(
-    viewModel: TextViewModel = koinViewModel(),
-    onBack: () -> Unit
-) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text("Text Screen (Texterkennung & Übersetzung)", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(32.dp))
-        Button(onClick = onBack) { Text("Zurück") }
+fun TextScreen(viewModel: TextViewModel) {
+    val context = LocalContext.current
+    val recognizedText by viewModel.recognizedText.collectAsState()
+    val translatedText by viewModel.translatedText.collectAsState()
+
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    var cameraManager by remember { mutableStateOf<CameraXManager?>(null) }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.weight(1f)) {
+            AndroidView(factory = { ctx ->
+                val previewView = PreviewView(ctx)
+                val manager = CameraXManager(ctx, cameraExecutor) { text ->
+                    viewModel.recognizeText(text)
+                }
+                cameraManager = manager
+                manager.startCamera(previewView)
+                previewView
+            }, modifier = Modifier.fillMaxSize())
+        }
+
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Erkannter Text:")
+            Text(recognizedText)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("Übersetzt:")
+            Text(translatedText)
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                val file = File(
+                    context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
+                    "ocr-${System.currentTimeMillis()}.jpg"
+                )
+                cameraManager?.takePhoto(file, { uri ->
+                    // Optional: OCR nach Foto erneut ausführen
+                }, { error ->
+                    // Fehler behandeln
+                })
+            }) {
+                Text("Foto aufnehmen")
+            }
+        }
     }
 }
