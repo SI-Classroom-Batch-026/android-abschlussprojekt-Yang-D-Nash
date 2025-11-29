@@ -47,17 +47,17 @@ fun TextScreen(
         AndroidView(factory = { ctx ->
             val previewView = PreviewView(ctx)
             val manager = CameraXManager(
-                ctx, cameraExecutor,
+                ctx,
+                cameraExecutor,
                 visionRepository
-            ) { text, boxes, bitmapWidth, bitmapHeight ->
-                boundingBoxes = boxes
-                cameraBitmapSize = Pair(bitmapWidth, bitmapHeight)
-                viewModel.recognizeText(text)
+            ) { result ->
+                boundingBoxes = result.boxes
+                cameraBitmapSize = Pair(result.width, result.height)
+                viewModel.recognizeText(result.text)
             }
             manager.startCamera(previewView)
             previewView
-        }, modifier = Modifier.fillMaxSize())
-
+        })
         // Canvas für Bounding Boxes
         Canvas(modifier = Modifier.fillMaxSize()) {
             val viewWidth = size.width
