@@ -2,32 +2,50 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.graphics.DetectedObject
-import com.example.yangdnashabschlussprojekt.util.CloudVisionHelper
-import kotlinx.coroutines.Dispatchers
+import com.example.yangdnashabschlussprojekt.ui.overlay.AnimatedBox
+import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.objects.ObjectDetection
+import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
 class ARViewModel : ViewModel() {
 
-    // Flow für die erkannten Objekte
-    private val _detectedObjects = MutableStateFlow<List<DetectedObject>>(emptyList())
-    val detectedObjects: StateFlow<List<DetectedObject>> = _detectedObjects
+    private val _boxes = MutableStateFlow<List<AnimatedBox>>(emptyList())
+    val boxes: StateFlow<List<AnimatedBox>> = _boxes
 
-    /**
-     * Analysiert ein Frame (Bitmap) und updated den StateFlow.
-     */
+    // STREAM_MODE für Live Tracking
+    private val options = ObjectDetectorOptions.Builder()
+        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
+        .enableMultipleObjects()
+        .enableClassification()
+        .build()
+
+    private val objectDetector = ObjectDetection.getClient(options)
+
+    fun onBoxTapped(index: Int) {
+        println("Tapped Box: $index")
+    }
+
     fun analyzeFrame(bitmap: Bitmap) {
-        viewModelScope.launch(Dispatchers.Default) {  // Default statt IO für CPU-intensive Arbeit
-            try {
-                val results: List<DetectedObject> = CloudVisionHelper.detectObjects(bitmap)
-                _detectedObjects.value = results
-            } catch (e: Exception) {
-                e.printStackTrace()
-                // Optional: Fehlerhandling, z.B. leere Liste oder StateFlow Error State
+        val image = InputImage.fromBitmap(bitmap, 0)
+
+        objectDetector.process(image)
+            .addOnSuccessListener { detectedObjects ->
+                val newBoxes = detectedObjects.map { obj ->
+                    AnimatedBox(
+                        id = obj.trackingId ?: obj.hashCode(),
+                        label = obj.labels.firstOrNull()?.text ?: "Objekt",
+                        targetLeft = obj.boundingBox.left.toFloat(),
+                        targetTop = obj.boundingBox.top.toFloat(),
+                        targetRight = obj.boundingBox.right.toFloat(),
+                        targetBottom = obj.boundingBox.bottom.toFloat()
+                    )
+                }
+                _boxes.value = newBoxes
             }
-        }
+            .addOnFailureListener { e ->
+                println("Object detection failed: ${e.message}")
+            }
     }
 }

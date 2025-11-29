@@ -1,5 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
+import android.graphics.Bitmap
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -16,7 +17,7 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 fun CameraPreview(
     modifier: Modifier = Modifier,
     viewModel: ARViewModel,
-    onPreviewSizeChanged: (Float, Float) -> Unit
+    onPreviewSizeChanged: ((Float, Float) -> Unit)? = null
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -29,17 +30,29 @@ fun CameraPreview(
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
 
+                // Preview
                 val preview = Preview.Builder().build().also {
                     it.surfaceProvider = previewView.surfaceProvider
                 }
 
+                // Image Analyzer
                 val imageAnalyzer = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build()
                     .also { analyzer ->
                         analyzer.setAnalyzer(ContextCompat.getMainExecutor(ctx)) { imageProxy ->
-                            val bitmap = imageProxy.toBitmap() // Hilfsfunktion Bitmap erstellen
-                            viewModel.analyzeFrame(bitmap)
+                            val bitmap = imageProxy.myBitmap()
+                            bitmap?.let { bmp ->
+                                // Bitmap auf PreviewView-Größe skalieren
+                                val scaledBitmap = Bitmap.createScaledBitmap(
+                                    bmp,
+                                    previewView.width.takeIf { it > 0 } ?: bmp.width,
+                                    previewView.height.takeIf { it > 0 } ?: bmp.height,
+                                    true
+                                )
+                                viewModel.analyzeFrame(bitmap = scaledBitmap)
+                            }
                             imageProxy.close()
                         }
                     }
@@ -57,7 +70,7 @@ fun CameraPreview(
             previewView
         },
         update = { previewView ->
-            onPreviewSizeChanged(previewView.width.toFloat(), previewView.height.toFloat())
+            onPreviewSizeChanged?.invoke(previewView.width.toFloat(), previewView.height.toFloat())
         }
     )
 }

@@ -122,6 +122,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.geometry)
     implementation(libs.sceneform.base)
     implementation(libs.genai.common)
+    implementation(libs.androidx.ui.graphics)
+    implementation(libs.androidx.compose.runtime)
 
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
@@ -170,8 +172,6 @@ dependencies {
 
     implementation(libs.guava)
 
-    implementation("com.google.mediapipe:tasks-vision:latest.release")
-
     implementation(libs.okio)
 
     implementation(libs.mediapipe.vision.detector)
@@ -181,7 +181,6 @@ dependencies {
     implementation(libs.mlkit.label)         // Image Labeling
     implementation(libs.mlkit.pose)          // Pose Detection
 
-    // Optional: eigenes Modell
     implementation(libs.mlkit.custom)        // Custom Model
 
 }
