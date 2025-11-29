@@ -7,10 +7,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -19,7 +21,10 @@ import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
+import com.example.yangdnashabschlussprojekt.util.ObjectDetectionAnalyzer
+import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(navController: NavHostController) {
@@ -48,10 +53,23 @@ fun AppNavHost(navController: NavHostController) {
             }
 
             composable(ARScreenRoute.route) {
+                val lifecycleOwner = LocalLifecycleOwner.current
+
+                val detectedObjects = remember { mutableStateListOf<DetectedObject>() }
+
+                val analyzer = remember {
+                    ObjectDetectionAnalyzer(object : ObjectDetectionAnalyzer.DetectionListener {
+                        override fun onObjectsDetected(objects: List<DetectedObject>) {
+                            detectedObjects.clear()
+                            detectedObjects.addAll(objects)
+                        }
+                    })
+                }
+
                 ARScreen(
-                    viewModel = koinViewModel(),
                 )
             }
+
 
             composable(SettingsRoute.route) {
                 SettingsScreen(

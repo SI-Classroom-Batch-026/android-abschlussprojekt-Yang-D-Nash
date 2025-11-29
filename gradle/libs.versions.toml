@@ -46,9 +46,12 @@ genaiCommon = "1.0.0-beta2"
 mlkit-barcode = "17.3.0"
 mlkit-face = "16.1.7"
 mlkit-label = "17.0.9"
-mlkit-pose = "18.0.0-beta5"
+mlkit-pose = "17.0.0"
 uiGraphics = "1.9.5"
 runtime = "1.9.5"
+mlkit-object-detection = "17.0.2"
+mlkit-object-detection-common = "18.0.0"
+
 
 [libraries]
 
@@ -136,6 +139,11 @@ mlkit-pose = { group = "com.google.mlkit", name = "pose-detection", version.ref 
 mlkit-custom = { group = "com.google.mlkit", name = "object-detection-custom", version = "17.0.2" }
 androidx-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics", version.ref = "uiGraphics" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+
+#noinspection SimilarGradleDependency
+mlkit-objectDetection = { module = "com.google.mlkit:object-detection", version.ref = "mlkit-object-detection" }
+mlkit-objectDetection-common = { module = "com.google.mlkit:object-detection-common", version.ref = "mlkit-object-detection-common" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

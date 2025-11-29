@@ -183,4 +183,7 @@ dependencies {
 
     implementation(libs.mlkit.custom)        // Custom Model
 
+    implementation(libs.mlkit.objectDetection)
+    implementation(libs.mlkit.objectDetection.common)
+
 }

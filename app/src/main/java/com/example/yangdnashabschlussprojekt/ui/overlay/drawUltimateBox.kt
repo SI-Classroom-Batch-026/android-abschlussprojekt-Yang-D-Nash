@@ -46,7 +46,6 @@ fun DrawScope.drawUltimateBox(
         isFakeBoldText = true
         textAlign = Paint.Align.CENTER
     }
-
     val x = (left + right) / 2
     val y = (top + bottom) / 2 - (textPaint.descent() + textPaint.ascent()) / 2
     drawContext.canvas.nativeCanvas.drawText(box.label, x, y, textPaint)

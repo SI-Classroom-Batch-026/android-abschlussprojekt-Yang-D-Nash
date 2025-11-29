@@ -1,100 +1,66 @@
 package com.example.yangdnashabschlussprojekt.ui.overlay
 
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.view.View
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 @Composable
 fun AROverlay(
     boxes: List<AnimatedBox>,
-    style: UltimateBoxStyle = UltimateBoxStyle(),
-    cameraWidth: Float,
-    cameraHeight: Float,
-    onBoxTap: ((Int) -> Unit)? = null
+    modifier: Modifier = Modifier
 ) {
-    val scope = rememberCoroutineScope()
-
-    val infinite = rememberInfiniteTransition()
-
-    val glowAlpha by infinite.animateFloat(
-        initialValue = style.minGlowAlpha,
-        targetValue = style.maxGlowAlpha,
-        animationSpec = infiniteRepeatable(tween(style.pulseDuration), RepeatMode.Reverse)
+    AndroidView(
+        factory = { context -> AnimatedOverlayView(context) },
+        update = { view ->
+            view.updateBoxes(boxes)
+        },
+        modifier = modifier
     )
+}
 
-    val colorFraction by infinite.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(style.pulseDuration), RepeatMode.Reverse)
-    )
+private class AnimatedOverlayView(context: Context) : View(context) {
 
-    val shimmerAlpha by infinite.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(tween(style.pulseDuration / 2), RepeatMode.Reverse)
-    )
-
-    LaunchedEffect(boxes) {
-        boxes.forEach { box ->
-            scope.launch {
-                box.updateTarget(
-                    box.animLeft.targetValue,
-                    box.animTop.targetValue,
-                    box.animRight.targetValue,
-                    box.animBottom.targetValue
-                )
-            }
-        }
+    private val paint = Paint().apply {
+        color = Color.RED
+        style = Paint.Style.STROKE
+        strokeWidth = 5f
     }
 
-    Box(
-        modifier = Modifier.pointerInput(boxes) {
-            detectTapGestures { offset ->
-                val scaleX = size.width / cameraWidth
-                val scaleY = size.height / cameraHeight
+    private var boxes: List<AnimatedBox> = emptyList()
+    private val scope = CoroutineScope(Dispatchers.Main)
 
-                boxes.forEachIndexed { index, box ->
-                    val left = box.animLeft.value * scaleX
-                    val right = box.animRight.value * scaleX
-                    val top = box.animTop.value * scaleY
-                    val bottom = box.animBottom.value * scaleY
+    fun updateBoxes(newBoxes: List<AnimatedBox>) {
+        // Update the current boxes
+        boxes = newBoxes
 
-                    if (offset.x in left..right && offset.y in top..bottom) {
-                        onBoxTap?.invoke(index)
-                    }
-                }
+        // Launch animations to target positions
+        scope.launch {
+            boxes.forEach { box ->
+                box.updateTarget(box.animLeft.value, box.animTop.value, box.animRight.value, box.animBottom.value)
             }
         }
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val scaleX = size.width / cameraWidth
-            val scaleY = size.height / cameraHeight
-            val currentColor = style.interpolateColor(colorFraction)
 
-            boxes.forEach { box ->
-                drawUltimateBox(
-                    box = box,
-                    style = style,
-                    currentColor = currentColor,
-                    glowAlpha = glowAlpha,
-                    shimmerAlpha = shimmerAlpha,
-                    scaleX = scaleX,
-                    scaleY = scaleY
-                )
-            }
+        invalidate() // force redraw
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        for (box in boxes) {
+            canvas.drawRect(
+                box.animLeft.value,
+                box.animTop.value,
+                box.animRight.value,
+                box.animBottom.value,
+                paint
+            )
         }
     }
 }

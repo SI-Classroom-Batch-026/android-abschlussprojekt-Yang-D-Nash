@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import android.graphics.Bitmap
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
 import com.example.yangdnashabschlussprojekt.ui.overlay.AnimatedBox
 import com.google.mlkit.vision.common.InputImage
@@ -26,25 +28,28 @@ class ARViewModel : ViewModel() {
         println("Tapped Box: $index")
     }
 
-    fun analyzeFrame(bitmap: Bitmap) {
-        val image = InputImage.fromBitmap(bitmap, 0)
-        objectDetector.process(image)
-            .addOnSuccessListener { detectedObjects ->
-                val newBoxes = detectedObjects.map { obj ->
-                    AnimatedBox(
-                        id = obj.trackingId ?: obj.hashCode(),
-                        label = obj.labels.firstOrNull()?.text ?: "Objekt",
-                        targetLeft = obj.boundingBox.left.toFloat(),
-                        targetTop = obj.boundingBox.top.toFloat(),
-                        targetRight = obj.boundingBox.right.toFloat(),
-                        targetBottom = obj.boundingBox.bottom.toFloat()
-                    )
+    @OptIn(ExperimentalGetImage::class)
+    fun analyzeFrame(imageProxy: ImageProxy) {
+        val mediaImage = imageProxy.image
+        if (mediaImage != null) {
+            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+            objectDetector.process(image)
+                .addOnSuccessListener { detectedObjects ->
+                    val newBoxes = detectedObjects.map { obj ->
+                        AnimatedBox(
+                            id = obj.trackingId ?: obj.hashCode(),
+                            label = obj.labels.firstOrNull()?.text ?: "Objekt",
+                            left = obj.boundingBox.left.toFloat(),
+                            top = obj.boundingBox.top.toFloat(),
+                            right = obj.boundingBox.right.toFloat(),
+                            bottom = obj.boundingBox.bottom.toFloat()
+                        )
+                    }
+                    _boxes.value = newBoxes
                 }
-                println("Detected ${newBoxes.size} boxes")
-                _boxes.value = newBoxes
-            }
-            .addOnFailureListener { e ->
-                println("Object detection failed: ${e.message}")
-            }
+                .addOnCompleteListener { imageProxy.close() }
+        } else {
+            imageProxy.close()
+        }
     }
 }
