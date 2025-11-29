@@ -15,18 +15,23 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.util.ObjectDetectionAnalyzer
 import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppNavHost(navController: NavHostController) {
+fun AppNavHost(
+    navController: NavHostController,
+    visionRepository: VisionRepository
+) {
 
     var topBarTitle by remember { mutableStateOf("") }
 
@@ -75,10 +80,10 @@ fun AppNavHost(navController: NavHostController) {
                     settingsViewModel = koinViewModel(),
                 )
             }
-
             composable(TextScreenRoute.route) {
                 TextScreen(
-                    viewModel = koinViewModel(),
+                    viewModel = koinViewModel<TextViewModel>(),
+                    visionRepository = visionRepository
                 )
             }
             composable(RegisterRoute.route) {

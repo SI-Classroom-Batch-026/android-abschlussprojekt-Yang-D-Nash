@@ -13,6 +13,7 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
+
 private const val VISION_BASE: String = "https://vision.googleapis.com/"
 private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
 val appModule = module {

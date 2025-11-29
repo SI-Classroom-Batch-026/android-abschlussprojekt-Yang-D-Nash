@@ -1,6 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import android.content.Context
+import android.graphics.Rect
 import android.widget.Toast
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Canvas
@@ -15,21 +15,30 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import java.io.File
+import com.example.yangdnashabschlussprojekt.util.image.saveTextAsFile
+import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.Executors
 
 @Composable
-fun TextScreen(viewModel: TextViewModel) {
+fun TextScreen(
+    viewModel: TextViewModel = koinViewModel(),
+    visionRepository: VisionRepository
+) {
     val context = LocalContext.current
     val recognizedText by viewModel.recognizedText.collectAsState()
     val translatedText by viewModel.translatedText.collectAsState()
-    var boundingBoxes by remember { mutableStateOf(listOf<android.graphics.Rect>()) }
+    var boundingBoxes by remember { mutableStateOf(listOf<Rect>()) }
+    var cameraBitmapSize by remember { mutableStateOf(Pair(1, 1)) } // width, height
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
@@ -37,25 +46,43 @@ fun TextScreen(viewModel: TextViewModel) {
 
         AndroidView(factory = { ctx ->
             val previewView = PreviewView(ctx)
-            val manager = CameraXManager(ctx, cameraExecutor) { text, boxes ->
+            val manager = CameraXManager(
+                ctx, cameraExecutor,
+                visionRepository
+            ) { text, boxes, bitmapWidth, bitmapHeight ->
                 boundingBoxes = boxes
+                cameraBitmapSize = Pair(bitmapWidth, bitmapHeight)
                 viewModel.recognizeText(text)
             }
             manager.startCamera(previewView)
             previewView
         }, modifier = Modifier.fillMaxSize())
 
+        // Canvas für Bounding Boxes
         Canvas(modifier = Modifier.fillMaxSize()) {
+            val viewWidth = size.width
+            val viewHeight = size.height
+            val (bitmapWidth, bitmapHeight) = cameraBitmapSize
+
             boundingBoxes.forEach { rect ->
+                val scaledRect = scaleRect(
+                    rect,
+                    bitmapWidth = bitmapWidth,
+                    bitmapHeight = bitmapHeight,
+                    viewWidth = viewWidth.toInt(),
+                    viewHeight = viewHeight.toInt()
+                )
+
                 drawRect(
                     color = Color.Yellow.copy(alpha = 0.3f),
-                    topLeft = androidx.compose.ui.geometry.Offset(rect.left.toFloat(), rect.top.toFloat()),
-                    size = androidx.compose.ui.geometry.Size(rect.width().toFloat(), rect.height().toFloat()),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f)
+                    topLeft = Offset(scaledRect.left.toFloat(), scaledRect.top.toFloat()),
+                    size = Size(scaledRect.width().toFloat(), scaledRect.height().toFloat()),
+                    style = Stroke(width = 3f)
                 )
             }
         }
 
+        // Text Overlay Card
         Card(
             modifier = Modifier
                 .align(Alignment.BottomStart)
@@ -80,6 +107,7 @@ fun TextScreen(viewModel: TextViewModel) {
             }
         }
 
+        // Floating Buttons
         Column(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -112,18 +140,21 @@ fun TextScreen(viewModel: TextViewModel) {
     }
 }
 
-fun saveTextAsFile(context: Context, text: String) {
-    try {
-        if(text.isBlank()) {
-            Toast.makeText(context, "Kein Text zum Speichern", Toast.LENGTH_SHORT).show()
-            return
-        }
-        val fileName = "ocr-${System.currentTimeMillis()}.txt"
-        val file = File(context.getExternalFilesDir(null), fileName)
-        file.writeText(text)
-        Toast.makeText(context, "Text gespeichert: ${file.absolutePath}", Toast.LENGTH_LONG).show()
-    } catch (e: Exception) {
-        Toast.makeText(context, "Fehler beim Speichern: ${e.message}", Toast.LENGTH_LONG).show()
-        e.printStackTrace()
-    }
+// Skalierungsfunktion
+fun scaleRect(
+    rect: Rect,
+    bitmapWidth: Int,
+    bitmapHeight: Int,
+    viewWidth: Int,
+    viewHeight: Int
+): Rect {
+    val scaleX = viewWidth.toFloat() / bitmapWidth.toFloat()
+    val scaleY = viewHeight.toFloat() / bitmapHeight.toFloat()
+
+    return Rect(
+        (rect.left * scaleX).toInt(),
+        (rect.top * scaleY).toInt(),
+        (rect.right * scaleX).toInt(),
+        (rect.bottom * scaleY).toInt()
+    )
 }
