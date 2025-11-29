@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
@@ -16,23 +15,27 @@ class ARViewModel : ViewModel() {
     private val _boxes = MutableStateFlow<List<AnimatedBox>>(emptyList())
     val boxes: StateFlow<List<AnimatedBox>> = _boxes
 
-    private val options = ObjectDetectorOptions.Builder()
-        .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
-        .enableMultipleObjects()
-        .enableClassification()
-        .build()
-
-    private val objectDetector = ObjectDetection.getClient(options)
-
-    fun onBoxTapped(index: Int) {
-        println("Tapped Box: $index")
+    private val objectDetector by lazy {
+        val options = ObjectDetectorOptions.Builder()
+            .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
+            .enableMultipleObjects()
+            .enableClassification()
+            .build()
+        ObjectDetection.getClient(options)
     }
 
+    fun updateBoxes(newBoxes: List<AnimatedBox>) {
+        _boxes.value = newBoxes
+    }
+
+    @Suppress("OPT_IN_ARGUMENT_IS_NOT_MARKER")
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
     @OptIn(ExperimentalGetImage::class)
     fun analyzeFrame(imageProxy: ImageProxy) {
         val mediaImage = imageProxy.image
         if (mediaImage != null) {
             val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+
             objectDetector.process(image)
                 .addOnSuccessListener { detectedObjects ->
                     val newBoxes = detectedObjects.map { obj ->
@@ -45,7 +48,7 @@ class ARViewModel : ViewModel() {
                             bottom = obj.boundingBox.bottom.toFloat()
                         )
                     }
-                    _boxes.value = newBoxes
+                    updateBoxes(newBoxes)
                 }
                 .addOnCompleteListener { imageProxy.close() }
         } else {
@@ -53,3 +56,4 @@ class ARViewModel : ViewModel() {
         }
     }
 }
+

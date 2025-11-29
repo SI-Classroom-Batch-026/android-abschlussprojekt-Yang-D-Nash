@@ -58,8 +58,7 @@ fun AppNavHost(
 
             composable(ARScreenRoute.route) {
                 val detectedObjects = remember { mutableStateListOf<DetectedObject>() }
-
-                val analyzer = remember {
+                remember {
                     ObjectDetectionAnalyzer(object : ObjectDetectionAnalyzer.DetectionListener {
                         override fun onObjectsDetected(objects: List<DetectedObject>) {
                             detectedObjects.clear()
@@ -67,8 +66,8 @@ fun AppNavHost(
                         }
                     })
                 }
-
                 ARScreen(
+                    viewModel = koinViewModel()
                 )
             }
 

@@ -6,19 +6,26 @@ import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.LifecycleOwner
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleOwner
 
 @Composable
 fun CameraPreview(
     lifecycleOwner: LifecycleOwner,
     previewView: PreviewView,
-    analyzer: ImageAnalysis.Analyzer
+    analyzer: ImageAnalysis.Analyzer,
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
+    AndroidView(
+        factory = { previewView },
+        modifier = modifier
+    )
 
+    val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
     cameraProviderFuture.addListener({
         val cameraProvider = cameraProviderFuture.get()
 
