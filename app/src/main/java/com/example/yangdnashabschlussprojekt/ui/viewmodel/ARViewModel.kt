@@ -14,7 +14,6 @@ class ARViewModel : ViewModel() {
     private val _boxes = MutableStateFlow<List<AnimatedBox>>(emptyList())
     val boxes: StateFlow<List<AnimatedBox>> = _boxes
 
-    // STREAM_MODE für Live Tracking
     private val options = ObjectDetectorOptions.Builder()
         .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
         .enableMultipleObjects()
@@ -29,7 +28,6 @@ class ARViewModel : ViewModel() {
 
     fun analyzeFrame(bitmap: Bitmap) {
         val image = InputImage.fromBitmap(bitmap, 0)
-
         objectDetector.process(image)
             .addOnSuccessListener { detectedObjects ->
                 val newBoxes = detectedObjects.map { obj ->
@@ -42,6 +40,7 @@ class ARViewModel : ViewModel() {
                         targetBottom = obj.boundingBox.bottom.toFloat()
                     )
                 }
+                println("Detected ${newBoxes.size} boxes")
                 _boxes.value = newBoxes
             }
             .addOnFailureListener { e ->

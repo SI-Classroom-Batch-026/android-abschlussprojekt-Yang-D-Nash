@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.overlay
 
-import android.graphics.Paint
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -9,8 +8,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import android.graphics.Paint
 
 fun DrawScope.drawUltimateBox(
     box: AnimatedBox,
@@ -18,20 +16,9 @@ fun DrawScope.drawUltimateBox(
     currentColor: Color,
     glowAlpha: Float,
     shimmerAlpha: Float,
-    scope: CoroutineScope,
     scaleX: Float = 1f,
     scaleY: Float = 1f
 ) {
-    scope.launch {
-        box.updateTarget(
-            box.animLeft.value,
-            box.animTop.value,
-            box.animRight.value,
-            box.animBottom.value
-        )
-    }
-
-    // Skaliere die Box-Koordinaten auf Canvas-Größe
     val left = box.animLeft.value * scaleX
     val top = box.animTop.value * scaleY
     val right = box.animRight.value * scaleX
@@ -53,14 +40,14 @@ fun DrawScope.drawUltimateBox(
         style = Stroke(width = style.mainStroke)
     )
 
-    drawContext.canvas.nativeCanvas.drawText(
-        box.label,
-        left,
-        top - 12f,
-        Paint().apply {
-            color = currentColor.copy(alpha = shimmerAlpha).toArgb()
-            textSize = style.textSize
-            isFakeBoldText = true
-        }
-    )
+    val textPaint = Paint().apply {
+        color = currentColor.copy(alpha = shimmerAlpha).toArgb()
+        textSize = style.textSize
+        isFakeBoldText = true
+        textAlign = Paint.Align.CENTER
+    }
+
+    val x = (left + right) / 2
+    val y = (top + bottom) / 2 - (textPaint.descent() + textPaint.ascent()) / 2
+    drawContext.canvas.nativeCanvas.drawText(box.label, x, y, textPaint)
 }

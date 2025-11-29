@@ -1,76 +1,75 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
-import android.graphics.Bitmap
+import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
-import androidx.camera.core.Preview
+import androidx.camera.core.ImageProxy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import java.util.concurrent.Executors
 
 @Composable
 fun CameraPreview(
     modifier: Modifier = Modifier,
     viewModel: ARViewModel,
-    onPreviewSizeChanged: ((Float, Float) -> Unit)? = null
+    onPreviewSizeChanged: (width: Float, height: Float) -> Unit
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
 
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
             val previewView = PreviewView(ctx)
-            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
 
+            // CameraProvider
+            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
             cameraProviderFuture.addListener({
                 val cameraProvider = cameraProviderFuture.get()
 
                 // Preview
-                val preview = Preview.Builder().build().also {
+                val preview = androidx.camera.core.Preview.Builder().build().also {
                     it.surfaceProvider = previewView.surfaceProvider
                 }
 
-                // Image Analyzer
+                // ImageAnalysis
                 val imageAnalyzer = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build()
                     .also { analyzer ->
-                        analyzer.setAnalyzer(ContextCompat.getMainExecutor(ctx)) { imageProxy ->
+                        analyzer.setAnalyzer(cameraExecutor) { imageProxy: ImageProxy ->
                             val bitmap = imageProxy.myBitmap()
                             bitmap?.let { bmp ->
-                                // Bitmap auf PreviewView-Größe skalieren
-                                val scaledBitmap = Bitmap.createScaledBitmap(
-                                    bmp,
-                                    previewView.width.takeIf { it > 0 } ?: bmp.width,
-                                    previewView.height.takeIf { it > 0 } ?: bmp.height,
-                                    true
-                                )
-                                viewModel.analyzeFrame(bitmap = scaledBitmap)
+                                viewModel.analyzeFrame(bmp)
                             }
+                            onPreviewSizeChanged(imageProxy.width.toFloat(), imageProxy.height.toFloat())
                             imageProxy.close()
                         }
                     }
 
-                val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-                cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
-                    lifecycleOwner,
-                    cameraSelector,
-                    preview,
-                    imageAnalyzer
-                )
+                try {
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        ctx as androidx.lifecycle.LifecycleOwner,
+                        CameraSelector.DEFAULT_BACK_CAMERA,
+                        preview,
+                        imageAnalyzer
+                    )
+                } catch (e: Exception) {
+                    Log.e("CameraPreview", "Camera binding failed", e)
+                }
+
             }, ContextCompat.getMainExecutor(ctx))
 
             previewView
-        },
-        update = { previewView ->
-            onPreviewSizeChanged?.invoke(previewView.width.toFloat(), previewView.height.toFloat())
         }
     )
 }

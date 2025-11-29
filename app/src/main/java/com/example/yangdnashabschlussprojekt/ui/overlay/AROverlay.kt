@@ -10,10 +10,12 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import kotlinx.coroutines.launch
 
 @Composable
 fun AROverlay(
@@ -24,6 +26,7 @@ fun AROverlay(
     onBoxTap: ((Int) -> Unit)? = null
 ) {
     val scope = rememberCoroutineScope()
+
     val infinite = rememberInfiniteTransition()
 
     val glowAlpha by infinite.animateFloat(
@@ -31,16 +34,31 @@ fun AROverlay(
         targetValue = style.maxGlowAlpha,
         animationSpec = infiniteRepeatable(tween(style.pulseDuration), RepeatMode.Reverse)
     )
+
     val colorFraction by infinite.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(style.pulseDuration), RepeatMode.Reverse)
     )
+
     val shimmerAlpha by infinite.animateFloat(
         initialValue = 0.6f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(tween(style.pulseDuration / 2), RepeatMode.Reverse)
     )
+
+    LaunchedEffect(boxes) {
+        boxes.forEach { box ->
+            scope.launch {
+                box.updateTarget(
+                    box.animLeft.targetValue,
+                    box.animTop.targetValue,
+                    box.animRight.targetValue,
+                    box.animBottom.targetValue
+                )
+            }
+        }
+    }
 
     Box(
         modifier = Modifier.pointerInput(boxes) {
@@ -73,7 +91,6 @@ fun AROverlay(
                     currentColor = currentColor,
                     glowAlpha = glowAlpha,
                     shimmerAlpha = shimmerAlpha,
-                    scope = scope,
                     scaleX = scaleX,
                     scaleY = scaleY
                 )
