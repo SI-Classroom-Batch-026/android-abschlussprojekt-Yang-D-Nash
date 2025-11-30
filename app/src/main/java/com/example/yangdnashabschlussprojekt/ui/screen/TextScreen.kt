@@ -1,52 +1,30 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.graphics.Rect
+import android.os.VibrationEffect
+import android.os.Vibrator
 import android.widget.Toast
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Save
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.example.yangdnashabschlussprojekt.data.api.VisionResult
 import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
+import com.example.yangdnashabschlussprojekt.ui.component.text.BoundingBoxesCanvas
+import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.util.image.saveTextAsFile
-import com.example.yangdnashabschlussprojekt.util.scaleRect
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -60,89 +38,92 @@ fun TextScreen(
     val context = LocalContext.current
     val recognizedText by viewModel.recognizedText.collectAsState()
     val translatedText by viewModel.translatedText.collectAsState()
+
     var boundingBoxes by remember { mutableStateOf(listOf<Rect>()) }
-    var cameraBitmapSize by remember { mutableStateOf(Pair(1, 1)) }
+    var cameraBitmapSize by remember { mutableStateOf(1 to 1) }
+    var isProcessing by remember { mutableStateOf(false) }
+    var highlight by remember { mutableStateOf(false) }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
+    val scope = rememberCoroutineScope()
+
+    val vibrator = context.getSystemService(Vibrator::class.java)
+
+    LaunchedEffect(highlight) {
+        if (highlight) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
+            kotlinx.coroutines.delay(500)
+            highlight = false
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        AndroidView(factory = { ctx ->
-            val previewView = PreviewView(ctx)
-            cameraManager.startCamera(previewView, ctx as androidx.lifecycle.LifecycleOwner)
-            previewView
-        }, modifier = Modifier.fillMaxSize())
+        // Camera preview
+        AndroidView(
+            factory = { ctx ->
+                val previewView = PreviewView(ctx)
+                cameraManager.startCamera(previewView, ctx as androidx.lifecycle.LifecycleOwner)
+                previewView
+            },
+            modifier = Modifier.fillMaxSize()
+        )
 
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val (bitmapWidth, bitmapHeight) = cameraBitmapSize
-            val viewWidth = size.width
-            val viewHeight = size.height
+        // Pulse for bounding boxes
+        val infiniteTransition = rememberInfiniteTransition()
+        val pulseAlpha by infiniteTransition.animateFloat(
+            initialValue = 0.7f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(animation = tween(1000))
+        )
 
-            boundingBoxes.forEach { rect ->
-                val scaledRect = scaleRect(rect, bitmapWidth, bitmapHeight, viewWidth.toInt(), viewHeight.toInt())
-                drawRect(
-                    color = Color.Yellow.copy(alpha = 0.3f),
-                    topLeft = Offset(scaledRect.left.toFloat(), scaledRect.top.toFloat()),
-                    size = Size(scaledRect.width().toFloat(), scaledRect.height().toFloat()),
-                    style = Stroke(width = 3f)
-                )
-            }
-        }
+        BoundingBoxesCanvas(
+            boundingBoxes = boundingBoxes,
+            bitmapSize = cameraBitmapSize,
+            highlight = highlight,
+            pulseAlpha = pulseAlpha
+        )
 
-        Card(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
-                .fillMaxWidth()
-                .heightIn(min = 120.dp, max = 250.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f)),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            SelectionContainer {
-                Column(
-                    modifier = Modifier
-                        .padding(8.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Erkannter Text:", color = Color.White)
-                    Text(recognizedText.ifBlank { "Noch kein Text erkannt" }, color = Color.White)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Übersetzt:", color = Color.White)
-                    Text(translatedText.ifBlank { "Noch keine Übersetzung" }, color = Color.White)
-                }
-            }
-        }
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            FloatingActionButton(onClick = {
-                cameraManager.captureFrame { bitmap ->
-                    CoroutineScope(Dispatchers.IO).launch {
+        BottomTextCard(
+            recognizedText = recognizedText,
+            translatedText = translatedText,
+            modifier = Modifier.align(Alignment.BottomStart)
+        )
+
+        TextScreenFABs(
+            onScanClick = {
+                isProcessing = true
+                cameraManager.captureFrame { bitmap, rotation ->
+                    scope.launch(Dispatchers.IO) {
                         val result: VisionResult = visionRepository.recognizeText(bitmap)
-                        CoroutineScope(Dispatchers.Main).launch {
+                        launch(Dispatchers.Main) {
                             boundingBoxes = result.boxes
-                            cameraBitmapSize = Pair(bitmap.width, bitmap.height)
+                            cameraBitmapSize = bitmap.width to bitmap.height
                             viewModel.recognizeText(result.text)
+                            highlight = true
+                            Toast.makeText(context, "Text erkannt!", Toast.LENGTH_SHORT).show()
+                            isProcessing = false
                         }
                     }
                 }
-                Toast.makeText(context, "Text erkannt!", Toast.LENGTH_SHORT).show()
-            }) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Refresh, contentDescription = "OCR erneut", tint = Color.White)
-                    Text("Scan", color = Color.White, style = MaterialTheme.typography.labelSmall)
-                }
-            }
+            },
+            onSaveClick = { saveTextAsFile(context, recognizedText) },
+            modifier = Modifier.align(Alignment.BottomEnd)
+        )
 
-            FloatingActionButton(onClick = { saveTextAsFile(context, recognizedText) }) {
+        if (isProcessing) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.Save, contentDescription = "Text speichern", tint = Color.White)
-                    Text("Speichern", color = Color.White, style = MaterialTheme.typography.labelSmall)
+                    CircularProgressIndicator(color = Color.Cyan)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("Text wird erkannt...", color = Color.White)
                 }
             }
         }

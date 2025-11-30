@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.util
+package com.example.yangdnashabschlussprojekt.util.notification
 
 import android.content.Context
 import android.content.Intent

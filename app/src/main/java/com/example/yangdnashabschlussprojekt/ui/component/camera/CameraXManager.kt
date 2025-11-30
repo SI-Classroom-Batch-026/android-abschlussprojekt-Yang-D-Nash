@@ -30,7 +30,9 @@ class CameraXManager(
         cameraProviderFuture.addListener({
             cameraProvider = cameraProviderFuture.get()
 
-            preview = Preview.Builder().build().also { it.surfaceProvider = previewView.surfaceProvider }
+            preview = Preview.Builder().build().also {
+                it.surfaceProvider = previewView.surfaceProvider
+            }
 
             @Suppress("DEPRECATION")
             imageCapture = ImageCapture.Builder()
@@ -49,18 +51,22 @@ class CameraXManager(
         }, ContextCompat.getMainExecutor(context))
     }
 
-    fun captureFrame(onCaptured: (Bitmap) -> Unit) {
+
+    fun captureFrame(onCaptured: (bitmap: Bitmap, rotation: Int) -> Unit) {
         val capture = imageCapture ?: return
 
         val tempFile = createTempFile(context)
-
         val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
 
         capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(context, it) }
                     ?: BitmapFactory.decodeFile(tempFile.absolutePath)
-                onCaptured(bitmap)
+
+                // Rotation der aktuellen Kamera
+                val rotationDegrees = capture.targetRotation.toDegrees()
+
+                onCaptured(bitmap, rotationDegrees)
             }
 
             override fun onError(exception: ImageCaptureException) {
@@ -68,6 +74,17 @@ class CameraXManager(
             }
         })
     }
+}
+
+/**
+ * Extension to convert Surface rotation constants to degrees
+ */
+private fun Int.toDegrees(): Int = when (this) {
+    android.view.Surface.ROTATION_0 -> 0
+    android.view.Surface.ROTATION_90 -> 90
+    android.view.Surface.ROTATION_180 -> 180
+    android.view.Surface.ROTATION_270 -> 270
+    else -> 0
 }
 
 fun createTempFile(context: Context): File =

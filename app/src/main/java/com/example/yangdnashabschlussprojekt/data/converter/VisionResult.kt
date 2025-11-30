@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.api
+package com.example.yangdnashabschlussprojekt.data.converter
 
 import android.graphics.Rect
 import com.example.yangdnashabschlussprojekt.data.model.VisionResponse
@@ -14,15 +14,11 @@ data class VisionResult(
 
             val boxes = textAnnotations?.drop(1)?.mapNotNull { annotation ->
                 annotation.boundingPoly?.let { poly ->
-                    val xs = poly.vertices.map { it.x ?: 0 }
-                    val ys = poly.vertices.map { it.y ?: 0 }
-
-                    val left = xs.minOrNull() ?: 0
-                    val top = ys.minOrNull() ?: 0
-                    val right = xs.maxOrNull() ?: 0
-                    val bottom = ys.maxOrNull() ?: 0
-
-                    if (right > left && bottom > top) Rect(left, top, right, bottom) else null
+                    val left = poly.vertices.minOf { it.x ?: 0 }  // jetzt Int
+                    val top = poly.vertices.minOf { it.y ?: 0 }
+                    val right = poly.vertices.maxOf { it.x ?: 0 }
+                    val bottom = poly.vertices.maxOf { it.y ?: 0 }
+                    Rect(left, top, right, bottom)
                 }
             } ?: emptyList()
 

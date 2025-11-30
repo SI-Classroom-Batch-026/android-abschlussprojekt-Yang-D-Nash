@@ -3,7 +3,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import androidx.lifecycle.ViewModel
-import com.example.yangdnashabschlussprojekt.ui.overlay.AnimatedBox
+import com.example.yangdnashabschlussprojekt.data.model.AnimatedBox
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions

@@ -25,6 +25,7 @@ class TextViewModel : ViewModel() {
         Translation.getClient(options)
     }
 
+    // Text vom CameraXManager verarbeiten
     fun recognizeText(text: String) {
         _recognizedText.value = text
         translateTextAsync(text)

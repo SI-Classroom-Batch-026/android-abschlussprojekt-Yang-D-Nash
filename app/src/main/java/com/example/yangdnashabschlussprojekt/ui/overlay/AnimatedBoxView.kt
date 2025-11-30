@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.camera
+package com.example.yangdnashabschlussprojekt.ui.overlay
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -15,12 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.yangdnashabschlussprojekt.ui.overlay.AnimatedBox
+import com.example.yangdnashabschlussprojekt.data.model.AnimatedBox
 
 @Composable
 fun AnimatedBoxView(box: AnimatedBox) {
     val alpha by animateFloatAsState(
-        targetValue = 1f, // du könntest z.B. 0f für verschwinden setzen
+        targetValue = 1f,
         animationSpec = tween(durationMillis = 500)
     )
 

@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.overlay
+package com.example.yangdnashabschlussprojekt.data.model
 
 data class AnimatedBox(
     val id: Int,
@@ -8,4 +8,3 @@ data class AnimatedBox(
     val right: Float,
     val bottom: Float
 )
-

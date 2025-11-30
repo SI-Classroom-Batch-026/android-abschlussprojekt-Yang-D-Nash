@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.util
+package com.example.yangdnashabschlussprojekt.util.camera
 
 import android.util.Log
 import androidx.annotation.OptIn
@@ -6,6 +6,7 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.ObjectDetector
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
@@ -59,6 +60,6 @@ class ObjectDetectionAnalyzer(
     }
 
     interface DetectionListener {
-        fun onObjectsDetected(objects: List<com.google.mlkit.vision.objects.DetectedObject>)
+        fun onObjectsDetected(objects: List<DetectedObject>)
     }
 }

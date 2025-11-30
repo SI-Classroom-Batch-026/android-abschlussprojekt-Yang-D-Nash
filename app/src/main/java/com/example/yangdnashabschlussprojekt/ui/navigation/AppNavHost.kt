@@ -22,7 +22,7 @@ import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.util.ObjectDetectionAnalyzer
+import com.example.yangdnashabschlussprojekt.util.camera.ObjectDetectionAnalyzer
 import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
 

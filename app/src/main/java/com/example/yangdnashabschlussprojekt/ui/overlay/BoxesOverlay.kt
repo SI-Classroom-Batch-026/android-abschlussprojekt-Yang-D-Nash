@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.example.yangdnashabschlussprojekt.ui.component.camera.AnimatedBoxView
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 
 @Composable
