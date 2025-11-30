@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.util.camera
+package com.example.yangdnashabschlussprojekt.util.`object`
 
 import android.util.Log
 import androidx.annotation.OptIn

@@ -28,9 +28,9 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.yangdnashabschlussprojekt.ui.component.service.PermissionsCard
-import com.example.yangdnashabschlussprojekt.ui.component.user.LoginForm
 import com.example.yangdnashabschlussprojekt.ui.component.user.ProfileImage
 import com.example.yangdnashabschlussprojekt.ui.component.user.UserInfo
+import com.example.yangdnashabschlussprojekt.ui.component.user.login.LoginForm
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.util.notification.isPermissionGranted
 import com.example.yangdnashabschlussprojekt.util.notification.openAppSettings

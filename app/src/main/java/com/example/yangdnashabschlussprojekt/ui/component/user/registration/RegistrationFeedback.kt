@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.user
+package com.example.yangdnashabschlussprojekt.ui.component.user.registration
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable

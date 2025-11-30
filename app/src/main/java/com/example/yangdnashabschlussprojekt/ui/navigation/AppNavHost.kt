@@ -21,8 +21,7 @@ import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.util.camera.ObjectDetectionAnalyzer
+import com.example.yangdnashabschlussprojekt.util.`object`.ObjectDetectionAnalyzer
 import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
 
@@ -67,7 +66,8 @@ fun AppNavHost(
                     })
                 }
                 ARScreen(
-                    viewModel = koinViewModel()
+                    viewModel = koinViewModel(),
+                    textViewModel = koinViewModel()
                 )
             }
 
@@ -81,8 +81,8 @@ fun AppNavHost(
             }
             composable(TextScreenRoute.route) {
                 TextScreen(
-                    viewModel = koinViewModel<TextViewModel>(),
-                    visionRepository = visionRepository
+                    textViewModel = koinViewModel(),
+                    arViewModel = koinViewModel()
                 )
             }
             composable(RegisterRoute.route) {

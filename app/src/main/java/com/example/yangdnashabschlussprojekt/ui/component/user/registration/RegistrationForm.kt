@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.user
+package com.example.yangdnashabschlussprojekt.ui.component.user.registration
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -21,7 +21,7 @@ fun RegistrationForm(
     onPasswordChange: (String) -> Unit,
     displayName: String,
     onDisplayNameChange: (String) -> Unit,
-    onRegisterClick: () -> Unit // keine @Composable hier
+    onRegisterClick: () -> Unit
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(

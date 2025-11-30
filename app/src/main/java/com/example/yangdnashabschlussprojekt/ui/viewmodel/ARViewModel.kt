@@ -1,9 +1,9 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import androidx.camera.core.ExperimentalGetImage
-import androidx.camera.core.ImageProxy
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import com.example.yangdnashabschlussprojekt.data.model.AnimatedBox
+import com.example.yangdnashabschlussprojekt.data.model.box.TimedBoundingBox
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 class ARViewModel : ViewModel() {
 
-    private val _boxes = MutableStateFlow<List<AnimatedBox>>(emptyList())
-    val boxes: StateFlow<List<AnimatedBox>> = _boxes
+    private val _boxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
+    val boxes: StateFlow<List<TimedBoundingBox>> = _boxes
 
     private val objectDetector by lazy {
         val options = ObjectDetectorOptions.Builder()
@@ -24,36 +24,37 @@ class ARViewModel : ViewModel() {
         ObjectDetection.getClient(options)
     }
 
-    fun updateBoxes(newBoxes: List<AnimatedBox>) {
-        _boxes.value = newBoxes
-    }
+    fun analyzeFrame(bitmap: Bitmap) {
+        val image = InputImage.fromBitmap(bitmap, 0)
 
-    @Suppress("OPT_IN_ARGUMENT_IS_NOT_MARKER")
-    @androidx.annotation.OptIn(ExperimentalGetImage::class)
-    @OptIn(ExperimentalGetImage::class)
-    fun analyzeFrame(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image
-        if (mediaImage != null) {
-            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
+        val frameWidth = bitmap.width
+        val frameHeight = bitmap.height
 
-            objectDetector.process(image)
-                .addOnSuccessListener { detectedObjects ->
-                    val newBoxes = detectedObjects.map { obj ->
-                        AnimatedBox(
-                            id = obj.trackingId ?: obj.hashCode(),
-                            label = obj.labels.firstOrNull()?.text ?: "Objekt",
-                            left = obj.boundingBox.left.toFloat(),
-                            top = obj.boundingBox.top.toFloat(),
-                            right = obj.boundingBox.right.toFloat(),
-                            bottom = obj.boundingBox.bottom.toFloat()
-                        )
-                    }
-                    updateBoxes(newBoxes)
+        objectDetector.process(image)
+            .addOnSuccessListener { detectedObjects ->
+
+                val newBoxes = detectedObjects.map { obj ->
+
+                    TimedBoundingBox(
+                        id = obj.trackingId ?: obj.hashCode(),
+                        label = obj.labels.firstOrNull()?.text ?: "Objekt",
+                        left = obj.boundingBox.left.toFloat(),
+                        top = obj.boundingBox.top.toFloat(),
+                        right = obj.boundingBox.right.toFloat(),
+                        bottom = obj.boundingBox.bottom.toFloat(),
+                        timestamp = System.currentTimeMillis(),
+                        color = Color.Cyan,
+                        frameWidth = frameWidth,
+                        frameHeight = frameHeight
+                    )
                 }
-                .addOnCompleteListener { imageProxy.close() }
-        } else {
-            imageProxy.close()
-        }
+
+                println("ARViewModel: Detected boxes: $newBoxes")
+
+                _boxes.value = newBoxes
+            }
+            .addOnFailureListener { e ->
+                e.printStackTrace()
+            }
     }
 }
-

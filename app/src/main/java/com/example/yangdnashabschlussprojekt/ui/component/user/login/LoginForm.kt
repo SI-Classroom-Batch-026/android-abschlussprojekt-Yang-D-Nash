@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.user
+package com.example.yangdnashabschlussprojekt.ui.component.user.login
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer

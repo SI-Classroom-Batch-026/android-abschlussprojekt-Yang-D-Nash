@@ -10,6 +10,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
+import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -22,15 +23,20 @@ class CameraXManager(
     val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
 ) {
+
     private var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var imageAnalyzer: ImageAnalysis? = null
 
+    interface FrameAnalyzer : ImageAnalysis.Analyzer {
+        fun analyzeFrame(bitmap: Bitmap)
+    }
+
     fun startCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
-        analyzer: ImageAnalysis.Analyzer? = null,
+        analyzer: FrameAnalyzer? = null,
         onReady: () -> Unit = {}
     ) {
         val providerFuture = ProcessCameraProvider.getInstance(context)
@@ -40,6 +46,7 @@ class CameraXManager(
             preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
             }
+
 
             @Suppress("DEPRECATION")
             imageCapture = ImageCapture.Builder()
@@ -56,11 +63,13 @@ class CameraXManager(
             }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-            cameraProvider?.unbindAll()
 
-            val useCases = mutableListOf(preview, imageCapture)
+            val useCases = mutableListOf<UseCase>()
+            preview?.let { useCases.add(it) }
+            imageCapture?.let { useCases.add(it) }
             imageAnalyzer?.let { useCases.add(it) }
 
+            cameraProvider?.unbindAll()
             cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, *useCases.toTypedArray())
 
             onReady()
@@ -88,15 +97,15 @@ class CameraXManager(
             }
         })
     }
-}
 
-private fun Int.toDegrees(): Int = when (this) {
-    android.view.Surface.ROTATION_0 -> 0
-    android.view.Surface.ROTATION_90 -> 90
-    android.view.Surface.ROTATION_180 -> 180
-    android.view.Surface.ROTATION_270 -> 270
-    else -> 0
-}
+    private fun Int.toDegrees(): Int = when (this) {
+        android.view.Surface.ROTATION_0 -> 0
+        android.view.Surface.ROTATION_90 -> 90
+        android.view.Surface.ROTATION_180 -> 180
+        android.view.Surface.ROTATION_270 -> 270
+        else -> 0
+    }
 
-fun CameraXManager.loadBitmapFromUri(uri: Uri): Bitmap? =
-    context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+    fun loadBitmapFromUri(uri: Uri): Bitmap? =
+        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+}

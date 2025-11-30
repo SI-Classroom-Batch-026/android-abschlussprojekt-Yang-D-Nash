@@ -15,8 +15,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.yangdnashabschlussprojekt.ui.component.user.RegistrationFeedback
-import com.example.yangdnashabschlussprojekt.ui.component.user.RegistrationForm
+import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationFeedback
+import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationForm
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
