@@ -14,7 +14,7 @@ import androidx.compose.ui.unit.dp
 fun BottomTextCard(
     recognizedText: String,
     translatedText: String,
-    modifier: Modifier = Modifier // <-- Modifier für flexible Positionierung
+    modifier: Modifier = Modifier
 ) {
     Card(
         modifier = modifier

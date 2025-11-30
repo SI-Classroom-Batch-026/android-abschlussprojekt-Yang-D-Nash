@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.overlay
+package com.example.yangdnashabschlussprojekt.ui.component.overlay
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState

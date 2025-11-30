@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.overlay
+package com.example.yangdnashabschlussprojekt.ui.component.overlay
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

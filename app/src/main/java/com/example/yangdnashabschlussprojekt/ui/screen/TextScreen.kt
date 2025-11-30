@@ -4,8 +4,6 @@ import android.graphics.Rect
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
-import androidx.camera.view.PreviewView
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
@@ -16,15 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.example.yangdnashabschlussprojekt.data.api.VisionResult
 import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.BoundingBoxesCanvas
 import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
+import com.example.yangdnashabschlussprojekt.ui.component.text.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.util.image.saveTextAsFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -36,19 +33,14 @@ fun TextScreen(
     visionRepository: VisionRepository
 ) {
     val context = LocalContext.current
-    val recognizedText by viewModel.recognizedText.collectAsState()
-    val translatedText by viewModel.translatedText.collectAsState()
-
-    var boundingBoxes by remember { mutableStateOf(listOf<Rect>()) }
-    var cameraBitmapSize by remember { mutableStateOf(1 to 1) }
-    var isProcessing by remember { mutableStateOf(false) }
-    var highlight by remember { mutableStateOf(false) }
-
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
     val scope = rememberCoroutineScope()
-
     val vibrator = context.getSystemService(Vibrator::class.java)
+
+    var boundingBoxes by remember { mutableStateOf(listOf<Rect>()) }
+    var isProcessing by remember { mutableStateOf(false) }
+    var highlight by remember { mutableStateOf(false) }
 
     LaunchedEffect(highlight) {
         if (highlight) {
@@ -60,47 +52,40 @@ fun TextScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Camera preview
-        AndroidView(
-            factory = { ctx ->
-                val previewView = PreviewView(ctx)
-                cameraManager.startCamera(previewView, ctx as androidx.lifecycle.LifecycleOwner)
-                previewView
-            },
-            modifier = Modifier.fillMaxSize()
-        )
-
-        // Pulse for bounding boxes
-        val infiniteTransition = rememberInfiniteTransition()
-        val pulseAlpha by infiniteTransition.animateFloat(
-            initialValue = 0.7f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(animation = tween(1000))
+        CameraPreview(
+            cameraManager = cameraManager,
+            modifier = Modifier.fillMaxSize(),
+            onBoundingBoxes = { boxes -> boundingBoxes = boxes }
         )
 
         BoundingBoxesCanvas(
-            boundingBoxes = boundingBoxes,
-            bitmapSize = cameraBitmapSize,
-            highlight = highlight,
-            pulseAlpha = pulseAlpha
+            boundingBoxes = boundingBoxes.map { rect ->
+                TimedBoundingBox(
+                    rect = rect,
+                    timestamp = System.currentTimeMillis(),
+                    color = Color.Magenta,
+                    bitmapWidth = 1280,
+                    bitmapHeight = 720
+                )
+            }
         )
 
 
+
         BottomTextCard(
-            recognizedText = recognizedText,
-            translatedText = translatedText,
+            recognizedText = viewModel.recognizedText.collectAsState().value,
+            translatedText = viewModel.translatedText.collectAsState().value,
             modifier = Modifier.align(Alignment.BottomStart)
         )
 
         TextScreenFABs(
             onScanClick = {
                 isProcessing = true
-                cameraManager.captureFrame { bitmap, rotation ->
+                cameraManager.captureFrame { bitmap, _ ->
                     scope.launch(Dispatchers.IO) {
-                        val result: VisionResult = visionRepository.recognizeText(bitmap)
+                        val result = visionRepository.recognizeText(bitmap)
                         launch(Dispatchers.Main) {
                             boundingBoxes = result.boxes
-                            cameraBitmapSize = bitmap.width to bitmap.height
                             viewModel.recognizeText(result.text)
                             highlight = true
                             Toast.makeText(context, "Text erkannt!", Toast.LENGTH_SHORT).show()
@@ -109,7 +94,7 @@ fun TextScreen(
                     }
                 }
             },
-            onSaveClick = { saveTextAsFile(context, recognizedText) },
+            onSaveClick = { },
             modifier = Modifier.align(Alignment.BottomEnd)
         )
 

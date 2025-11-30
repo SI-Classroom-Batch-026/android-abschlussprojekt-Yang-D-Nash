@@ -1,34 +1,43 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
-import com.example.yangdnashabschlussprojekt.ui.overlay.BoxesOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.component.overlay.BoxesOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.text.BoundingBoxesCanvas
+import com.example.yangdnashabschlussprojekt.ui.component.text.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import org.koin.androidx.compose.koinViewModel
+import java.util.concurrent.Executors
 
 @Composable
-fun ARScreen(viewModel: ARViewModel) {
+fun ARScreen(viewModel: ARViewModel = koinViewModel()) {
+
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val previewView = remember { PreviewView(context) }
+    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val cameraManager = remember { CameraXManager(context, cameraExecutor) }
+
+    var timedBoundingBoxes by remember { mutableStateOf(listOf<TimedBoundingBox>()) }
 
     Box(modifier = Modifier.fillMaxSize()) {
+
         CameraPreview(
-            lifecycleOwner = lifecycleOwner,
-            previewView = previewView,
-            analyzer = { imageProxy ->
-                viewModel.analyzeFrame(imageProxy)
-            },
-            modifier = Modifier.fillMaxSize()
+            cameraManager = cameraManager,
+            modifier = Modifier.fillMaxSize(),
+            onBoundingBoxes = { boxes ->
+                val now = System.currentTimeMillis()
+                timedBoundingBoxes = boxes.map { rect ->
+                    TimedBoundingBox(rect = rect, timestamp = now)
+                }
+            }
         )
+
+        BoundingBoxesCanvas(boundingBoxes = timedBoundingBoxes)
+
         BoxesOverlay(viewModel = viewModel)
     }
 }
-
-

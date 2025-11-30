@@ -4,7 +4,9 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Size
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
@@ -17,18 +19,23 @@ import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
 class CameraXManager(
-    private val context: Context,
+    val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
 ) {
-
     private var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
     private var cameraProvider: ProcessCameraProvider? = null
+    private var imageAnalyzer: ImageAnalysis? = null
 
-    fun startCamera(previewView: PreviewView, lifecycleOwner: LifecycleOwner, onReady: () -> Unit = {}) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
-            cameraProvider = cameraProviderFuture.get()
+    fun startCamera(
+        previewView: PreviewView,
+        lifecycleOwner: LifecycleOwner,
+        analyzer: ImageAnalysis.Analyzer? = null,
+        onReady: () -> Unit = {}
+    ) {
+        val providerFuture = ProcessCameraProvider.getInstance(context)
+        providerFuture.addListener({
+            cameraProvider = providerFuture.get()
 
             preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
@@ -36,37 +43,44 @@ class CameraXManager(
 
             @Suppress("DEPRECATION")
             imageCapture = ImageCapture.Builder()
-                .setTargetResolution(android.util.Size(1280, 720))
+                .setTargetResolution(Size(1280, 720))
                 .build()
 
+            analyzer?.let {
+                imageAnalyzer = ImageAnalysis.Builder()
+                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                    .build()
+                    .also { analysis ->
+                        analysis.setAnalyzer(executor, it)
+                    }
+            }
+
+            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             cameraProvider?.unbindAll()
-            cameraProvider?.bindToLifecycle(
-                lifecycleOwner,
-                CameraSelector.DEFAULT_BACK_CAMERA,
-                preview,
-                imageCapture
-            )
+
+            val useCases = mutableListOf(preview, imageCapture)
+            imageAnalyzer?.let { useCases.add(it) }
+
+            cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, *useCases.toTypedArray())
 
             onReady()
         }, ContextCompat.getMainExecutor(context))
     }
 
-
     fun captureFrame(onCaptured: (bitmap: Bitmap, rotation: Int) -> Unit) {
         val capture = imageCapture ?: return
+        val tempFile = File.createTempFile("capture_", ".jpg", context.cacheDir)
 
-        val tempFile = createTempFile(context)
         val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
-
         capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(context, it) }
+                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
                     ?: BitmapFactory.decodeFile(tempFile.absolutePath)
 
-                // Rotation der aktuellen Kamera
                 val rotationDegrees = capture.targetRotation.toDegrees()
-
                 onCaptured(bitmap, rotationDegrees)
+
+                tempFile.delete()
             }
 
             override fun onError(exception: ImageCaptureException) {
@@ -76,9 +90,6 @@ class CameraXManager(
     }
 }
 
-/**
- * Extension to convert Surface rotation constants to degrees
- */
 private fun Int.toDegrees(): Int = when (this) {
     android.view.Surface.ROTATION_0 -> 0
     android.view.Surface.ROTATION_90 -> 90
@@ -87,8 +98,5 @@ private fun Int.toDegrees(): Int = when (this) {
     else -> 0
 }
 
-fun createTempFile(context: Context): File =
-    File.createTempFile("capture_", ".jpg", context.cacheDir)
-
-fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? =
+fun CameraXManager.loadBitmapFromUri(uri: Uri): Bitmap? =
     context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }

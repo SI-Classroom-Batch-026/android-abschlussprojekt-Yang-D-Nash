@@ -1,70 +1,70 @@
 package com.example.yangdnashabschlussprojekt.ui.component.text
 
-import android.graphics.Rect
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
-import com.example.yangdnashabschlussprojekt.util.camera.scaleRectToView
-
-/**
- * Map API Landscape-box to Portrait-box coordinates
- */
-fun mapLandscapeToPortrait(rect: Rect, bitmapWidth: Int, bitmapHeight: Int): Rect {
-    return Rect(
-        rect.top,                    // new left
-        bitmapWidth - rect.right,    // new top
-        rect.bottom,                 // new right
-        bitmapWidth - rect.left      // new bottom
-    )
-}
 
 @Composable
 fun BoundingBoxesCanvas(
-    boundingBoxes: List<Rect>,
-    bitmapSize: Pair<Int, Int>,
-    highlight: Boolean,
-    pulseAlpha: Float
+    boundingBoxes: List<TimedBoundingBox>,
+    pulseDurationMs: Int = 800,
+    cornerRadius: Float = 12f,
+    strokeWidth: Float = 3f,
+    glowColor: Color = Color.Cyan
 ) {
-    val (bitmapWidth, bitmapHeight) = bitmapSize
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(pulseDurationMs),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        val viewWidth = size.width.toInt()
-        val viewHeight = size.height.toInt()
+        val viewWidth = size.width
+        val viewHeight = size.height
+        val now = System.currentTimeMillis()
 
-        boundingBoxes.forEach { rect ->
-            // Map Landscape -> Portrait
-            val portraitRect = mapLandscapeToPortrait(rect, bitmapWidth, bitmapHeight)
-            // Scale to view coordinates
-            val scaled = scaleRectToView(portraitRect, bitmapHeight, bitmapWidth, viewWidth, viewHeight)
+        boundingBoxes.forEach { box ->
+            val age = now - box.timestamp
+            if (age > 2000) return@forEach
+            val alpha = pulseAlpha
 
-            // Glow effect (3 layers)
-            for (i in 3 downTo 1) {
+            val left = box.rect.left.toFloat() / box.bitmapWidth * viewWidth
+            val top = box.rect.top.toFloat() / box.bitmapHeight * viewHeight
+            val right = box.rect.right.toFloat() / box.bitmapWidth * viewWidth
+            val bottom = box.rect.bottom.toFloat() / box.bitmapHeight * viewHeight
+            val width = right - left
+            val height = bottom - top
+
+            val glowAlphas = listOf(0.36f, 0.24f, 0.12f)
+            for ((i, a) in glowAlphas.withIndex()) {
+                val offset = i + 1f
                 drawRoundRect(
-                    color = Color.Cyan.copy(alpha = 0.12f * i),
-                    topLeft = Offset(scaled.left.toFloat() - i, scaled.top.toFloat() - i),
-                    size = Size(
-                        scaled.width().toFloat() + 2 * i,
-                        scaled.height().toFloat() + 2 * i
-                    ),
-                    cornerRadius = CornerRadius(10f, 10f),
-                    style = Stroke(width = 2f)
+                    color = glowColor.copy(alpha = a),
+                    topLeft = Offset(left - offset, top - offset),
+                    size = Size(width + 2*offset, height + 2*offset),
+                    cornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                    style = Stroke(width = strokeWidth)
                 )
             }
 
-            // Main rectangle (pulse + highlight)
             drawRoundRect(
-                color = if (highlight) Color.Magenta.copy(alpha = 0.9f)
-                else Color.Cyan.copy(alpha = pulseAlpha),
-                topLeft = Offset(scaled.left.toFloat(), scaled.top.toFloat()),
-                size = Size(scaled.width().toFloat(), scaled.height().toFloat()),
-                cornerRadius = CornerRadius(12f, 12f),
-                style = Stroke(width = 3f)
+                color = box.color.copy(alpha = alpha),
+                topLeft = Offset(left, top),
+                size = Size(width, height),
+                cornerRadius = CornerRadius(cornerRadius, cornerRadius),
+                style = Stroke(width = strokeWidth)
             )
         }
     }
