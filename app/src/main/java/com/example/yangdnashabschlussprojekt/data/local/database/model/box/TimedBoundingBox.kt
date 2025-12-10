@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.model.box
+package com.example.yangdnashabschlussprojekt.data.local.database.model.box
 
 import androidx.compose.ui.graphics.Color
 

@@ -15,7 +15,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.times
-import com.example.yangdnashabschlussprojekt.data.model.box.TimedBoundingBox
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 @Composable
 fun AnimatedBoxView(box: TimedBoundingBox, screenWidth: Int, screenHeight: Int) {
 

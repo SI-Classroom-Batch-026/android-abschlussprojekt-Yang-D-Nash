@@ -5,9 +5,9 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.local.AppUser
-import com.example.yangdnashabschlussprojekt.data.local.RegistrationResult
-import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.data.remote.AppUser
+import com.example.yangdnashabschlussprojekt.data.remote.RegistrationResult
+import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch

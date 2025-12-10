@@ -1,9 +1,8 @@
-package com.example.yangdnashabschlussprojekt.data.repository
+package com.example.yangdnashabschlussprojekt.data.remote.repository
 
 import android.net.Uri
 import androidx.core.net.toUri
-import com.example.yangdnashabschlussprojekt.data.local.AppUser
-import com.example.yangdnashabschlussprojekt.data.local.firebaseToLocalUser
+import com.example.yangdnashabschlussprojekt.data.remote.firebaseToLocalUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
@@ -11,19 +10,32 @@ import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
-    private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
-    private val _currentUser = MutableStateFlow<AppUser?>(null)
-    val currentUser = _currentUser.asStateFlow()
-
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
+    // Verwendung von Dispatchers.Default für Flows, I/O für Tasks
     private val scope = CoroutineScope(Dispatchers.IO)
+
+    private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
+
+    // Initialisiere _currentUser basierend auf dem aktuellen Firebase-Zustand
+    private val _currentUser = MutableStateFlow(firebaseAuth.currentUser?.let { firebaseToLocalUser(it) })
+    val currentUser = _currentUser.asStateFlow()
+
+    // NEU: Flow zur Überprüfung des Login-Zustands für die UI-Steuerung
+    val isAuthenticated = _currentUser.map { it != null }.stateIn(
+        scope = scope,
+        started = SharingStarted.Eagerly,
+        initialValue = firebaseAuth.currentUser != null
+    )
 
     fun registerUser(
         email: String,
@@ -32,6 +44,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         profileImageUri: Uri? = null,
         onComplete: (Boolean, String?) -> Unit
     ) {
+        // ... (Bestehende Logik zur Registrierung und Firestore/Storage-Erstellung bleibt gleich)
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
@@ -46,7 +59,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                 }
 
                 scope.launch {
-                    // Profilbild hochladen, falls vorhanden
                     var profileImageUrl: String? = null
                     profileImageUri?.let { uri ->
                         profileImageUrl = try {
@@ -66,13 +78,11 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                     )
 
                     try {
-                        // Firestore-Dokument erstellen
                         firestore.collection("users")
                             .document(user.uid)
                             .set(userMap)
                             .await()
 
-                        // Firebase Auth Profil aktualisieren
                         val profileUpdates = UserProfileChangeRequest.Builder()
                             .setDisplayName(displayName)
                             .apply { profileImageUrl?.let { photoUri = it.toUri() } }
@@ -80,7 +90,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
                         user.updateProfile(profileUpdates).await()
 
-                        // Lokales State aktualisieren
                         val localUser = firebaseToLocalUser(user)
                         _currentUser.value = localUser
                         _userName.value = displayName
@@ -119,5 +128,37 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         firebaseAuth.signOut()
         _userName.value = "Gast"
         _currentUser.value = null
+    }
+
+    // NEU: Funktion zum Speichern des erkannten Textes
+    suspend fun saveTextEntry(
+        recognizedText: String,
+        translatedText: String
+    ): Result<Unit> {
+        val userId = firebaseAuth.currentUser?.uid
+            ?: return Result.failure(IllegalStateException("User not logged in. Cannot save text."))
+
+        if (recognizedText.isBlank()) {
+            return Result.failure(IllegalArgumentException("Recognized text cannot be empty."))
+        }
+
+        val textData = hashMapOf(
+            "recognizedText" to recognizedText,
+            "translatedText" to translatedText,
+            "timestamp" to System.currentTimeMillis()
+        )
+
+        return try {
+            // Speichern unter: users/{userId}/texts/{autoId}
+            firestore.collection("users")
+                .document(userId)
+                .collection("texts") // Sub-Collection
+                .add(textData)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

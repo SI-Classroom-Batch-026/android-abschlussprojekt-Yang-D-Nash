@@ -31,6 +31,7 @@ fun CameraWithLiveObjects(
     ) {
         CameraPreview(
             cameraManager = cameraManager,
+            textViewModel = textViewModel,
             modifier = Modifier.fillMaxSize(),
             arViewModel = arViewModel
         )
@@ -45,4 +46,3 @@ fun CameraWithLiveObjects(
         }
     }
 }
-

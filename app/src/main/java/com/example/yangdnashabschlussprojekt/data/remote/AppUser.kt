@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.local
+package com.example.yangdnashabschlussprojekt.data.remote
 
 import com.google.firebase.auth.FirebaseUser
 

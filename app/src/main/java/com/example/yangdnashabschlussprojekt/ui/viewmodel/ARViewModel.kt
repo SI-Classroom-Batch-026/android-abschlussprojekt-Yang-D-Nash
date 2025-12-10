@@ -3,7 +3,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import android.graphics.Bitmap
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
-import com.example.yangdnashabschlussprojekt.data.model.box.TimedBoundingBox
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions

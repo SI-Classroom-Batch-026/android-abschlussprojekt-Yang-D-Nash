@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.local
+package com.example.yangdnashabschlussprojekt.data.remote
 
 data class RegistrationResult(
     val success: Boolean = false,

@@ -2,8 +2,8 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.local.AppUser
-import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.data.remote.AppUser
+import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map

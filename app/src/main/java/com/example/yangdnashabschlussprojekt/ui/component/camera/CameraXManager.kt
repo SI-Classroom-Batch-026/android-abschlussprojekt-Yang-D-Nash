@@ -3,35 +3,42 @@ package com.example.yangdnashabschlussprojekt.ui.component.camera
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
+import android.graphics.ImageFormat
+import android.graphics.Matrix
+import android.graphics.YuvImage
+import android.net.Uri // NEU: Für URI-Operationen
+import android.util.Base64 // NEU: Für Base64-Konvertierung
 import android.util.Size
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageCaptureException // NEU: Für Fehler-Callback
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import java.io.File
+import java.io.ByteArrayOutputStream
+import java.io.File // NEU: Für temporäre Datei
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
+@Suppress("OPT_IN_ARGUMENT_IS_NOT_MARKER")
 class CameraXManager(
     val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
 ) {
-
     private var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var imageAnalyzer: ImageAnalysis? = null
 
-    interface FrameAnalyzer : ImageAnalysis.Analyzer {
-        fun analyzeFrame(bitmap: Bitmap)
-    }
+    fun interface FrameAnalyzer : ImageAnalysis.Analyzer
+
+    // --- FUNKTIONEN FÜR LIVE-ANALYSE ---
 
     fun startCamera(
         previewView: PreviewView,
@@ -46,7 +53,6 @@ class CameraXManager(
             preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
             }
-
 
             @Suppress("DEPRECATION")
             imageCapture = ImageCapture.Builder()
@@ -63,7 +69,6 @@ class CameraXManager(
             }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
             val useCases = mutableListOf<UseCase>()
             preview?.let { useCases.add(it) }
             imageCapture?.let { useCases.add(it) }
@@ -76,36 +81,84 @@ class CameraXManager(
         }, ContextCompat.getMainExecutor(context))
     }
 
-    fun captureFrame(onCaptured: (bitmap: Bitmap, rotation: Int) -> Unit) {
-        val capture = imageCapture ?: return
+    @androidx.annotation.OptIn(ExperimentalGetImage::class)
+    @OptIn(ExperimentalGetImage::class)
+    fun toBitmap(imageProxy: ImageProxy): Bitmap? {
+        // (Bestehende Logik zur YUV-zu-Bitmap-Konvertierung)
+        val image = imageProxy.image ?: return null
+        if (image.format != ImageFormat.YUV_420_888) return null
+
+        val yBuffer = image.planes[0].buffer
+        val vuBuffer = image.planes[2].buffer
+
+        val ySize = yBuffer.remaining()
+        val vuSize = vuBuffer.remaining()
+
+        val nv21 = ByteArray(ySize + vuSize)
+        yBuffer.get(nv21, 0, ySize)
+        vuBuffer.get(nv21, ySize, vuSize)
+
+        val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
+        val out = ByteArrayOutputStream()
+        yuvImage.compressToJpeg(android.graphics.Rect(0, 0, yuvImage.width, yuvImage.height), 90, out)
+        val imageBytes = out.toByteArray()
+        val rotatedBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+
+        val matrix = Matrix()
+        matrix.postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
+
+        return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
+    }
+
+    // --- NEU: FUNKTIONEN FÜR CLOUD-OCR (FEHLEND) ---
+
+    /**
+     * Nimmt ein Bild auf und konvertiert es sofort in Base64 für die Cloud API.
+     */
+    fun captureFrameAsBase64(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
+        val capture = imageCapture ?: run {
+            onError(IllegalStateException("ImageCapture use case not initialized."))
+            return
+        }
+
         val tempFile = File.createTempFile("capture_", ".jpg", context.cacheDir)
 
         val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
         capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                // Lädt das gespeicherte Bild als Bitmap
                 val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
-                    ?: BitmapFactory.decodeFile(tempFile.absolutePath)
 
-                val rotationDegrees = capture.targetRotation.toDegrees()
-                onCaptured(bitmap, rotationDegrees)
+                if (bitmap != null) {
+                    val base64 = bitmap.toBase64() // Konvertiert Bitmap zu Base64
+                    onCaptured(base64)
+                } else {
+                    onError(IllegalStateException("Failed to load captured Bitmap."))
+                }
 
-                tempFile.delete()
+                tempFile.delete() // Temporäre Datei bereinigen
             }
 
             override fun onError(exception: ImageCaptureException) {
                 exception.printStackTrace()
+                onError(exception)
             }
         })
     }
 
-    private fun Int.toDegrees(): Int = when (this) {
-        android.view.Surface.ROTATION_0 -> 0
-        android.view.Surface.ROTATION_90 -> 90
-        android.view.Surface.ROTATION_180 -> 180
-        android.view.Surface.ROTATION_270 -> 270
-        else -> 0
+    // --- HILFSFUNKTIONEN ---
+
+    // 1. Konvertiert ein Bitmap in einen Base64-String (für Cloud-API)
+    private fun Bitmap.toBase64(): String {
+        ByteArrayOutputStream().use { outputStream ->
+            this.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            val byteArray = outputStream.toByteArray()
+            return Base64.encodeToString(byteArray, Base64.NO_WRAP)
+        }
     }
 
+    // 2. Lädt Bitmap von der URI (nach der Aufnahme)
     fun loadBitmapFromUri(uri: Uri): Bitmap? =
         context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+
 }
