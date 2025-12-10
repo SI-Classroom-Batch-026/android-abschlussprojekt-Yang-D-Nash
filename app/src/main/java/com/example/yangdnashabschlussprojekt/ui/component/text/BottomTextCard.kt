@@ -16,13 +16,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 
 @Composable
 fun BottomTextCard(
     recognizedText: String,
     translatedText: String,
+    cloudRecognitionState: CloudRecognitionState, // NEU
     modifier: Modifier = Modifier
 ) {
+    // ... Card Definition
     Card(
         modifier = modifier
             .padding(16.dp)
@@ -38,7 +41,16 @@ fun BottomTextCard(
                     .padding(8.dp)
                     .verticalScroll(scrollState)
             ) {
-                Text("Erkannter Text:", color = Color.White)
+                // NEU: Anzeige des Cloud-Fehlerzustands
+                when (cloudRecognitionState) {
+                    is CloudRecognitionState.Error -> {
+                        Text("Cloud Fehler: ${cloudRecognitionState.message}", color = Color.Red)
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                    else -> Unit
+                }
+
+                Text("Erkannter Text (Live/Cloud):", color = Color.White)
                 Text(recognizedText.ifBlank { "Noch kein Text erkannt" }, color = Color.White)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text("Übersetzt:", color = Color.White)

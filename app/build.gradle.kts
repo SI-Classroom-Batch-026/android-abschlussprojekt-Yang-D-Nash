@@ -186,4 +186,6 @@ dependencies {
     implementation(libs.mlkit.objectDetection)
     implementation(libs.mlkit.objectDetection.common)
 
+    implementation("androidx.compose.material:material-icons-extended")
+
 }

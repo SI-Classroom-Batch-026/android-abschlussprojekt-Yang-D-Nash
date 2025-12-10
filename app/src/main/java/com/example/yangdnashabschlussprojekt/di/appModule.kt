@@ -1,8 +1,8 @@
 package com.example.yangdnashabschlussprojekt.di
 
-import com.example.yangdnashabschlussprojekt.data.api.VisionApiService
-import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.data.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
+import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel

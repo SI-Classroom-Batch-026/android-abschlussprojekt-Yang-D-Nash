@@ -25,12 +25,13 @@ fun CameraWithBoundingBoxes(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onGloballyPositioned { previewSize = it.size } // speichert Größe
+            .onGloballyPositioned { previewSize = it.size }
     ) {
         CameraPreview(
             cameraManager = cameraManager,
             modifier = Modifier.fillMaxSize(),
-            arViewModel = arViewModel
+            textViewModel = textViewModel,
+            arViewModel = arViewModel,
         )
 
         if (previewSize.width > 0 && previewSize.height > 0) {
@@ -43,6 +44,3 @@ fun CameraWithBoundingBoxes(
         }
     }
 }
-
-
-
