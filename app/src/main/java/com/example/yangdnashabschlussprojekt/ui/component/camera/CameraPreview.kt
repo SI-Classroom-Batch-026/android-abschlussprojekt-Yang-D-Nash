@@ -24,11 +24,9 @@ fun CameraPreview(
     val lifecycleOwner = context as LifecycleOwner
     val previewView = remember { PreviewView(context) }
 
-    // LAMBDA-VERSION: Kompakt und modern (SAM Interface)
     val analyzer = CameraXManager.FrameAnalyzer { imageProxy ->
 
         @OptIn(ExperimentalGetImage::class)
-        // LÖSUNG: Aufruf der toBitmap-Funktion über die Instanz cameraManager
         val bitmap = cameraManager.toBitmap(imageProxy)
 
         bitmap?.let {

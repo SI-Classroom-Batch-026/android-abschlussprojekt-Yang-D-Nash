@@ -1,13 +1,20 @@
 package com.example.yangdnashabschlussprojekt.di
 
+import android.app.Application
+import androidx.room.Room
+import com.example.yangdnashabschlussprojekt.data.local.database.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
+import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.google.firebase.auth.FirebaseAuth
+import org.koin.android.ext.koin.androidContext
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -16,10 +23,22 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 private const val VISION_BASE: String = "https://vision.googleapis.com/"
 private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
+
 val appModule = module {
 
-    single { FirebaseAuth.getInstance() }
+    single {
+        Room.databaseBuilder(
+            androidContext() as Application,
+            AppDatabase::class.java,
+            "text_history_db"
+        ).build()
+    }
 
+    single { get<AppDatabase>().textHistoryDao() }
+
+    single { HistoryRepository(get()) }
+
+    single { FirebaseAuth.getInstance() }
     single { UserRepository(get()) }
 
     single<VisionApiService> {
@@ -34,14 +53,20 @@ val appModule = module {
         apiKey = API_KEY,
         api = get()
     ) }
+    viewModel {
+        TextViewModel(
+            visionRepository = get(),
+            historyRepository = get()
+        )
+    }
 
     viewModelOf(::WelcomeViewModel)
-
     viewModelOf(::SettingsViewModel)
-
     viewModelOf(::ARViewModel)
 
-    viewModelOf(::TextViewModel)
-
+    viewModel {
+        HistoryViewModel(
+            historyRepository = get()
+        )
+    }
 }
-

@@ -17,6 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
+import com.example.yangdnashabschlussprojekt.ui.screen.HistoryScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
@@ -82,11 +83,18 @@ fun AppNavHost(
             composable(TextScreenRoute.route) {
                 TextScreen(
                     textViewModel = koinViewModel(),
-                    arViewModel = koinViewModel()
+                    arViewModel = koinViewModel(),
+                    onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
             composable(RegisterRoute.route) {
                 RegistrationScreen(
+                    viewModel = koinViewModel(),
+                    onBack = { navController.popBackStack() }
+                )
+            }
+            composable(HistoryRoute.route) {
+                HistoryScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )

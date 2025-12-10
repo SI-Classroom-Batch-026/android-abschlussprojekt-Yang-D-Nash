@@ -3,9 +3,17 @@ package com.example.yangdnashabschlussprojekt.ui.screen
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -17,14 +25,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraWithBoundingBoxes
+import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
+import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
 import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -34,7 +45,8 @@ import java.util.concurrent.Executors
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
     arViewModel: ARViewModel = koinViewModel(),
-    userRepository: UserRepository = koinInject()
+    userRepository: UserRepository = koinInject(),
+    onNavigateToHistory: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -49,6 +61,8 @@ fun TextScreen(
     val isLoading = cloudState is CloudRecognitionState.Loading
 
     var highlight by remember { mutableStateOf(false) }
+    var showModal by remember { mutableStateOf(false) }
+    var showSaveFeedback by remember { mutableStateOf(false) }
 
     LaunchedEffect(highlight) {
         if (highlight) {
@@ -59,7 +73,7 @@ fun TextScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        CameraWithBoundingBoxes(
+        CameraWithLiveObjects(
             cameraManager = cameraManager,
             textViewModel = textViewModel,
             arViewModel = arViewModel
@@ -69,6 +83,7 @@ fun TextScreen(
             recognizedText = recognizedText,
             translatedText = translatedText,
             cloudRecognitionState = cloudState,
+            onEditClick = { showModal = true },
             modifier = Modifier.align(Alignment.BottomStart)
         )
 
@@ -76,45 +91,77 @@ fun TextScreen(
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
 
-        TextScreenFABs(
-            onScanClick = {
-                if (!isLoading) {
-                    // KORREKTUR: Explizite Typisierung der Lambda-Parameter
-                    cameraManager.captureFrameAsBase64(
-                        onCaptured = { base64Image: String -> // HIER: Typ String hinzugefügt
-                            textViewModel.recognizeTextViaCloud(base64Image)
-                            highlight = true
-                        },
-                        onError = { e: Exception -> // HIER: Typ Exception hinzugefügt
-                            Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    )
-                }
-            },
-            onSaveClick = {
-                if (isAuthenticated) {
-                    if (recognizedText.isBlank()) {
-                        Toast.makeText(context, "Kein Text zum Speichern vorhanden.", Toast.LENGTH_SHORT).show()
-                        return@TextScreenFABs
-                    }
-
-                    scope.launch {
-                        val result = userRepository.saveTextEntry(
-                            recognizedText = recognizedText,
-                            translatedText = translatedText
-                        )
-
-                        result.onSuccess {
-                            Toast.makeText(context, "Text erfolgreich gespeichert!", Toast.LENGTH_SHORT).show()
-                        }.onFailure { e ->
-                            Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
-                            println("Firebase Save Error: ${e.message}")
-                        }
-                    }
-                }
-            },
-            isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
+        Box(
             modifier = Modifier.align(Alignment.BottomEnd)
-        )
+        ) {
+            TextScreenFABs(
+                onSaveClick = {
+                    if (isAuthenticated) {
+                        if (recognizedText.isBlank()) {
+                            Toast.makeText(context, "Kein Text zum Speichern vorhanden.", Toast.LENGTH_SHORT).show()
+                            return@TextScreenFABs
+                        }
+
+                        scope.launch {
+                            val result = userRepository.saveTextEntry(
+                                recognizedText = recognizedText,
+                                translatedText = translatedText
+                            )
+
+                            result.onSuccess {
+                                Toast.makeText(context, "Text erfolgreich in Firebase gespeichert!", Toast.LENGTH_SHORT).show()
+                                showSaveFeedback = true
+                                delay(1500)
+                                showSaveFeedback = false
+
+                            }.onFailure { e ->
+                                Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
+                                println("Firebase Save Error: ${e.message}")
+                            }
+                        }
+                    }
+                },
+                onHistoryClick = onNavigateToHistory,
+                isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
+            )
+
+            AnimatedVisibility(
+                visible = showSaveFeedback,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 16.dp, end = 16.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = "Gespeichert",
+                    tint = MaterialTheme.colorScheme.tertiary,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+
+        if (showModal) {
+            RecognitionModalSheet(
+                recognizedText = recognizedText,
+                onDismiss = { showModal = false },
+                onCloudScan = {
+                    showModal = false
+
+                    if (!isLoading) {
+                        cameraManager.captureFrameAsBase64(
+                            onCaptured = { base64Image: String ->
+                                textViewModel.recognizeTextViaCloud(base64Image)
+                                highlight = true
+                            },
+                            onError = { e: Exception ->
+                                Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
+                }
+            )
+        }
     }
 }
