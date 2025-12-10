@@ -6,14 +6,14 @@ import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
 import android.graphics.Matrix
 import android.graphics.YuvImage
-import android.net.Uri // NEU: Für URI-Operationen
-import android.util.Base64 // NEU: Für Base64-Konvertierung
+import android.net.Uri
+import android.util.Base64
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException // NEU: Für Fehler-Callback
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
@@ -22,7 +22,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import java.io.ByteArrayOutputStream
-import java.io.File // NEU: Für temporäre Datei
+import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -60,12 +60,14 @@ class CameraXManager(
                 .build()
 
             analyzer?.let {
-                imageAnalyzer = ImageAnalysis.Builder()
+                val analysis: ImageAnalysis = ImageAnalysis.Builder()
+                    // Strategie, um nur den neuesten Frame zu analysieren
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
-                    .also { analysis ->
-                        analysis.setAnalyzer(executor, it)
-                    }
+
+                analysis.setAnalyzer(executor, it)
+
+                imageAnalyzer = analysis
             }
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -84,7 +86,7 @@ class CameraXManager(
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     @OptIn(ExperimentalGetImage::class)
     fun toBitmap(imageProxy: ImageProxy): Bitmap? {
-        // (Bestehende Logik zur YUV-zu-Bitmap-Konvertierung)
+        // Logik zur YUV-zu-Bitmap-Konvertierung
         val image = imageProxy.image ?: return null
         if (image.format != ImageFormat.YUV_420_888) return null
 
@@ -110,7 +112,7 @@ class CameraXManager(
         return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
     }
 
-    // --- NEU: FUNKTIONEN FÜR CLOUD-OCR (FEHLEND) ---
+    // --- FUNKTIONEN FÜR CLOUD-OCR ---
 
     /**
      * Nimmt ein Bild auf und konvertiert es sofort in Base64 für die Cloud API.
@@ -126,17 +128,16 @@ class CameraXManager(
         val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
         capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                // Lädt das gespeicherte Bild als Bitmap
                 val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
 
                 if (bitmap != null) {
-                    val base64 = bitmap.toBase64() // Konvertiert Bitmap zu Base64
+                    val base64 = bitmap.toBase64()
                     onCaptured(base64)
                 } else {
                     onError(IllegalStateException("Failed to load captured Bitmap."))
                 }
 
-                tempFile.delete() // Temporäre Datei bereinigen
+                tempFile.delete()
             }
 
             override fun onError(exception: ImageCaptureException) {
@@ -148,7 +149,6 @@ class CameraXManager(
 
     // --- HILFSFUNKTIONEN ---
 
-    // 1. Konvertiert ein Bitmap in einen Base64-String (für Cloud-API)
     private fun Bitmap.toBase64(): String {
         ByteArrayOutputStream().use { outputStream ->
             this.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
@@ -157,7 +157,6 @@ class CameraXManager(
         }
     }
 
-    // 2. Lädt Bitmap von der URI (nach der Aufnahme)
     fun loadBitmapFromUri(uri: Uri): Bitmap? =
         context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
 

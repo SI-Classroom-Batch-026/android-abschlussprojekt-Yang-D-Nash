@@ -33,3 +33,9 @@ object RegisterRoute : NavRoute{
     override val route = "register"
     override val label = "Register"
 }
+
+@Serializable
+object HistoryRoute : NavRoute{
+    override val route = "historyroute"
+    override val label = "Verlauf"
+}

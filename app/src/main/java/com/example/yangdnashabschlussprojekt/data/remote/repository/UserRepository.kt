@@ -21,16 +21,13 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
 
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
-    // Verwendung von Dispatchers.Default für Flows, I/O für Tasks
     private val scope = CoroutineScope(Dispatchers.IO)
 
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
 
-    // Initialisiere _currentUser basierend auf dem aktuellen Firebase-Zustand
     private val _currentUser = MutableStateFlow(firebaseAuth.currentUser?.let { firebaseToLocalUser(it) })
     val currentUser = _currentUser.asStateFlow()
 
-    // NEU: Flow zur Überprüfung des Login-Zustands für die UI-Steuerung
     val isAuthenticated = _currentUser.map { it != null }.stateIn(
         scope = scope,
         started = SharingStarted.Eagerly,
@@ -44,7 +41,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         profileImageUri: Uri? = null,
         onComplete: (Boolean, String?) -> Unit
     ) {
-        // ... (Bestehende Logik zur Registrierung und Firestore/Storage-Erstellung bleibt gleich)
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
@@ -130,7 +126,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         _currentUser.value = null
     }
 
-    // NEU: Funktion zum Speichern des erkannten Textes
     suspend fun saveTextEntry(
         recognizedText: String,
         translatedText: String
@@ -149,10 +144,9 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         )
 
         return try {
-            // Speichern unter: users/{userId}/texts/{autoId}
             firestore.collection("users")
                 .document(userId)
-                .collection("texts") // Sub-Collection
+                .collection("texts")
                 .add(textData)
                 .await()
 
