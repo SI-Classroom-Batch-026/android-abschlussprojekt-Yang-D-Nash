@@ -1,5 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.component.text
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -32,9 +33,12 @@ import androidx.compose.ui.unit.dp
 fun RecognitionModalSheet(
     recognizedText: String,
     onDismiss: () -> Unit,
-    onCloudScan: () -> Unit
+    onCloudScan: () -> Unit,
+    onTextEdited: (String) -> Unit
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
+
+    val hasEditedText = editableText != recognizedText
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -44,10 +48,7 @@ fun RecognitionModalSheet(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Texterkennung überprüfen",
-                style = MaterialTheme.typography.titleMedium
-            )
+            Text("Texterkennung überprüfen", style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
@@ -61,15 +62,28 @@ fun RecognitionModalSheet(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = onCloudScan,
-                enabled = editableText.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Cloud, contentDescription = "Cloud Scan")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Texterkennung via Cloud-API starten (genauer)")
+                Button(
+                    onClick = onCloudScan,
+                    enabled = editableText.isNotBlank() && !hasEditedText,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Cloud, contentDescription = "Cloud Scan")
+                        Text("Cloud Scan")
+                    }
+                }
+
+                Button(
+                    onClick = { onTextEdited(editableText) },
+                    enabled = editableText.isNotBlank(),
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text("Manuell Übersetzen")
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))
