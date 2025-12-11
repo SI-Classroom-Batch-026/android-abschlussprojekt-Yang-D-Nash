@@ -15,26 +15,19 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 fun BoxesOverlay(
     viewModel: TextViewModel,
     arViewModel: ARViewModel,
-    // screenWidth und screenHeight werden nicht mehr direkt benötigt,
-    // da AnimatedBoxView BoxWithConstraints verwendet. Sie können aber bleiben.
     screenWidth: Int,
     screenHeight: Int
 ) {
-    // Holt die Text-Boxen aus dem TextViewModel
     val textBoxes by viewModel.boundingBoxes.collectAsState()
 
-    // Holt die AR-Boxen aus dem ARViewModel
     val arBoxes by arViewModel.boxes.collectAsState()
 
-    // Holt die Frame-Größe (z.B. 1280x720) zur korrekten Skalierung
     val frameSize by viewModel.frameSize.collectAsState()
 
-    // Kombiniert beide Listen zu einer einzigen Liste von TimedBoundingBox-Objekten
     val allBoxes: List<TimedBoundingBox> = (textBoxes + arBoxes)
 
     Box(Modifier.fillMaxSize()) {
 
-        // NEU: Ruft AnimatedBoxView nur EINMAL mit der gesamten Liste auf
         AnimatedBoxView(
             boxes = allBoxes,
             frameSize = frameSize,

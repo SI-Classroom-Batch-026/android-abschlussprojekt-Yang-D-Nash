@@ -3,19 +3,15 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
+import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-
-data class HistoryItem(
-    val id: Long,
-    val recognizedText: String,
-    val translatedText: String,
-    val timestampFormatted: String, // Für die Anzeige
-    val rawTimestamp: Long
-)
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class HistoryViewModel(
     private val historyRepository: HistoryRepository
@@ -39,8 +35,8 @@ class HistoryViewModel(
         )
     
     private fun formatTimestamp(timestamp: Long): String {
-        val date = java.util.Date(timestamp)
-        return java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.getDefault()).format(date)
+        val date = Date(timestamp)
+        return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
     }
     
     fun deleteHistoryItem(itemId: Long) {

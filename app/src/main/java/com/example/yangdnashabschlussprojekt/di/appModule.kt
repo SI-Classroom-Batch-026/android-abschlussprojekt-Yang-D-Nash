@@ -2,7 +2,7 @@ package com.example.yangdnashabschlussprojekt.di
 
 import android.app.Application
 import androidx.room.Room
-import com.example.yangdnashabschlussprojekt.data.local.database.AppDatabase
+import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository

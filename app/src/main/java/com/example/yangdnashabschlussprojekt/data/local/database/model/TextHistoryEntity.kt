@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.local.database.model.box
+package com.example.yangdnashabschlussprojekt.data.local.database.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryItem
 
 @Composable
 fun HistoryList(
@@ -23,7 +22,7 @@ fun HistoryList(
     ) {
         items(
             items = historyItems,
-            key = { it.id } // Wichtig für die effiziente Aktualisierung
+            key = { it.id }
         ) { item ->
             HistoryCard(item = item, onDelete = { onDelete(item.id) })
             Spacer(modifier = Modifier.height(8.dp))
