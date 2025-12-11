@@ -67,11 +67,6 @@ class TextViewModel(
         Translation.getClient(options)
     }
 
-    // 2. FUNKTION: updateBoundingBoxes (Wird konzeptionell genutzt)
-    fun updateBoundingBoxes(boxes: List<TimedBoundingBox>) {
-        _boundingBoxes.value = boxes
-    }
-
     private fun sortAndStructureText(blocks: List<Text.TextBlock>): String {
         if (blocks.isEmpty()) return ""
         val allLines = blocks.flatMap { it.lines }
