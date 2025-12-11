@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 fun HistoryList(
     historyItems: List<HistoryItem>,
     onDelete: (Long) -> Unit,
+    onSelect: (HistoryItem) -> Unit,
     modifier: Modifier
 ) {
     LazyColumn(
@@ -24,7 +25,11 @@ fun HistoryList(
             items = historyItems,
             key = { it.id }
         ) { item ->
-            HistoryCard(item = item, onDelete = { onDelete(item.id) })
+            HistoryCard(
+                item = item,
+                onDelete = { onDelete(item.id) },
+                onSelect = { onSelect(item) }
+            )
             Spacer(modifier = Modifier.height(8.dp))
         }
     }

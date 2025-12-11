@@ -57,7 +57,7 @@ class CameraXManager(
         val providerFuture = ProcessCameraProvider.getInstance(context)
         providerFuture.addListener({
             cameraProvider = providerFuture.get()
-            val provider = cameraProvider ?: return@addListener // Safety check
+            val provider = cameraProvider ?: return@addListener
 
             preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
@@ -78,41 +78,17 @@ class CameraXManager(
                 imageAnalyzer = analysis
             }
 
-            val useCases = mutableListOf<UseCase>()
-            preview?.let { useCases.add(it) }
-            imageAnalyzer?.let { useCases.add(it) }
+            val allUseCases = mutableListOf<UseCase>()
+            preview?.let { allUseCases.add(it) }
+            imageCapture?.let { allUseCases.add(it) }
+            imageAnalyzer?.let { allUseCases.add(it) }
 
             provider.unbindAll()
-            provider.bindToLifecycle(lifecycleOwner, cameraSelector, *useCases.toTypedArray())
+            provider.bindToLifecycle(lifecycleOwner, cameraSelector, *allUseCases.toTypedArray())
 
             onReady()
 
         }, mainExecutor)
-    }
-    private fun bindUseCases(isAnalysisMode: Boolean) {
-        mainExecutor.execute {
-            val provider = cameraProvider ?: return@execute
-            val owner = lifecycleOwner ?: return@execute
-
-            try {
-                provider.unbindAll()
-
-                val useCases = mutableListOf<UseCase>()
-
-                preview?.let { useCases.add(it) }
-
-                if (isAnalysisMode) {
-                    imageAnalyzer?.let { useCases.add(it) }
-                } else {
-                    imageCapture?.let { useCases.add(it) }
-                }
-
-                provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
     }
 
     fun captureForCloudScan(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
@@ -128,14 +104,11 @@ class CameraXManager(
             return
         }
 
-        bindUseCases(isAnalysisMode = false)
-
         val tempFile = File.createTempFile("cloud_capture_", ".jpg", context.cacheDir)
         val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
 
         capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-
                 val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
 
                 if (bitmap != null) {
@@ -147,7 +120,6 @@ class CameraXManager(
 
                 tempFile.delete()
 
-                bindUseCases(isAnalysisMode = true)
                 isCapturing = false
             }
 
@@ -155,7 +127,6 @@ class CameraXManager(
                 exception.printStackTrace()
                 onError(exception)
 
-                bindUseCases(isAnalysisMode = true)
                 isCapturing = false
             }
         })

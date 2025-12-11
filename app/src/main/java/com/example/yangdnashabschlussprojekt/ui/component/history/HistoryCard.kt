@@ -22,11 +22,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun HistoryCard(item: HistoryItem, onDelete: () -> Unit) {
+fun HistoryCard(
+    item: HistoryItem,
+    onDelete: () -> Unit,
+    onSelect: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { /* Hier könnte eine Detailansicht geöffnet werden */ }
+            .clickable(onClick = onSelect)
     ) {
         Row(
             modifier = Modifier
@@ -41,7 +45,7 @@ fun HistoryCard(item: HistoryItem, onDelete: () -> Unit) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                
+
                 Text(
                     text = "Original: ${item.recognizedText}",
                     style = MaterialTheme.typography.bodyMedium,
@@ -49,7 +53,7 @@ fun HistoryCard(item: HistoryItem, onDelete: () -> Unit) {
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                
+
                 if (item.translatedText.isNotEmpty()) {
                     Text(
                         text = "Übersetzt: ${item.translatedText}",
