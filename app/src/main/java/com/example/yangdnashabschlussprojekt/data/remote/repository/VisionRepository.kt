@@ -6,25 +6,30 @@ import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Image
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.VisionApiRequest
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.VisionApiResponse
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
 class VisionRepository(
     private val apiKey: String,
     private val api: VisionApiService
 ) {
 
-    suspend fun detectText(base64Image: String): VisionApiResponse {
-        val requestBody = VisionApiRequest(
-            requests = listOf(
-                AnnotateImageRequest(
-                    image = Image(content = base64Image),
-                    features = listOf(Feature(type = "DOCUMENT_TEXT_DETECTION"))
+    suspend fun detectText(base64Image: String): VisionApiResponse = withContext(Dispatchers.IO) {
+        withTimeout(15000L) {
+            val requestBody = VisionApiRequest(
+                requests = listOf(
+                    AnnotateImageRequest(
+                        image = Image(content = base64Image),
+                        features = listOf(Feature(type = "DOCUMENT_TEXT_DETECTION"))
+                    )
                 )
             )
-        )
 
-        return api.annotateImage(
-            apiKey = apiKey,
-            request = requestBody
-        )
+            api.annotateImage(
+                apiKey = apiKey,
+                request = requestBody
+            )
+        }
     }
 }

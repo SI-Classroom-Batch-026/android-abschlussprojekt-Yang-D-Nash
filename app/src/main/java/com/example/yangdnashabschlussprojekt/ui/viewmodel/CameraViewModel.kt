@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.viewmodel // Passe den Pfad an
+package com.example.yangdnashabschlussprojekt.ui.viewmodel // Der Pfad bleibt
 
 import android.app.Application
 import android.util.Log
@@ -8,14 +8,16 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.TranslatedTextResult
-import com.example.yangdnashabschlussprojekt.service.TranslationService // Dein Service
-import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager // Dein Manager
+import com.example.yangdnashabschlussprojekt.service.TranslationService
+import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 class CameraViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val tag = "CameraViewModel"
 
     private val cameraXManager = CameraXManager(application.applicationContext)
 
@@ -30,7 +32,10 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     fun getCameraXManager(): CameraXManager = cameraXManager
 
     fun captureImage() {
-        if (isTranslating) return
+        if (isTranslating) {
+            Log.w(tag, "Capture already in progress, ignoring.")
+            return
+        }
 
         viewModelScope.launch {
             try {
@@ -38,31 +43,30 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
                 translatedTextResult = null
 
                 val base64Image = suspendCaptureImage()
-                Log.d("CameraViewModel", "Image captured, Base64 length: ${base64Image.length}")
+                Log.d(tag, "Image successfully captured and encoded.")
 
                 val result = translationService.translateImage(base64Image)
 
                 translatedTextResult = result
 
             } catch (e: Exception) {
-                Log.e("CameraViewModel", "Error during capture or translation: ${e.message}")
+                Log.e(tag, "Error during capture or simulated translation: ${e.message}", e)
             } finally {
                 isTranslating = false
             }
         }
     }
 
-    private suspend fun suspendCaptureImage(): String = suspendCancellableCoroutine { continuation ->
+    suspend fun suspendCaptureImage(): String = suspendCancellableCoroutine { continuation ->
 
         cameraXManager.captureForCloudScan(
             onCaptured = { base64String ->
-                continuation.resume(base64String)
+                if (continuation.isActive) continuation.resume(base64String)
             },
             onError = { exception ->
-                continuation.resumeWithException(exception)
+                if (continuation.isActive) continuation.resumeWithException(exception)
             }
         )
-
         continuation.invokeOnCancellation {
         }
     }

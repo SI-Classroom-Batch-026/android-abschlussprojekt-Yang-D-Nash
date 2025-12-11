@@ -6,14 +6,20 @@ import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +48,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.concurrent.Executors
+
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
@@ -51,10 +58,11 @@ fun TextScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = LocalLifecycleOwner.current // Nicht direkt benötigt, aber nützlich für Effekte
+    val vibrator = context.getSystemService(Vibrator::class.java)
+
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
-    val vibrator = context.getSystemService(Vibrator::class.java)
 
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
@@ -66,16 +74,7 @@ fun TextScreen(
 
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
-
     var showSaveFeedback by remember { mutableStateOf(false) }
-
-    /*
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraExecutor.shutdown()
-        }
-    }
-    */
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
@@ -88,6 +87,12 @@ fun TextScreen(
         if (highlight) {
             vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
             highlight = false
+        }
+    }
+
+    LaunchedEffect(cloudState) {
+        if (cloudState is CloudRecognitionState.Success) {
+            vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     }
 
@@ -107,8 +112,34 @@ fun TextScreen(
             modifier = Modifier.align(Alignment.BottomStart)
         )
 
-        if (isLoading || (isAnalyzing && recognizedText.isBlank())) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                    .clickable(enabled = false) {},
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
+                        .padding(24.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Analysiere Bild in der Cloud...",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "(Timeout in 15s)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+            }
         }
 
         Box(
@@ -119,12 +150,7 @@ fun TextScreen(
                 isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
 
                 onSaveClick = {
-                    if (isAuthenticated) {
-                        if (recognizedText.isBlank()) {
-                            Toast.makeText(context, "Kein Text zum Speichern vorhanden.", Toast.LENGTH_SHORT).show()
-                            return@TextScreenFABs
-                        }
-
+                    if (isAuthenticated && recognizedText.isNotBlank()) {
                         scope.launch {
                             userRepository.saveTextEntry(recognizedText, translatedText)
                                 .onSuccess {
@@ -136,6 +162,8 @@ fun TextScreen(
                                     Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
                                 }
                         }
+                    } else {
+                        Toast.makeText(context, "Kein Text oder nicht authentifiziert.", Toast.LENGTH_SHORT).show()
                     }
                 },
                 onHistoryClick = onNavigateToHistory,
@@ -163,7 +191,6 @@ fun TextScreen(
             RecognitionModalSheet(
                 recognizedText = recognizedText,
                 onDismiss = { showModal = false },
-
                 onTextEdited = { newText ->
                     textViewModel.recognizeText(newText)
                     showModal = false
@@ -171,17 +198,20 @@ fun TextScreen(
 
                 onCloudScan = {
                     showModal = false
-                    if (!isLoading) {
-                        cameraManager.captureForCloudScan(
-                            onCaptured = { base64Image: String ->
-                                textViewModel.recognizeTextViaCloud(base64Image)
-                                highlight = true
-                            },
-                            onError = { e: Exception ->
-                                Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                        )
-                    }
+                    if (isLoading) return@RecognitionModalSheet
+
+                    textViewModel.setCloudRecognitionState(CloudRecognitionState.Loading)
+
+                    cameraManager.captureForCloudScan(
+                        onCaptured = { base64Image: String ->
+                            textViewModel.recognizeTextViaCloud(base64Image)
+                            highlight = true
+                        },
+                        onError = { e: Exception ->
+                            Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen"))
+                        }
+                    )
                 }
             )
         }

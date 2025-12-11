@@ -2,6 +2,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.graphics.Bitmap
 import android.graphics.Rect
+import android.util.Log
 import android.util.Size
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -32,6 +33,8 @@ class TextViewModel(
     private val visionRepository: VisionRepository,
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
+
+    private val tag = "TextViewModel"
 
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
@@ -64,6 +67,11 @@ class TextViewModel(
         Translation.getClient(options)
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        translator.close()
+    }
+
     private fun sortAndStructureText(blocks: List<Text.TextBlock>): String {
         if (blocks.isEmpty()) return ""
         val allLines = blocks.flatMap { it.lines }
@@ -71,7 +79,28 @@ class TextViewModel(
         return sortedLines.joinToString("\n") { line -> line.text }
     }
 
+    private fun updateBoundingBoxes(textBlocks: List<Text.TextBlock>, frameWidth: Int, frameHeight: Int, timestamp: Long) {
+        val boxes = textBlocks.map { block ->
+            val rect: Rect = block.boundingBox ?: Rect(0, 0, 0, 0)
+            TimedBoundingBox(
+                id = block.hashCode().toLong().toInt(),
+                label = block.text,
+                left = rect.left.toFloat(),
+                top = rect.top.toFloat(),
+                right = rect.right.toFloat(),
+                bottom = rect.bottom.toFloat(),
+                timestamp = timestamp,
+                color = Color.Magenta,
+                frameWidth = frameWidth,
+                frameHeight = frameHeight
+            )
+        }
+        _boundingBoxes.value = boxes
+    }
+
+
     fun analyzeFrame(bitmap: Bitmap) {
+
         val currentTimestamp = System.currentTimeMillis()
 
         if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < frameThrottleIntervalMs) {
@@ -87,38 +116,21 @@ class TextViewModel(
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
+                if (visionText.textBlocks.isEmpty()) return@addOnSuccessListener
 
-                val textBlocks = visionText.textBlocks
-                if (textBlocks.isEmpty()) return@addOnSuccessListener
-
-                val structuredText = sortAndStructureText(textBlocks)
+                val structuredText = sortAndStructureText(visionText.textBlocks)
                 if (structuredText.isBlank()) return@addOnSuccessListener
 
                 _recognizedText.value = structuredText
-
-                val boxes = textBlocks.map { block ->
-                    val rect: Rect = block.boundingBox ?: Rect(0, 0, 0, 0)
-                    TimedBoundingBox(
-                        id = block.hashCode().toLong().toInt(),
-                        label = block.text,
-                        left = rect.left.toFloat(),
-                        top = rect.top.toFloat(),
-                        right = rect.right.toFloat(),
-                        bottom = rect.bottom.toFloat(),
-                        timestamp = currentTimestamp,
-                        color = Color.Magenta,
-                        frameWidth = bitmap.width,
-                        frameHeight = bitmap.height
-                    )
-                }
-                _boundingBoxes.value = boxes
-
                 _isAnalyzing.value = false
+
+                updateBoundingBoxes(visionText.textBlocks, bitmap.width, bitmap.height, currentTimestamp)
 
                 translateTextAsync(structuredText)
             }
-            .addOnFailureListener {
-                _recognizedText.value = "Text-Erkennung (ML Kit) fehlgeschlagen"
+            .addOnFailureListener { e ->
+                Log.e(tag, "ML Kit Text-Erkennung fehlgeschlagen", e)
+                _recognizedText.value = "Text-Erkennung (ML Kit) fehlgeschlagen: ${e.message}"
             }
     }
 
@@ -127,6 +139,7 @@ class TextViewModel(
         _recognizedText.value = ""
         _translatedText.value = ""
         _boundingBoxes.value = emptyList()
+        _cloudRecognitionState.value = CloudRecognitionState.Idle
     }
 
     fun recognizeText(text: String) {
@@ -135,6 +148,7 @@ class TextViewModel(
             _recognizedText.value = text
             _boundingBoxes.value = emptyList()
             translateTextAsync(text)
+            _cloudRecognitionState.value = CloudRecognitionState.Success(text)
         }
     }
 
@@ -142,6 +156,8 @@ class TextViewModel(
         _isAnalyzing.value = false
         if (_cloudRecognitionState.value is CloudRecognitionState.Loading) return
 
+        _recognizedText.value = ""
+        _translatedText.value = ""
         _cloudRecognitionState.value = CloudRecognitionState.Loading
 
         viewModelScope.launch {
@@ -151,34 +167,42 @@ class TextViewModel(
                 val cloudText = response.responses.firstOrNull()
                     ?.fullTextAnnotation
                     ?.text
-                    ?: "Kein Text von der Cloud Vision API gefunden."
-
-                _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
+                    ?: throw IllegalStateException("Kein Text von der Cloud Vision API gefunden.")
 
                 _recognizedText.value = cloudText
+                _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
+
                 translateTextAsync(cloudText)
 
             } catch (e: Exception) {
-                _cloudRecognitionState.value = CloudRecognitionState.Error("Cloud-Erkennung fehlgeschlagen: ${e.localizedMessage}")
+                Log.e(tag, "Cloud-Erkennung fehlgeschlagen", e)
+                val errorMessage = "Cloud-Erkennung fehlgeschlagen: ${e.localizedMessage ?: e.message}"
+                _cloudRecognitionState.value = CloudRecognitionState.Error(errorMessage)
+                _recognizedText.value = errorMessage
             } finally {
-                _isAnalyzing.value = false
             }
         }
     }
 
     private fun translateTextAsync(text: String) {
+
         viewModelScope.launch {
             translator.downloadModelIfNeeded()
                 .addOnSuccessListener {
                     translator.translate(text)
                         .addOnSuccessListener { translated ->
                             _translatedText.value = translated
-
                             saveCurrentTextToHistory()
                         }
-                        .addOnFailureListener { _translatedText.value = "Übersetzung fehlgeschlagen" }
+                        .addOnFailureListener { e ->
+                            Log.e(tag, "Übersetzung fehlgeschlagen", e)
+                            _translatedText.value = "Übersetzung fehlgeschlagen: ${e.message}"
+                        }
                 }
-                .addOnFailureListener { _translatedText.value = "Modell-Download fehlgeschlagen" }
+                .addOnFailureListener { e ->
+                    Log.e(tag, "Modell-Download fehlgeschlagen", e)
+                    _translatedText.value = "Modell-Download fehlgeschlagen: ${e.message}"
+                }
         }
     }
 
@@ -193,5 +217,9 @@ class TextViewModel(
                 historyRepository.saveEntry(entity)
             }
         }
+    }
+
+    fun setCloudRecognitionState(state: CloudRecognitionState) {
+        _cloudRecognitionState.value = state
     }
 }

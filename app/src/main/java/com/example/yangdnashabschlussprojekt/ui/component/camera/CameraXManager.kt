@@ -25,6 +25,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import androidx.core.graphics.scale
 
 @Suppress("OPT_IN_ARGUMENT_IS_NOT_MARKER")
 class CameraXManager(
@@ -88,33 +89,29 @@ class CameraXManager(
 
         }, mainExecutor)
     }
-
     private fun bindUseCases(isAnalysisMode: Boolean) {
-        val provider = cameraProvider ?: return
-        val owner = lifecycleOwner ?: return
+        mainExecutor.execute {
+            val provider = cameraProvider ?: return@execute
+            val owner = lifecycleOwner ?: return@execute
 
-        if (Thread.currentThread() != context.mainLooper.thread) {
-            mainExecutor.execute { bindUseCases(isAnalysisMode) }
-            return
-        }
+            try {
+                provider.unbindAll()
 
-        if (isAnalysisMode) {
-            imageCapture?.let { provider.unbind(it) }
+                val useCases = mutableListOf<UseCase>()
 
-            val useCases = mutableListOf<UseCase>()
-            preview?.let { useCases.add(it) }
-            imageAnalyzer?.let { useCases.add(it) }
+                preview?.let { useCases.add(it) }
 
-            provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
+                if (isAnalysisMode) {
+                    imageAnalyzer?.let { useCases.add(it) }
+                } else {
+                    imageCapture?.let { useCases.add(it) }
+                }
 
-        } else {
-            imageAnalyzer?.let { provider.unbind(it) }
+                provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
 
-            val useCases = mutableListOf<UseCase>()
-            preview?.let { useCases.add(it) }
-            imageCapture?.let { useCases.add(it) }
-
-            provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -197,8 +194,15 @@ class CameraXManager(
     }
 
     private fun Bitmap.toBase64(): String {
+        val scaledBitmap = if (this.width > 1024) {
+            val ratio = 1024.0 / this.width
+            this.scale(1024, (this.height * ratio).toInt())
+        } else {
+            this
+        }
+
         ByteArrayOutputStream().use { outputStream ->
-            this.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream)
             val byteArray = outputStream.toByteArray()
             return Base64.encodeToString(byteArray, Base64.NO_WRAP)
         }
