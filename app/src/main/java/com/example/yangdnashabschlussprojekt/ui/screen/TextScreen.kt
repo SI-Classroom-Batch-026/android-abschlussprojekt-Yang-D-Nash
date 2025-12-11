@@ -134,7 +134,7 @@ fun TextScreen(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "(Timeout in 15s)",
+                        text = "(Timeout in 3s)",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     )
@@ -196,20 +196,27 @@ fun TextScreen(
                     showModal = false
                 },
 
-                onCloudScan = {
-                    showModal = false
-                    if (isLoading) return@RecognitionModalSheet
+                onCloudScan = scanCheck@{
+                    if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) return@scanCheck
 
-                    textViewModel.setCloudRecognitionState(CloudRecognitionState.Loading)
+                    val timeoutJob = scope.launch {
+                        delay(3000)
+                        if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
+                            Toast.makeText(context, "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.", Toast.LENGTH_LONG).show()
+                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
+                        }
+                    }
 
                     cameraManager.captureForCloudScan(
                         onCaptured = { base64Image: String ->
+                            timeoutJob.cancel()
                             textViewModel.recognizeTextViaCloud(base64Image)
                             highlight = true
                         },
                         onError = { e: Exception ->
+                            timeoutJob.cancel()
                             Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
-                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen"))
+                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen: ${e.message}"))
                         }
                     )
                 }

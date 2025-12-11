@@ -141,7 +141,16 @@ class TextViewModel(
         _boundingBoxes.value = emptyList()
         _cloudRecognitionState.value = CloudRecognitionState.Idle
     }
+    fun loadFromHistory(recognized: String, translated: String) {
+        _isAnalyzing.value = false
 
+        _recognizedText.value = recognized
+        _translatedText.value = translated
+
+        _cloudRecognitionState.value = CloudRecognitionState.Success(recognized)
+
+        _boundingBoxes.value = emptyList()
+    }
     fun recognizeText(text: String) {
         if (text.isNotBlank()) {
             _isAnalyzing.value = false
@@ -158,9 +167,11 @@ class TextViewModel(
 
         _recognizedText.value = ""
         _translatedText.value = ""
-        _cloudRecognitionState.value = CloudRecognitionState.Loading
 
         viewModelScope.launch {
+
+            _cloudRecognitionState.value = CloudRecognitionState.Loading
+
             try {
                 val response = visionRepository.detectText(base64Image)
 
@@ -177,9 +188,10 @@ class TextViewModel(
             } catch (e: Exception) {
                 Log.e(tag, "Cloud-Erkennung fehlgeschlagen", e)
                 val errorMessage = "Cloud-Erkennung fehlgeschlagen: ${e.localizedMessage ?: e.message}"
+
                 _cloudRecognitionState.value = CloudRecognitionState.Error(errorMessage)
                 _recognizedText.value = errorMessage
-            } finally {
+
             }
         }
     }

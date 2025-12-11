@@ -22,6 +22,7 @@ import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.util.`object`.ObjectDetectionAnalyzer
 import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
@@ -94,9 +95,20 @@ fun AppNavHost(
                 )
             }
             composable(HistoryRoute.route) {
+                val textViewModel: TextViewModel = koinViewModel()
+
                 HistoryScreen(
                     viewModel = koinViewModel(),
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onHistoryItemSelected = { item ->
+
+                        textViewModel.loadFromHistory(
+                            recognized = item.recognizedText,
+                            translated = item.translatedText
+                        )
+
+                        navController.popBackStack()
+                    }
                 )
             }
         }

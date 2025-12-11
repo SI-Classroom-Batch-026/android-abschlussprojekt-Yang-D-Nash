@@ -16,7 +16,7 @@ class VisionRepository(
 ) {
 
     suspend fun detectText(base64Image: String): VisionApiResponse = withContext(Dispatchers.IO) {
-        withTimeout(15000L) {
+        withTimeout(3000L) {
             val requestBody = VisionApiRequest(
                 requests = listOf(
                     AnnotateImageRequest(
