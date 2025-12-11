@@ -27,9 +27,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
 import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
@@ -41,7 +42,6 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.concurrent.Executors
-
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
@@ -51,7 +51,7 @@ fun TextScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-
+    val lifecycleOwner = LocalLifecycleOwner.current
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
     val vibrator = context.getSystemService(Vibrator::class.java)
@@ -60,7 +60,7 @@ fun TextScreen(
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
-    val isAnalyzing by textViewModel.isAnalyzing.collectAsState() // 🆕 isAnalyzing wird gesammelt
+    val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
 
     val isLoading = cloudState is CloudRecognitionState.Loading
 
@@ -69,9 +69,27 @@ fun TextScreen(
 
     var showSaveFeedback by remember { mutableStateOf(false) }
 
+    // ❌ KORRIGIERT: Dieses DisposableEffect war redundant und kann entfernt werden,
+    // da cameraExecutor in onDispose des Haupteffekts unten heruntergefahren werden kann.
+    /*
     DisposableEffect(Unit) {
         onDispose {
             cameraExecutor.shutdown()
+        }
+    }
+    */
+
+    // 🆕 NEU: Haupteffekt zur Verwaltung der Kamera-Ressourcen im Lifecycle des Composables
+    DisposableEffect(lifecycleOwner) {
+        // Beim Start des Composables (oder wenn der LifecycleOwner sich ändert)
+        // ... hier könnte man cameraManager.startCamera aufrufen,
+        //     aber das passiert bereits in CameraWithLiveObjects.
+
+        onDispose {
+            // Beim Verlassen des Composables (oder wenn der LifecycleOwner sich ändert)
+            // 🚨 KRITISCH: Unbinde alle Usecases, um BufferQueue-Abandonment zu verhindern
+            cameraManager.unbindAll()
+            cameraExecutor.shutdown() // Füge das Herunterfahren des Executors hier hinzu
         }
     }
 
@@ -163,7 +181,7 @@ fun TextScreen(
                 onCloudScan = {
                     showModal = false
                     if (!isLoading) {
-                        cameraManager.captureFrameAsBase64(
+                        cameraManager.captureForCloudScan(
                             onCaptured = { base64Image: String ->
                                 textViewModel.recognizeTextViaCloud(base64Image)
                                 highlight = true
