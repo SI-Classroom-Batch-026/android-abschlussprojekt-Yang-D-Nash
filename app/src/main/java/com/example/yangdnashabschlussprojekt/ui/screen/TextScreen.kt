@@ -15,6 +15,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -50,19 +51,29 @@ fun TextScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
     val vibrator = context.getSystemService(Vibrator::class.java)
 
-    val isAuthenticated = userRepository.isAuthenticated.collectAsState().value
+    val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
+    val isAnalyzing by textViewModel.isAnalyzing.collectAsState() // 🆕 isAnalyzing wird gesammelt
+
     val isLoading = cloudState is CloudRecognitionState.Loading
 
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
+
     var showSaveFeedback by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraExecutor.shutdown()
+        }
+    }
 
     LaunchedEffect(highlight) {
         if (highlight) {
@@ -87,7 +98,7 @@ fun TextScreen(
             modifier = Modifier.align(Alignment.BottomStart)
         )
 
-        if (isLoading) {
+        if (isLoading || (isAnalyzing && recognizedText.isBlank())) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
         }
 
@@ -95,6 +106,9 @@ fun TextScreen(
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
             TextScreenFABs(
+                onRestartClick = textViewModel::continueAnalysis,
+                isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
+
                 onSaveClick = {
                     if (isAuthenticated) {
                         if (recognizedText.isBlank()) {
@@ -103,21 +117,15 @@ fun TextScreen(
                         }
 
                         scope.launch {
-                            val result = userRepository.saveTextEntry(
-                                recognizedText = recognizedText,
-                                translatedText = translatedText
-                            )
-
-                            result.onSuccess {
-                                Toast.makeText(context, "Text erfolgreich in Firebase gespeichert!", Toast.LENGTH_SHORT).show()
-                                showSaveFeedback = true
-                                delay(1500)
-                                showSaveFeedback = false
-
-                            }.onFailure { e ->
-                                Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
-                                println("Firebase Save Error: ${e.message}")
-                            }
+                            userRepository.saveTextEntry(recognizedText, translatedText)
+                                .onSuccess {
+                                    Toast.makeText(context, "Text erfolgreich in Firebase gespeichert!", Toast.LENGTH_SHORT).show()
+                                    showSaveFeedback = true
+                                    delay(1500)
+                                    showSaveFeedback = false
+                                }.onFailure { e ->
+                                    Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
                         }
                     }
                 },
@@ -134,7 +142,7 @@ fun TextScreen(
                     .padding(bottom = 16.dp, end = 16.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Check,
+                    Icons.Default.Check,
                     contentDescription = "Gespeichert",
                     tint = MaterialTheme.colorScheme.tertiary,
                     modifier = Modifier.padding(16.dp)
@@ -146,9 +154,14 @@ fun TextScreen(
             RecognitionModalSheet(
                 recognizedText = recognizedText,
                 onDismiss = { showModal = false },
+
+                onTextEdited = { newText ->
+                    textViewModel.recognizeText(newText)
+                    showModal = false
+                },
+
                 onCloudScan = {
                     showModal = false
-
                     if (!isLoading) {
                         cameraManager.captureFrameAsBase64(
                             onCaptured = { base64Image: String ->

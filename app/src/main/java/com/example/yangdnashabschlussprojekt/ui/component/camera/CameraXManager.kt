@@ -60,7 +60,6 @@ class CameraXManager(
 
             analyzer?.let {
                 val analysis: ImageAnalysis = ImageAnalysis.Builder()
-                    // Strategie, um nur den neuesten Frame zu analysieren
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .build()
 
@@ -82,10 +81,13 @@ class CameraXManager(
         }, ContextCompat.getMainExecutor(context))
     }
 
+    fun unbindAll() {
+        cameraProvider?.unbindAll()
+    }
+
     @androidx.annotation.OptIn(ExperimentalGetImage::class)
     @OptIn(ExperimentalGetImage::class)
     fun toBitmap(imageProxy: ImageProxy): Bitmap? {
-        // Logik zur YUV-zu-Bitmap-Konvertierung
         val image = imageProxy.image ?: return null
         if (image.format != ImageFormat.YUV_420_888) return null
 
@@ -110,6 +112,7 @@ class CameraXManager(
 
         return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
     }
+
     fun captureFrameAsBase64(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
         val capture = imageCapture ?: run {
             onError(IllegalStateException("ImageCapture use case not initialized."))
@@ -149,5 +152,4 @@ class CameraXManager(
 
     fun loadBitmapFromUri(uri: Uri): Bitmap? =
         context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
-
 }
