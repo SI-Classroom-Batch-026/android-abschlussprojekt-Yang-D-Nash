@@ -186,7 +186,9 @@ dependencies {
     implementation(libs.mlkit.objectDetection)
     implementation(libs.mlkit.objectDetection.common)
 
-    implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.material.icons.extended)
 
     implementation(libs.camerax.core)
+
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
 }

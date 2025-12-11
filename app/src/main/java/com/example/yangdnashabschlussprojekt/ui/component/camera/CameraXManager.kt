@@ -31,10 +31,16 @@ class CameraXManager(
     val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
 ) {
+    private val mainExecutor = ContextCompat.getMainExecutor(context)
+
     private var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
     private var cameraProvider: ProcessCameraProvider? = null
     private var imageAnalyzer: ImageAnalysis? = null
+    private var lifecycleOwner: LifecycleOwner? = null
+    private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+
+    @Volatile private var isCapturing = false
 
     fun interface FrameAnalyzer : ImageAnalysis.Analyzer
 
@@ -45,9 +51,12 @@ class CameraXManager(
         analyzer: FrameAnalyzer? = null,
         onReady: () -> Unit = {}
     ) {
+        this.lifecycleOwner = lifecycleOwner
+
         val providerFuture = ProcessCameraProvider.getInstance(context)
         providerFuture.addListener({
             cameraProvider = providerFuture.get()
+            val provider = cameraProvider ?: return@addListener // Safety check
 
             preview = Preview.Builder().build().also {
                 it.surfaceProvider = previewView.surfaceProvider
@@ -56,6 +65,7 @@ class CameraXManager(
             @Suppress("DEPRECATION")
             imageCapture = ImageCapture.Builder()
                 .setTargetResolution(Size(1280, 720))
+                .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                 .build()
 
             analyzer?.let {
@@ -64,21 +74,90 @@ class CameraXManager(
                     .build()
 
                 analysis.setAnalyzer(executor, it)
-
                 imageAnalyzer = analysis
             }
 
-            val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             val useCases = mutableListOf<UseCase>()
             preview?.let { useCases.add(it) }
-            imageCapture?.let { useCases.add(it) }
             imageAnalyzer?.let { useCases.add(it) }
 
-            cameraProvider?.unbindAll()
-            cameraProvider?.bindToLifecycle(lifecycleOwner, cameraSelector, *useCases.toTypedArray())
+            provider.unbindAll()
+            provider.bindToLifecycle(lifecycleOwner, cameraSelector, *useCases.toTypedArray())
 
             onReady()
-        }, ContextCompat.getMainExecutor(context))
+
+        }, mainExecutor)
+    }
+
+    private fun bindUseCases(isAnalysisMode: Boolean) {
+        if (Thread.currentThread() != mainExecutor.javaClass.enclosingClass) {
+            mainExecutor.execute { bindUseCases(isAnalysisMode) }
+            return
+        }
+
+        val provider = cameraProvider ?: return
+        val owner = lifecycleOwner ?: return
+
+        provider.unbindAll()
+
+        val useCases = mutableListOf<UseCase>()
+
+        preview?.let { useCases.add(it) }
+
+        if (isAnalysisMode) {
+            imageAnalyzer?.let { useCases.add(it) }
+
+        } else {
+            imageCapture?.let { useCases.add(it) }
+        }
+
+        provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
+    }
+
+    fun captureForCloudScan(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
+        if (isCapturing) {
+            onError(IllegalStateException("Capture already in progress."))
+            return
+        }
+        isCapturing = true
+
+        val capture = imageCapture ?: run {
+            onError(IllegalStateException("ImageCapture use case not initialized."))
+            isCapturing = false
+            return
+        }
+
+        bindUseCases(isAnalysisMode = false)
+
+        val tempFile = File.createTempFile("cloud_capture_", ".jpg", context.cacheDir)
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
+
+        capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+
+                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
+
+                if (bitmap != null) {
+                    val base64 = bitmap.toBase64()
+                    onCaptured(base64)
+                } else {
+                    onError(IllegalStateException("Failed to load captured Bitmap."))
+                }
+
+                tempFile.delete()
+
+                bindUseCases(isAnalysisMode = true)
+                isCapturing = false
+            }
+
+            override fun onError(exception: ImageCaptureException) {
+                exception.printStackTrace()
+                onError(exception)
+
+                bindUseCases(isAnalysisMode = true)
+                isCapturing = false
+            }
+        })
     }
 
     fun unbindAll() {
@@ -113,35 +192,6 @@ class CameraXManager(
         return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
     }
 
-    fun captureFrameAsBase64(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
-        val capture = imageCapture ?: run {
-            onError(IllegalStateException("ImageCapture use case not initialized."))
-            return
-        }
-
-        val tempFile = File.createTempFile("capture_", ".jpg", context.cacheDir)
-
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
-        capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
-
-                if (bitmap != null) {
-                    val base64 = bitmap.toBase64()
-                    onCaptured(base64)
-                } else {
-                    onError(IllegalStateException("Failed to load captured Bitmap."))
-                }
-
-                tempFile.delete()
-            }
-
-            override fun onError(exception: ImageCaptureException) {
-                exception.printStackTrace()
-                onError(exception)
-            }
-        })
-    }
     private fun Bitmap.toBase64(): String {
         ByteArrayOutputStream().use { outputStream ->
             this.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
@@ -150,6 +200,6 @@ class CameraXManager(
         }
     }
 
-    fun loadBitmapFromUri(uri: Uri): Bitmap? =
+    private fun loadBitmapFromUri(uri: Uri): Bitmap? =
         context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
 }
