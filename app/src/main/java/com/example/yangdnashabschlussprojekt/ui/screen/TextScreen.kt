@@ -69,8 +69,6 @@ fun TextScreen(
 
     var showSaveFeedback by remember { mutableStateOf(false) }
 
-    // ❌ KORRIGIERT: Dieses DisposableEffect war redundant und kann entfernt werden,
-    // da cameraExecutor in onDispose des Haupteffekts unten heruntergefahren werden kann.
     /*
     DisposableEffect(Unit) {
         onDispose {
@@ -79,17 +77,10 @@ fun TextScreen(
     }
     */
 
-    // 🆕 NEU: Haupteffekt zur Verwaltung der Kamera-Ressourcen im Lifecycle des Composables
     DisposableEffect(lifecycleOwner) {
-        // Beim Start des Composables (oder wenn der LifecycleOwner sich ändert)
-        // ... hier könnte man cameraManager.startCamera aufrufen,
-        //     aber das passiert bereits in CameraWithLiveObjects.
-
         onDispose {
-            // Beim Verlassen des Composables (oder wenn der LifecycleOwner sich ändert)
-            // 🚨 KRITISCH: Unbinde alle Usecases, um BufferQueue-Abandonment zu verhindern
             cameraManager.unbindAll()
-            cameraExecutor.shutdown() // Füge das Herunterfahren des Executors hier hinzu
+            cameraExecutor.shutdown()
         }
     }
 

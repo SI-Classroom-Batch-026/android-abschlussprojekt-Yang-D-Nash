@@ -40,7 +40,6 @@ fun TextScreenFABs(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
 
-        // 1. Restart Button
         FloatingActionButton(
             onClick = {
                 if (isRestartButtonEnabled) {
@@ -49,7 +48,6 @@ fun TextScreenFABs(
             },
             containerColor = restartColor,
             elevation = if (isRestartButtonEnabled) FloatingActionButtonDefaults.elevation() else FloatingActionButtonDefaults.elevation(0.dp),
-            // 💡 KORREKTUR: Explizite Zuweisung des 'content'-Blocks
             content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
@@ -66,9 +64,8 @@ fun TextScreenFABs(
             }
         )
 
-        Spacer(Modifier.height(8.dp)) // Kleiner Abstand
+        Spacer(Modifier.height(8.dp))
 
-        // 2. Save Button
         FloatingActionButton(
             onClick = {
                 if (isSaveButtonEnabled) {
@@ -76,7 +73,6 @@ fun TextScreenFABs(
                 }
             },
             containerColor = saveButtonColor,
-            // 💡 KORREKTUR: Explizite Zuweisung des 'content'-Blocks
             content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
@@ -92,11 +88,9 @@ fun TextScreenFABs(
             }
         )
 
-        // 3. History Button
         FloatingActionButton(
             onClick = onHistoryClick,
             containerColor = activeColor,
-            // 💡 KORREKTUR: Explizite Zuweisung des 'content'-Blocks
             content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(

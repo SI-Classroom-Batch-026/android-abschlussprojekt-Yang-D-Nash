@@ -90,28 +90,32 @@ class CameraXManager(
     }
 
     private fun bindUseCases(isAnalysisMode: Boolean) {
-        if (Thread.currentThread() != mainExecutor.javaClass.enclosingClass) {
+        val provider = cameraProvider ?: return
+        val owner = lifecycleOwner ?: return
+
+        if (Thread.currentThread() != context.mainLooper.thread) {
             mainExecutor.execute { bindUseCases(isAnalysisMode) }
             return
         }
 
-        val provider = cameraProvider ?: return
-        val owner = lifecycleOwner ?: return
-
-        provider.unbindAll()
-
-        val useCases = mutableListOf<UseCase>()
-
-        preview?.let { useCases.add(it) }
-
         if (isAnalysisMode) {
+            imageCapture?.let { provider.unbind(it) }
+
+            val useCases = mutableListOf<UseCase>()
+            preview?.let { useCases.add(it) }
             imageAnalyzer?.let { useCases.add(it) }
 
-        } else {
-            imageCapture?.let { useCases.add(it) }
-        }
+            provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
 
-        provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
+        } else {
+            imageAnalyzer?.let { provider.unbind(it) }
+
+            val useCases = mutableListOf<UseCase>()
+            preview?.let { useCases.add(it) }
+            imageCapture?.let { useCases.add(it) }
+
+            provider.bindToLifecycle(owner, cameraSelector, *useCases.toTypedArray())
+        }
     }
 
     fun captureForCloudScan(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {

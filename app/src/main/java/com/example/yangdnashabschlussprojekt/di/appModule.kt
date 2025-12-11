@@ -8,6 +8,7 @@ import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepos
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -63,7 +64,7 @@ val appModule = module {
     viewModelOf(::WelcomeViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::ARViewModel)
-
+    viewModelOf(::CameraViewModel)
     viewModel {
         HistoryViewModel(
             historyRepository = get()
