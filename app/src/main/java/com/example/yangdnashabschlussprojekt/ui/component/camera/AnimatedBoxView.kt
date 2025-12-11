@@ -37,7 +37,6 @@ fun AnimatedBoxView(
         LaunchedEffect(boxes) {
             if (boxes.isNotEmpty()) {
                 alphaAnimatable.snapTo(1f)
-                // NEU: 3000 ms Dauer (passt zur Ruhephase im ViewModel)
                 alphaAnimatable.animateTo(0f, animationSpec = tween(durationMillis = 3000, delayMillis = 50))
             }
         }
@@ -59,16 +58,13 @@ fun AnimatedBoxView(
                 val rectTopLeft = Offset(scaledLeft, scaledTop)
                 val rectSize = ComposeSize(width, height)
 
-                // <<< NEU: GLOW-EFFEKT (weiß) >>>
-                // Zeichnet eine breitere, weichere Linie unter der Hauptbox
                 drawRect(
                     color = glowColor,
                     topLeft = rectTopLeft,
                     size = rectSize,
-                    style = Stroke(width = 12f) // Breiter für den Glow
+                    style = Stroke(width = 12f)
                 )
 
-                // Hauptbox (Magenta)
                 drawRect(
                     color = box.color.copy(alpha = alpha),
                     topLeft = rectTopLeft,

@@ -38,7 +38,6 @@ class CameraXManager(
 
     fun interface FrameAnalyzer : ImageAnalysis.Analyzer
 
-    // --- FUNKTIONEN FÜR LIVE-ANALYSE ---
 
     fun startCamera(
         previewView: PreviewView,
@@ -111,12 +110,6 @@ class CameraXManager(
 
         return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
     }
-
-    // --- FUNKTIONEN FÜR CLOUD-OCR ---
-
-    /**
-     * Nimmt ein Bild auf und konvertiert es sofort in Base64 für die Cloud API.
-     */
     fun captureFrameAsBase64(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
         val capture = imageCapture ?: run {
             onError(IllegalStateException("ImageCapture use case not initialized."))
@@ -146,9 +139,6 @@ class CameraXManager(
             }
         })
     }
-
-    // --- HILFSFUNKTIONEN ---
-
     private fun Bitmap.toBase64(): String {
         ByteArrayOutputStream().use { outputStream ->
             this.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)

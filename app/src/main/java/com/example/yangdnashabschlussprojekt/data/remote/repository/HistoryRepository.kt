@@ -1,7 +1,7 @@
 package com.example.yangdnashabschlussprojekt.data.remote.repository
 
 import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistoryDao
-import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TextHistoryEntity
+import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
 import kotlinx.coroutines.flow.Flow
 
 class HistoryRepository(

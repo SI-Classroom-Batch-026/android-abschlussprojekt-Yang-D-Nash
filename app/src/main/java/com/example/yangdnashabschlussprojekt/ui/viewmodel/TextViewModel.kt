@@ -7,7 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
-import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TextHistoryEntity
+import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
