@@ -1,10 +1,11 @@
 [versions]
-agp = "8.13.1"
+agp = "8.13.2"
 #noinspection NewerVersionAvailable
 kotlin = "2.1.0"
 kspVersion = "2.1.0-1.0.29"
-composeBom = "2025.11.01"
-activityCompose = "1.12.0"
+composeBom = "2025.12.00"
+activityCompose = "1.12.1"
+lifecycleRuntimeCompose = "2.10.0"
 navigationCompose = "2.9.6"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
@@ -33,12 +34,12 @@ mlkit-translate = "17.0.3"
 arCore = "1.51.0"
 objectDetection = "17.0.2"
 retrofit = "3.0.0"
-foundationLayout = "1.9.5"
+foundationLayout = "1.10.0"
 compose = "1.7.8"
 material3 = "1.4.0"
-ui = "1.9.5"
+ui = "1.10.0"
 firebaseStorage = "22.0.1"
-uiGeometry = "1.9.5"
+uiGeometry = "1.10.0"
 sceneformBase = "1.17.1"
 guava = "33.5.0-android"
 mediapipe = "0.20230731"
@@ -47,8 +48,8 @@ mlkit-barcode = "17.3.0"
 mlkit-face = "16.1.7"
 mlkit-label = "17.0.9"
 mlkit-pose = "17.0.0"
-uiGraphics = "1.9.5"
-runtime = "1.9.5"
+uiGraphics = "1.10.0"
+runtime = "1.10.0"
 mlkit-object-detection = "17.0.2"
 mlkit-object-detection-common = "18.0.0"
 
@@ -56,6 +57,7 @@ mlkit-object-detection-common = "18.0.0"
 
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycleRuntimeCompose" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
@@ -111,6 +113,7 @@ arcore = { group = "com.google.ar", name = "core", version.ref = "arCore" }
 
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
+#noinspection SimilarGradleDependency
 object1-detection = { group = "com.google.mlkit", name = "object-detection", version.ref = "objectDetection" }
 
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }

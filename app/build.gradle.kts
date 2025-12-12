@@ -190,5 +190,5 @@ dependencies {
 
     implementation(libs.camerax.core)
 
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }
