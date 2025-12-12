@@ -7,8 +7,8 @@ import android.util.Size
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -117,7 +117,7 @@ class TextViewModel(
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
                 if (visionText.textBlocks.isEmpty()) return@addOnSuccessListener
-
+                Log.d("recognizer.process", "ML Kit erkannte Textblöcke: ${visionText}")
                 val structuredText = sortAndStructureText(visionText.textBlocks)
                 if (structuredText.isBlank()) return@addOnSuccessListener
 

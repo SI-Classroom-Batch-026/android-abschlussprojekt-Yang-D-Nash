@@ -58,7 +58,7 @@ fun TextScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current // Nicht direkt benötigt, aber nützlich für Effekte
+    val lifecycleOwner = LocalLifecycleOwner.current
     val vibrator = context.getSystemService(Vibrator::class.java)
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }

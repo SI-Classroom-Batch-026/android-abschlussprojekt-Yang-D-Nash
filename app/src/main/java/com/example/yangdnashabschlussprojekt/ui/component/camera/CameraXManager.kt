@@ -20,12 +20,12 @@ import androidx.camera.core.UseCase
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
-import androidx.core.graphics.scale
 
 @Suppress("OPT_IN_ARGUMENT_IS_NOT_MARKER")
 class CameraXManager(
