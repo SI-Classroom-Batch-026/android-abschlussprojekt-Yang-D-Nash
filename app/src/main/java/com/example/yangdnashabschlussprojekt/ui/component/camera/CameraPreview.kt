@@ -1,8 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
-import android.util.Log
-import androidx.annotation.OptIn
-import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -24,20 +21,10 @@ fun CameraPreview(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val previewView = remember { PreviewView(context) }
 
+    // Der Analyzer übergibt jetzt direkt das ImageProxy an das ViewModel.
+    // Das ist VIEL performanter, da wir nicht mehr jedes Frame in ein Bitmap umwandeln.
     val analyzer = CameraXManager.FrameAnalyzer { imageProxy ->
-
-        @OptIn(ExperimentalGetImage::class)
-        val bitmap = cameraManager.toBitmap(imageProxy)
-
-        try {
-            bitmap?.let {
-                textViewModel.analyzeFrame(it)
-            }
-        } catch (e: Exception) {
-            Log.e("CameraPreview", "Fehler bei der Frame-Analyse", e)
-        } finally {
-            imageProxy.close()
-        }
+        textViewModel.analyzeImageProxy(imageProxy)
     }
 
     AndroidView(factory = { previewView }, modifier = modifier)

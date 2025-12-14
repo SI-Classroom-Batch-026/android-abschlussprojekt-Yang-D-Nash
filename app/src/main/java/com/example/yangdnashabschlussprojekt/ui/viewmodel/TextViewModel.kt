@@ -4,6 +4,9 @@ import android.graphics.Bitmap
 import android.graphics.Rect
 import android.util.Log
 import android.util.Size
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
+import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -98,15 +101,60 @@ class TextViewModel(
         _boundingBoxes.value = boxes
     }
 
-
-    fun analyzeFrame(bitmap: Bitmap) {
-
+    // NEU/OPTIMIERT: Nutzt ImageProxy direkt für Live-Analyse
+    @OptIn(ExperimentalGetImage::class)
+    fun analyzeImageProxy(imageProxy: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
 
         if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < frameThrottleIntervalMs) {
+            imageProxy.close()
             return
         }
+
+        val mediaImage = imageProxy.image
+        if (mediaImage == null) {
+            imageProxy.close()
+            return
+        }
+
         lastAnalyzedTimestamp = currentTimestamp
+
+        val rotation = imageProxy.imageInfo.rotationDegrees
+        val isRotated = rotation == 90 || rotation == 270
+        val width = if (isRotated) imageProxy.height else imageProxy.width
+        val height = if (isRotated) imageProxy.width else imageProxy.height
+
+        if (_frameSize.value.width != width || _frameSize.value.height != height) {
+            _frameSize.value = Size(width, height)
+        }
+
+        val image = InputImage.fromMediaImage(mediaImage, rotation)
+
+        recognizer.process(image)
+            .addOnSuccessListener { visionText ->
+                if (visionText.textBlocks.isNotEmpty()) {
+                    val structuredText = sortAndStructureText(visionText.textBlocks)
+                    if (structuredText.isNotBlank()) {
+                        _recognizedText.value = structuredText
+                        _isAnalyzing.value = false
+                        updateBoundingBoxes(visionText.textBlocks, width, height, currentTimestamp)
+                        translateTextAsync(structuredText)
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e(tag, "ML Kit Text-Erkennung fehlgeschlagen", e)
+            }
+            .addOnCompleteListener {
+                imageProxy.close()
+            }
+    }
+
+    // ALTE Methode für Bitmap (bleibt als Fallback/für statische Bilder)
+    fun analyzeFrame(bitmap: Bitmap) {
+        val currentTimestamp = System.currentTimeMillis()
+
+        if (!_isAnalyzing.value) return
 
         if (_frameSize.value.width == 0) {
             _frameSize.value = Size(bitmap.width, bitmap.height)
@@ -117,7 +165,6 @@ class TextViewModel(
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
                 if (visionText.textBlocks.isEmpty()) return@addOnSuccessListener
-                Log.d("recognizer.process", "ML Kit erkannte Textblöcke: ${visionText}")
                 val structuredText = sortAndStructureText(visionText.textBlocks)
                 if (structuredText.isBlank()) return@addOnSuccessListener
 
@@ -125,12 +172,10 @@ class TextViewModel(
                 _isAnalyzing.value = false
 
                 updateBoundingBoxes(visionText.textBlocks, bitmap.width, bitmap.height, currentTimestamp)
-
                 translateTextAsync(structuredText)
             }
             .addOnFailureListener { e ->
-                Log.e(tag, "ML Kit Text-Erkennung fehlgeschlagen", e)
-                _recognizedText.value = "Text-Erkennung (ML Kit) fehlgeschlagen: ${e.message}"
+                Log.e(tag, "ML Kit Text-Erkennung (Bitmap) fehlgeschlagen", e)
             }
     }
 
@@ -141,16 +186,15 @@ class TextViewModel(
         _boundingBoxes.value = emptyList()
         _cloudRecognitionState.value = CloudRecognitionState.Idle
     }
+
     fun loadFromHistory(recognized: String, translated: String) {
         _isAnalyzing.value = false
-
         _recognizedText.value = recognized
         _translatedText.value = translated
-
         _cloudRecognitionState.value = CloudRecognitionState.Success(recognized)
-
         _boundingBoxes.value = emptyList()
     }
+
     fun recognizeText(text: String) {
         if (text.isNotBlank()) {
             _isAnalyzing.value = false
@@ -169,12 +213,9 @@ class TextViewModel(
         _translatedText.value = ""
 
         viewModelScope.launch {
-
             _cloudRecognitionState.value = CloudRecognitionState.Loading
-
             try {
                 val response = visionRepository.detectText(base64Image)
-
                 val cloudText = response.responses.firstOrNull()
                     ?.fullTextAnnotation
                     ?.text
@@ -182,22 +223,18 @@ class TextViewModel(
 
                 _recognizedText.value = cloudText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
-
                 translateTextAsync(cloudText)
 
             } catch (e: Exception) {
                 Log.e(tag, "Cloud-Erkennung fehlgeschlagen", e)
                 val errorMessage = "Cloud-Erkennung fehlgeschlagen: ${e.localizedMessage ?: e.message}"
-
                 _cloudRecognitionState.value = CloudRecognitionState.Error(errorMessage)
                 _recognizedText.value = errorMessage
-
             }
         }
     }
 
     private fun translateTextAsync(text: String) {
-
         viewModelScope.launch {
             translator.downloadModelIfNeeded()
                 .addOnSuccessListener {

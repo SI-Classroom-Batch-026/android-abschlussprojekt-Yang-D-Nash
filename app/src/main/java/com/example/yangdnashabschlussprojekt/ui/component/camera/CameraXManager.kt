@@ -1,12 +1,11 @@
+@file:Suppress("SameReturnValue")
+
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
 import android.graphics.Matrix
-import android.graphics.YuvImage
-import android.net.Uri
 import android.util.Base64
 import android.util.Size
 import androidx.camera.core.CameraSelector
@@ -23,7 +22,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
 import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -44,7 +42,6 @@ class CameraXManager(
     @Volatile private var isCapturing = false
 
     fun interface FrameAnalyzer : ImageAnalysis.Analyzer
-
 
     fun startCamera(
         previewView: PreviewView,
@@ -91,6 +88,7 @@ class CameraXManager(
         }, mainExecutor)
     }
 
+    // --- OPTIMIERUNG: In-Memory Capture (ohne temporäre Datei) ---
     fun captureForCloudScan(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
         if (isCapturing) {
             onError(IllegalStateException("Capture already in progress."))
@@ -104,29 +102,40 @@ class CameraXManager(
             return
         }
 
-        val tempFile = File.createTempFile("cloud_capture_", ".jpg", context.cacheDir)
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(tempFile).build()
+        // Wir nutzen ImageCapture im Speicher
+        capture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
+            @OptIn(ExperimentalGetImage::class)
+            override fun onCaptureSuccess(image: ImageProxy) {
+                try {
+                    // Konvertierung von ImageProxy zu Bitmap für Base64
+                    val buffer = image.planes[0].buffer
+                    val bytes = ByteArray(buffer.remaining())
+                    buffer.get(bytes)
 
-        capture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                val bitmap = outputFileResults.savedUri?.let { loadBitmapFromUri(it) }
+                    // Decode
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-                if (bitmap != null) {
-                    val base64 = bitmap.toBase64()
-                    onCaptured(base64)
-                } else {
-                    onError(IllegalStateException("Failed to load captured Bitmap."))
+                    // Rotation korrigieren
+                    val matrix = Matrix()
+                    matrix.postRotate(image.imageInfo.rotationDegrees.toFloat())
+                    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+
+                    val base64 = rotatedBitmap.toBase64()
+
+                    // Zurück auf Main Thread
+                    mainExecutor.execute {
+                        onCaptured(base64)
+                    }
+                } catch (e: Exception) {
+                    mainExecutor.execute { onError(e) }
+                } finally {
+                    image.close()
+                    isCapturing = false
                 }
-
-                tempFile.delete()
-
-                isCapturing = false
             }
 
             override fun onError(exception: ImageCaptureException) {
-                exception.printStackTrace()
-                onError(exception)
-
+                mainExecutor.execute { onError(exception) }
                 isCapturing = false
             }
         })
@@ -136,34 +145,7 @@ class CameraXManager(
         cameraProvider?.unbindAll()
     }
 
-    @androidx.annotation.OptIn(ExperimentalGetImage::class)
-    @OptIn(ExperimentalGetImage::class)
-    fun toBitmap(imageProxy: ImageProxy): Bitmap? {
-        val image = imageProxy.image ?: return null
-        if (image.format != ImageFormat.YUV_420_888) return null
-
-        val yBuffer = image.planes[0].buffer
-        val vuBuffer = image.planes[2].buffer
-
-        val ySize = yBuffer.remaining()
-        val vuSize = vuBuffer.remaining()
-
-        val nv21 = ByteArray(ySize + vuSize)
-        yBuffer.get(nv21, 0, ySize)
-        vuBuffer.get(nv21, ySize, vuSize)
-
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, imageProxy.width, imageProxy.height, null)
-        val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(android.graphics.Rect(0, 0, yuvImage.width, yuvImage.height), 90, out)
-        val imageBytes = out.toByteArray()
-        val rotatedBitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-
-        val matrix = Matrix()
-        matrix.postRotate(imageProxy.imageInfo.rotationDegrees.toFloat())
-
-        return Bitmap.createBitmap(rotatedBitmap, 0, 0, rotatedBitmap.width, rotatedBitmap.height, matrix, true)
-    }
-
+    // Hilfsfunktion: Bitmap zu Base64 String
     private fun Bitmap.toBase64(): String {
         val scaledBitmap = if (this.width > 1024) {
             val ratio = 1024.0 / this.width
@@ -179,6 +161,4 @@ class CameraXManager(
         }
     }
 
-    private fun loadBitmapFromUri(uri: Uri): Bitmap? =
-        context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
 }

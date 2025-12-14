@@ -2,6 +2,7 @@ package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.os.VibratorManager
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -59,7 +60,17 @@ fun TextScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-    val vibrator = context.getSystemService(Vibrator::class.java)
+
+    // KORREKTUR: Kompatibler Abruf des Vibrator-Service
+    val vibrator = remember {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            val manager = context.getSystemService(VibratorManager::class.java)
+            manager?.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+        }
+    }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
@@ -85,6 +96,7 @@ fun TextScreen(
 
     LaunchedEffect(highlight) {
         if (highlight) {
+            // Starkes Feedback nach Cloud-Capture
             vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
             highlight = false
         }
@@ -92,6 +104,7 @@ fun TextScreen(
 
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
+            // Kurzes Feedback nach erfolgreicher Erkennung/Übersetzung
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     }
@@ -146,7 +159,11 @@ fun TextScreen(
             modifier = Modifier.align(Alignment.BottomEnd)
         ) {
             TextScreenFABs(
-                onRestartClick = textViewModel::continueAnalysis,
+                onRestartClick = {
+                    textViewModel.continueAnalysis()
+                    // NEU: Haptisches Feedback beim Neustart der Analyse
+                    vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                },
                 isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
 
                 onSaveClick = {

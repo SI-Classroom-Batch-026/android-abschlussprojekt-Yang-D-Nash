@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
+import kotlin.math.max
 import androidx.compose.ui.geometry.Size as ComposeSize
 
 @Composable
@@ -29,8 +30,18 @@ fun AnimatedBoxView(
         val composableWidthPx = with(density) { maxWidth.toPx() }
         val composableHeightPx = with(density) { maxHeight.toPx() }
 
-        val scaleX = if (frameSize.width > 0) composableWidthPx / frameSize.width else 0f
-        val scaleY = if (frameSize.height > 0) composableHeightPx / frameSize.height else 0f
+        // --- KORREKTUR: Aspect Fill Berechnung ---
+        // Wir berechnen den Scale-Faktor basierend darauf, welche Seite "bestimmend" ist (max),
+        // damit das Bild den Screen füllt (wie ScaleType.FILL_CENTER / CENTER_CROP).
+        val scale = if (frameSize.width > 0 && frameSize.height > 0) {
+            max(composableWidthPx / frameSize.width, composableHeightPx / frameSize.height)
+        } else {
+            0f
+        }
+
+        // Berechne den Offset, um das Bild zu zentrieren (Center Crop)
+        val dx = (composableWidthPx - frameSize.width * scale) / 2
+        val dy = (composableHeightPx - frameSize.height * scale) / 2
 
         val alphaAnimatable = remember { Animatable(0f) }
 
@@ -44,13 +55,14 @@ fun AnimatedBoxView(
         @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
         Canvas(modifier = Modifier.fillMaxSize()) {
             val alpha = alphaAnimatable.value
-            val glowColor = Color.White.copy(alpha = alpha * 0.5f) // Weißer Glow
+            val glowColor = Color.White.copy(alpha = alpha * 0.5f)
 
             boxes.forEach { box ->
-                val scaledLeft = box.left * scaleX
-                val scaledTop = box.top * scaleY
-                val scaledRight = box.right * scaleX
-                val scaledBottom = box.bottom * scaleY
+                // --- KORREKTUR: Koordinaten transformieren ---
+                val scaledLeft = box.left * scale + dx
+                val scaledTop = box.top * scale + dy
+                val scaledRight = box.right * scale + dx
+                val scaledBottom = box.bottom * scale + dy
 
                 val width = scaledRight - scaledLeft
                 val height = scaledBottom - scaledTop
