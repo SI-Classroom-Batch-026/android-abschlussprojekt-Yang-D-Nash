@@ -6,7 +6,6 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -16,7 +15,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding // WICHTIG: Für Tastatur-Handling
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -36,10 +35,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
@@ -47,7 +48,6 @@ import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -95,7 +95,12 @@ fun TextScreen(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (!isGranted) {
-            Toast.makeText(context, "Kameraberechtigung ist notwendig!", Toast.LENGTH_LONG).show()
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Kameraberechtigung ist notwendig!",
+                    withDismissAction = true
+                )
+            }
         }
     }
 
@@ -138,7 +143,7 @@ fun TextScreen(
 
     Scaffold(
         snackbarHost = {
-            CustomSnackbarHost(hostState = snackbarHostState)
+            CustomSnackbarHost(hostState = snackbarHostState,modifier = Modifier.zIndex(10f))
         },
         modifier = Modifier
             .fillMaxSize()
@@ -220,7 +225,7 @@ fun TextScreen(
 
                     onTextEdited = { newText ->
                         textViewModel.recognizeText(newText)
-                        showModal = false // <-- Modal schließen
+                        showModal = false
                     },
 
                     onCloudScan = scanCheck@{
@@ -231,7 +236,10 @@ fun TextScreen(
                         val timeoutJob = scope.launch {
                             delay(3000)
                             if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
-                                Toast.makeText(context, "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.", Toast.LENGTH_LONG).show()
+                                snackbarHostState.showSnackbar(
+                                    message = "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.",
+                                    withDismissAction = true
+                                )
                                 textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
                             }
                         }
@@ -244,7 +252,12 @@ fun TextScreen(
                             },
                             onError = { e: Exception ->
                                 timeoutJob.cancel()
-                                Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Kamerafehler: ${e.message}",
+                                        withDismissAction = true
+                                    )
+                                }
                                 textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen: ${e.message}"))
                             }
                         )
