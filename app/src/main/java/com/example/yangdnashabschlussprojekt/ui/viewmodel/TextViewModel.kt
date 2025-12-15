@@ -14,15 +14,18 @@ import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHisto
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 sealed class CloudRecognitionState {
@@ -34,11 +37,15 @@ sealed class CloudRecognitionState {
 
 class TextViewModel(
     private val visionRepository: VisionRepository,
-    private val historyRepository: HistoryRepository
+    private val historyRepository: HistoryRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
 
     private val tag = "TextViewModel"
 
+    private val _uiEvent = Channel<String>()
+    val uiEvent = _uiEvent.receiveAsFlow()
+    
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
 
@@ -101,7 +108,6 @@ class TextViewModel(
         _boundingBoxes.value = boxes
     }
 
-    // NEU/OPTIMIERT: Nutzt ImageProxy direkt für Live-Analyse
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
@@ -150,7 +156,6 @@ class TextViewModel(
             }
     }
 
-    // ALTE Methode für Bitmap (bleibt als Fallback/für statische Bilder)
     fun analyzeFrame(bitmap: Bitmap) {
         val currentTimestamp = System.currentTimeMillis()
 
@@ -265,6 +270,39 @@ class TextViewModel(
                 )
                 historyRepository.saveEntry(entity)
             }
+        }
+    }
+
+    fun saveTextToCloud() {
+        val recognized = _recognizedText.value
+        val translated = _translatedText.value
+
+        if (!userRepository.isAuthenticated.value) {
+            viewModelScope.launch {
+                Log.e(tag, "SNACKBAR EVENT: Nicht authentifiziert.")
+                _uiEvent.send("Speichern fehlgeschlagen: Sie sind nicht authentifiziert.")
+            }
+            return
+        }
+
+        if (recognized.isBlank() || translated.isBlank()) {
+            viewModelScope.launch {
+                Log.e(tag, "SNACKBAR EVENT: Kein Text.")
+                _uiEvent.send("Kein Text zum Speichern vorhanden.")
+            }
+            return
+        }
+
+        viewModelScope.launch {
+            userRepository.saveTextEntry(recognized, translated)
+                .onSuccess {
+                    Log.d(tag, "SNACKBAR EVENT: Erfolg.")
+                    _uiEvent.send("Text erfolgreich in Firebase gespeichert!")
+                }
+                .onFailure { e ->
+                    Log.e(tag, "SNACKBAR EVENT: Fehler: ${e.message}")
+                    _uiEvent.send("Speichern fehlgeschlagen: ${e.message}")
+                }
         }
     }
 

@@ -57,7 +57,8 @@ val appModule = module {
     viewModel {
         TextViewModel(
             visionRepository = get(),
-            historyRepository = get()
+            historyRepository = get(),
+            userRepository = get()
         )
     }
 

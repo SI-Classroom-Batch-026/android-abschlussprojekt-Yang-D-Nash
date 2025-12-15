@@ -1,12 +1,14 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -14,12 +16,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding // WICHTIG: Für Tastatur-Handling
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -34,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
@@ -44,6 +47,7 @@ import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -61,7 +65,8 @@ fun TextScreen(
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // KORREKTUR: Kompatibler Abruf des Vibrator-Service
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val vibrator = remember {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             val manager = context.getSystemService(VibratorManager::class.java)
@@ -85,7 +90,20 @@ fun TextScreen(
 
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
-    var showSaveFeedback by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (!isGranted) {
+            Toast.makeText(context, "Kameraberechtigung ist notwendig!", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
 
     DisposableEffect(lifecycleOwner) {
         onDispose {
@@ -94,9 +112,19 @@ fun TextScreen(
         }
     }
 
+    LaunchedEffect(snackbarHostState) {
+        Log.d("TextScreen", "Starte das Lauschen auf UI Events...")
+        textViewModel.uiEvent.collect { message ->
+            Log.d("TextScreen", "UI Event empfangen: $message")
+            snackbarHostState.showSnackbar(
+                message = message,
+                withDismissAction = true
+            )
+        }
+    }
+
     LaunchedEffect(highlight) {
         if (highlight) {
-            // Starkes Feedback nach Cloud-Capture
             vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
             highlight = false
         }
@@ -104,140 +132,125 @@ fun TextScreen(
 
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
-            // Kurzes Feedback nach erfolgreicher Erkennung/Übersetzung
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-
-        CameraWithLiveObjects(
-            cameraManager = cameraManager,
-            textViewModel = textViewModel,
-            arViewModel = arViewModel
-        )
-
-        BottomTextCard(
-            recognizedText = recognizedText,
-            translatedText = translatedText,
-            cloudRecognitionState = cloudState,
-            onEditClick = { showModal = true },
-            modifier = Modifier.align(Alignment.BottomStart)
-        )
-
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
-                    .clickable(enabled = false) {},
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
-                        .padding(24.dp)
-                ) {
-                    CircularProgressIndicator()
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Analysiere Bild in der Cloud...",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "(Timeout in 3s)",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    )
-                }
-            }
-        }
+    Scaffold(
+        snackbarHost = {
+            CustomSnackbarHost(hostState = snackbarHostState)
+        },
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+    ) { paddingValues ->
 
         Box(
-            modifier = Modifier.align(Alignment.BottomEnd)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
         ) {
-            TextScreenFABs(
-                onRestartClick = {
-                    textViewModel.continueAnalysis()
-                    // NEU: Haptisches Feedback beim Neustart der Analyse
-                    vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-                },
-                isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
 
-                onSaveClick = {
-                    if (isAuthenticated && recognizedText.isNotBlank()) {
-                        scope.launch {
-                            userRepository.saveTextEntry(recognizedText, translatedText)
-                                .onSuccess {
-                                    Toast.makeText(context, "Text erfolgreich in Firebase gespeichert!", Toast.LENGTH_SHORT).show()
-                                    showSaveFeedback = true
-                                    delay(1500)
-                                    showSaveFeedback = false
-                                }.onFailure { e ->
-                                    Toast.makeText(context, "Speichern fehlgeschlagen: ${e.message}", Toast.LENGTH_LONG).show()
-                                }
-                        }
-                    } else {
-                        Toast.makeText(context, "Kein Text oder nicht authentifiziert.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                onHistoryClick = onNavigateToHistory,
-                isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
+            CameraWithLiveObjects(
+                cameraManager = cameraManager,
+                textViewModel = textViewModel,
+                arViewModel = arViewModel
             )
 
-            AnimatedVisibility(
-                visible = showSaveFeedback,
-                enter = fadeIn(),
-                exit = fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 16.dp, end = 16.dp)
+            BottomTextCard(
+                recognizedText = recognizedText,
+                translatedText = translatedText,
+                cloudRecognitionState = cloudState,
+                onEditClick = { showModal = true },
+                modifier = Modifier.align(Alignment.BottomStart)
+            )
+
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
+                        .clickable(enabled = false) {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier
+                            .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
+                            .padding(24.dp)
+                    ) {
+                        CircularProgressIndicator()
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Analysiere Bild in der Cloud...",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "(Timeout in 3s)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier.align(Alignment.BottomEnd)
             ) {
-                Icon(
-                    Icons.Default.Check,
-                    contentDescription = "Gespeichert",
-                    tint = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier.padding(16.dp)
+                TextScreenFABs(
+                    onRestartClick = {
+                        textViewModel.continueAnalysis()
+                        vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+                    },
+                    isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
+
+                    onSaveClick = {
+                        textViewModel.saveTextToCloud()
+                    },
+                    onHistoryClick = onNavigateToHistory,
+                    isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                 )
             }
-        }
 
-        if (showModal) {
-            RecognitionModalSheet(
-                recognizedText = recognizedText,
-                onDismiss = { showModal = false },
-                onTextEdited = { newText ->
-                    textViewModel.recognizeText(newText)
-                    showModal = false
-                },
+            if (showModal) {
+                RecognitionModalSheet(
+                    recognizedText = recognizedText,
+                    onDismiss = { showModal = false },
 
-                onCloudScan = scanCheck@{
-                    if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) return@scanCheck
+                    onTextEdited = { newText ->
+                        textViewModel.recognizeText(newText)
+                        showModal = false // <-- Modal schließen
+                    },
 
-                    val timeoutJob = scope.launch {
-                        delay(3000)
-                        if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
-                            Toast.makeText(context, "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.", Toast.LENGTH_LONG).show()
-                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
+                    onCloudScan = scanCheck@{
+                        if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) return@scanCheck
+
+                        showModal = false
+
+                        val timeoutJob = scope.launch {
+                            delay(3000)
+                            if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
+                                Toast.makeText(context, "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.", Toast.LENGTH_LONG).show()
+                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
+                            }
                         }
+
+                        cameraManager.captureForCloudScan(
+                            onCaptured = { base64Image: String ->
+                                timeoutJob.cancel()
+                                textViewModel.recognizeTextViaCloud(base64Image)
+                                highlight = true
+                            },
+                            onError = { e: Exception ->
+                                timeoutJob.cancel()
+                                Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
+                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen: ${e.message}"))
+                            }
+                        )
                     }
-
-                    cameraManager.captureForCloudScan(
-                        onCaptured = { base64Image: String ->
-                            timeoutJob.cancel()
-                            textViewModel.recognizeTextViaCloud(base64Image)
-                            highlight = true
-                        },
-                        onError = { e: Exception ->
-                            timeoutJob.cancel()
-                            Toast.makeText(context, "Kamerafehler: ${e.message}", Toast.LENGTH_SHORT).show()
-                            textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen: ${e.message}"))
-                        }
-                    )
-                }
-            )
+                )
+            }
         }
     }
 }
