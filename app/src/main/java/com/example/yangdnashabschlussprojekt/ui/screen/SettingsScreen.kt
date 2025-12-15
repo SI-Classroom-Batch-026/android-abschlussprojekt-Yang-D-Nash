@@ -10,6 +10,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Scaffold // NEU: Scaffold importieren
+import androidx.compose.material3.SnackbarHostState // NEU: SnackbarHostState importieren
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -18,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope // NEU: CoroutineScope importieren
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +37,9 @@ import com.example.yangdnashabschlussprojekt.ui.component.user.login.LoginForm
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.util.notification.isPermissionGranted
 import com.example.yangdnashabschlussprojekt.util.notification.openAppSettings
+// Import für Ihren Custom Host
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
+import kotlinx.coroutines.launch // NEU: launch importieren
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -46,6 +52,9 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     val currentUser by settingsViewModel.currentUser.collectAsState()
 
@@ -77,57 +86,68 @@ fun SettingsScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
-        ProfileImage()
-        Spacer(Modifier.height(16.dp))
-        UserInfo(currentUser?.name ?: "Gast")
-        Spacer(Modifier.height(16.dp))
-
-
-        if (currentUser != null) {
-            Button(onClick = { settingsViewModel.logout() }) {
-                Text("Ausloggen")
-            }
-        } else {
-            Button(onClick = onNavigateToRegister) { Text("Registrieren") }
-
-            Spacer(Modifier.height(16.dp))
-
-            LoginForm(
-                email = email,
-                onEmailChange = { email = it },
-                password = password,
-                onPasswordChange = { password = it },
-                onLoginClick = {
-                    settingsViewModel.login(email.trim(), password.trim())
-                }
+    Scaffold(
+        snackbarHost = {
+            CustomSnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
         }
+    ) { paddingValues ->
 
-        Spacer(Modifier.height(32.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+
+            ProfileImage()
+            Spacer(Modifier.height(16.dp))
+            UserInfo(currentUser?.name ?: "Gast")
+            Spacer(Modifier.height(16.dp))
 
 
-        PermissionsCard(
-            notificationsEnabled = notificationsEnabled,
-            cameraGranted = cameraGranted,
-            locationGranted = locationGranted,
-            microphoneGranted = microphoneGranted,
-            onOpenSettings = { openAppSettings(context) }
-        )
+            if (currentUser != null) {
+                Button(onClick = {
+                    settingsViewModel.logout()
+                    scope.launch {
+                        snackbarHostState.showSnackbar("Erfolgreich ausgeloggt.")
+                    }
+                }) {
+                    Text("Ausloggen")
+                }
+            } else {
+                Button(onClick = onNavigateToRegister) { Text("Registrieren") }
+
+                Spacer(Modifier.height(16.dp))
+
+                LoginForm(
+                    email = email,
+                    onEmailChange = { email = it },
+                    password = password,
+                    onPasswordChange = { password = it },
+                    onLoginClick = {
+                        settingsViewModel.login(email.trim(), password.trim())
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Login-Versuch gesendet...")
+                        }
+                    }
+                )
+            }
+
+            Spacer(Modifier.height(32.dp))
+
+
+            PermissionsCard(
+                notificationsEnabled = notificationsEnabled,
+                cameraGranted = cameraGranted,
+                locationGranted = locationGranted,
+                microphoneGranted = microphoneGranted,
+                onOpenSettings = { openAppSettings(context) }
+            )
+        }
     }
 }
-
-
-
-
-
-
-
-
