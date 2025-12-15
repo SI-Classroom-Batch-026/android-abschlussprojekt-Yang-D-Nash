@@ -26,7 +26,10 @@ fun PermissionsCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(Modifier.padding(20.dp)) {
-            Text("Berechtigungen", style = MaterialTheme.typography.titleLarge)
+            Text(
+                "Berechtigungen",
+                style = MaterialTheme.typography.titleLarge
+            )
             Spacer(Modifier.height(16.dp))
 
             PermissionRow("Benachrichtigungen", notificationsEnabled, onOpenSettings)

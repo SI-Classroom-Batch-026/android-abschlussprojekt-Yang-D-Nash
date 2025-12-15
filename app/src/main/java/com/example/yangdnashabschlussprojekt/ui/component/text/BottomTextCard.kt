@@ -21,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 
 private val FAB_HEIGHT_SPACE = 100.dp
+private val CARD_PADDING = 16.dp
 
 @Composable
 fun BottomTextCard(
@@ -39,8 +41,8 @@ fun BottomTextCard(
 ) {
     Card(
         modifier = modifier
-            .padding(16.dp)
-            .padding(bottom = FAB_HEIGHT_SPACE)
+            .padding(horizontal = CARD_PADDING)
+            .padding(bottom = FAB_HEIGHT_SPACE + CARD_PADDING)
             .fillMaxWidth()
             .heightIn(min = 120.dp, max = 250.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.6f)),
@@ -53,16 +55,18 @@ fun BottomTextCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 4.dp, end = 4.dp),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = onEditClick) {
                     Icon(
                         Icons.Default.Edit,
                         contentDescription = "Text bearbeiten und Cloud Scan starten",
-                        tint = Color.White
+                        tint = MaterialTheme.colorScheme.tertiary
                     )
                 }
             }
+
             val scrollState = rememberScrollState()
 
             SelectionContainer(
@@ -71,29 +75,39 @@ fun BottomTextCard(
                     .verticalScroll(scrollState)
             ) {
                 Column(
-                    modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp)
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
+
                     when (cloudRecognitionState) {
                         is CloudRecognitionState.Error -> {
                             Text(
                                 text = "Cloud-API Fehler: ${cloudRecognitionState.message}",
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                         }
                         else -> Unit
                     }
 
-                    Text("Erkannter Text:", color = Color.White)
+                    Text(
+                        "Erkannter Text:",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.labelMedium
+                    )
                     Text(
                         text = recognizedText.ifBlank { "Noch kein Text erkannt" },
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    Text("Übersetzt:", color = Color.White)
+                    Text(
+                        "Übersetzt:",
+                        color = Color.White.copy(alpha = 0.8f),
+                        style = MaterialTheme.typography.labelMedium
+                    )
                     Text(
                         text = translatedText.ifBlank { "Noch keine Übersetzung" },
                         color = MaterialTheme.colorScheme.primary,

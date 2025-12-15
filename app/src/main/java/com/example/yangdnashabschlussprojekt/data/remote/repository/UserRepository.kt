@@ -111,7 +111,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                     firebaseUser?.let {
                         val localUser = firebaseToLocalUser(it)
                         _currentUser.value = localUser
-                        _userName.value = localUser.name
+                        _userName.value = localUser.displayName
                     }
                     onComplete(true, null)
                 } else {

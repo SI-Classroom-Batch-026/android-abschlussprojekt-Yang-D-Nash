@@ -6,12 +6,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme // NEU: Import für Theme-Farben
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
@@ -47,10 +47,13 @@ fun AnimatedBoxView(
             }
         }
 
+        val frameAccentColor = MaterialTheme.colorScheme.tertiary
+
         @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
         Canvas(modifier = Modifier.fillMaxSize()) {
             val alpha = alphaAnimatable.value
-            val glowColor = Color.White.copy(alpha = alpha * 0.5f)
+
+            val animatedColor = frameAccentColor.copy(alpha = alpha)
 
             boxes.forEach { box ->
                 val scaledLeft = box.left * scale + dx
@@ -65,17 +68,16 @@ fun AnimatedBoxView(
                 val rectSize = ComposeSize(width, height)
 
                 drawRect(
-                    color = glowColor,
+                    color = animatedColor,
                     topLeft = rectTopLeft,
                     size = rectSize,
-                    style = Stroke(width = 12f)
+                    style = Stroke(width = 6f)
                 )
 
-                drawRect(
-                    color = box.color.copy(alpha = alpha),
-                    topLeft = rectTopLeft,
-                    size = rectSize,
-                    style = Stroke(width = 4f)
+                 drawRect(
+                    color = box.color.copy(alpha = alpha * 0.15f),
+                     topLeft = rectTopLeft,
+                     size = rectSize,
                 )
             }
         }

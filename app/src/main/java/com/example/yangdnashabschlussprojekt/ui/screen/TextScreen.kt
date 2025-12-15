@@ -7,7 +7,6 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -37,11 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex // <-- WICHTIG: ZIndex Import
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
@@ -49,13 +48,22 @@ import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-// Bitte diesen Import prüfen und ggf. anpassen, falls der Pfad nicht stimmt:
-import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import java.util.concurrent.Executors
+
+// Hilfsfunktion zur Erstellung des Vibrators
+private fun createVibrator(context: Context): Vibrator? {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val manager = context.getSystemService(VibratorManager::class.java)
+        manager?.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
+    }
+}
 
 @Composable
 fun TextScreen(
@@ -66,23 +74,17 @@ fun TextScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    val vibrator = remember {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val manager = context.getSystemService(VibratorManager::class.java)
-            manager?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
-        }
-    }
+    // NEU: Verwendung der Hilfsfunktion zur sauberen Vibrator-Erstellung
+    val vibrator = remember { createVibrator(context) }
 
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
+    // State Collection
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
@@ -91,7 +93,7 @@ fun TextScreen(
 
     val isLoading = cloudState is CloudRecognitionState.Loading
 
-    var highlight by remember { mutableStateOf(false) }
+    var highlight by remember { mutableStateOf(false) } // Trigger für haptisches Feedback
     var showModal by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -107,23 +109,29 @@ fun TextScreen(
         }
     }
 
+    // Kamera-Berechtigung prüfen und anfordern
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
 
-    DisposableEffect(lifecycleOwner) {
+    // Ressourcenfreigabe (Kamera und Executor)
+    DisposableEffect(lifecycleOwner, vibrator) {
         onDispose {
             cameraManager.unbindAll()
             cameraExecutor.shutdown()
+
+            // NEU: Stoppen jeglicher laufenden Vibration beim Verlassen des Screens
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                vibrator?.cancel()
+            }
         }
     }
 
+    // UI Event Stream für Snackbar
     LaunchedEffect(snackbarHostState) {
-        Log.d("TextScreen", "Starte das Lauschen auf UI Events...")
         textViewModel.uiEvent.collect { message ->
-            Log.d("TextScreen", "UI Event empfangen: $message")
             snackbarHostState.showSnackbar(
                 message = message,
                 withDismissAction = true
@@ -131,6 +139,7 @@ fun TextScreen(
         }
     }
 
+    // Haptisches Feedback für Highlight-Aktionen (z.B. nach Cloud-Scan)
     LaunchedEffect(highlight) {
         if (highlight) {
             vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -138,6 +147,7 @@ fun TextScreen(
         }
     }
 
+    // Haptisches Feedback für Cloud-Erfolg
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -153,7 +163,9 @@ fun TextScreen(
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
-            .imePadding()
+            .imePadding(),
+        // KORRIGIERT: Entfernen des redundanten SnackbarHost, da dieser manuell positioniert wird
+        snackbarHost = {}
     ) { paddingValues ->
 
         Box(
@@ -162,12 +174,14 @@ fun TextScreen(
                 .padding(paddingValues)
         ) {
 
+            // --- 1. Kamera-View ---
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 textViewModel = textViewModel,
                 arViewModel = arViewModel
             )
 
+            // --- 2. Bottom Text Card (Ergebnisse) ---
             BottomTextCard(
                 recognizedText = recognizedText,
                 translatedText = translatedText,
@@ -176,10 +190,12 @@ fun TextScreen(
                 modifier = Modifier.align(Alignment.BottomStart)
             )
 
+            // --- 3. Lade-Overlay (Blockiert UI während Cloud-Scan) ---
             if (isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
+                        // Grauer, nicht klickbarer Hintergrund zur Blockierung der Interaktion
                         .background(MaterialTheme.colorScheme.background.copy(alpha = 0.7f))
                         .clickable(enabled = false) {},
                     contentAlignment = Alignment.Center
@@ -192,10 +208,7 @@ fun TextScreen(
                     ) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Analysiere Bild in der Cloud...",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                        Text(text = "Analysiere Bild in der Cloud...")
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "(Timeout in 3s)",
@@ -206,6 +219,7 @@ fun TextScreen(
                 }
             }
 
+            // --- 4. FABs (Aktionen: Neustart, Speichern, Verlauf) ---
             Box(
                 modifier = Modifier.align(Alignment.BottomEnd)
             ) {
@@ -213,7 +227,6 @@ fun TextScreen(
                     onRestartClick = {
                         textViewModel.continueAnalysis()
                         vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-
                         scope.launch {
                             snackbarHostState.showSnackbar(
                                 message = "Analyse neu gestartet.",
@@ -237,15 +250,17 @@ fun TextScreen(
                 )
             }
 
+            // --- 5. Snackbar Host (Manuell positioniert) ---
             CustomSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(horizontal = 16.dp)
-                    .padding(bottom = 150.dp)
+                    .padding(bottom = 150.dp) // Über der BottomTextCard
                     .zIndex(1f)
             )
 
+            // --- 6. Bearbeitungs-Modal ---
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,

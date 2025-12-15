@@ -2,8 +2,6 @@ package com.example.yangdnashabschlussprojekt.ui.component.text
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -20,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
+private val FAB_SPACING = 16.dp
+
 @Composable
 fun TextScreenFABs(
     onSaveClick: () -> Unit,
@@ -29,15 +29,16 @@ fun TextScreenFABs(
     isRestartButtonEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val disabledColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-    val activeColor = MaterialTheme.colorScheme.primary
-    val saveButtonColor = if (isSaveButtonEnabled) activeColor else disabledColor
-    val restartColor = if (isRestartButtonEnabled) MaterialTheme.colorScheme.error else disabledColor
+    val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+    val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    val activeContentColor = Color.White
 
+    val saveContainerColor = if (isSaveButtonEnabled) MaterialTheme.colorScheme.primary else disabledContainerColor
+    val restartContainerColor = if (isRestartButtonEnabled) MaterialTheme.colorScheme.error else disabledContainerColor
 
     Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier = modifier.padding(FAB_SPACING),
+        verticalArrangement = Arrangement.spacedBy(FAB_SPACING)
     ) {
 
         FloatingActionButton(
@@ -46,25 +47,24 @@ fun TextScreenFABs(
                     onRestartClick()
                 }
             },
-            containerColor = restartColor,
+            containerColor = restartContainerColor,
             elevation = if (isRestartButtonEnabled) FloatingActionButtonDefaults.elevation() else FloatingActionButtonDefaults.elevation(0.dp),
             content = {
+                val tintColor = if (isRestartButtonEnabled) activeContentColor else disabledContentColor
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Filled.RestartAlt,
                         contentDescription = "Analyse neu starten",
-                        tint = if (isRestartButtonEnabled) Color.White else Color.Black.copy(alpha = 0.5f)
+                        tint = tintColor
                     )
                     Text(
                         "Restart",
-                        color = if (isRestartButtonEnabled) Color.White else Color.Black.copy(alpha = 0.5f),
+                        color = tintColor,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
             }
         )
-
-        Spacer(Modifier.height(8.dp))
 
         FloatingActionButton(
             onClick = {
@@ -72,16 +72,18 @@ fun TextScreenFABs(
                     onSaveClick()
                 }
             },
-            containerColor = saveButtonColor,
+            containerColor = saveContainerColor,
+            elevation = if (isSaveButtonEnabled) FloatingActionButtonDefaults.elevation() else FloatingActionButtonDefaults.elevation(0.dp),
             content = {
+                val tintColor = if (isSaveButtonEnabled) activeContentColor else disabledContentColor
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.Default.Save,
                         contentDescription = "Text speichern",
-                        tint = if (isSaveButtonEnabled) Color.White else Color.Black.copy(alpha = 0.5f)
+                        tint = tintColor
                     )
                     Text("Speichern",
-                        color = if (isSaveButtonEnabled) Color.White else Color.Black.copy(alpha = 0.5f),
+                        color = tintColor,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
@@ -90,17 +92,17 @@ fun TextScreenFABs(
 
         FloatingActionButton(
             onClick = onHistoryClick,
-            containerColor = activeColor,
+            containerColor = MaterialTheme.colorScheme.primary,
             content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         Icons.AutoMirrored.Filled.List,
                         contentDescription = "Verlauf anzeigen",
-                        tint = Color.White
+                        tint = activeContentColor
                     )
                     Text(
                         "Verlauf",
-                        color = Color.White,
+                        color = activeContentColor,
                         style = MaterialTheme.typography.labelSmall
                     )
                 }

@@ -1,8 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.net.Uri
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.remote.AppUser
@@ -10,16 +8,22 @@ import com.example.yangdnashabschlussprojekt.data.remote.RegistrationResult
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow // NEU: asStateFlow für Read-Only StateFlow
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val userRepository: UserRepository) : ViewModel() {
 
     val currentUser: StateFlow<AppUser?> = userRepository.currentUser
 
-    private val _registrationResult = mutableStateOf<RegistrationResult?>(null)
-    val registrationResult: State<RegistrationResult?> = _registrationResult
+    private val _registrationResult = MutableStateFlow<RegistrationResult?>(null)
+    val registrationResult: StateFlow<RegistrationResult?> = _registrationResult.asStateFlow()
 
     private val _authResult = MutableStateFlow<String?>(null)
+    val authResult: StateFlow<String?> = _authResult.asStateFlow()
+
+    fun resetRegistrationResult() {
+        _registrationResult.value = null
+    }
 
     fun registerUser(
         email: String,
@@ -28,6 +32,7 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
         profileImageUri: Uri? = null
     ) {
         viewModelScope.launch {
+
             userRepository.registerUser(email, password, displayName, profileImageUri) { success, error ->
                 _registrationResult.value = RegistrationResult(success, error)
             }

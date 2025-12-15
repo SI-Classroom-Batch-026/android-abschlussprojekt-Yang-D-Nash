@@ -10,20 +10,38 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HistoryTopBar(onBack: () -> Unit, onClearAll: () -> Unit) {
+fun HistoryTopBar(
+    onBack: () -> Unit,
+    onClearAll: () -> Unit,
+    isClearAllEnabled: Boolean,
+    modifier: Modifier = Modifier
+) {
     TopAppBar(
+        modifier = modifier,
         title = { Text("Text-Verlauf") },
+
         navigationIcon = {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Zurück"
+                )
             }
         },
+
         actions = {
-            TextButton(onClick = onClearAll) {
-                Text("Alles Löschen", color = MaterialTheme.colorScheme.error)
+            TextButton(
+                onClick = onClearAll,
+                enabled = isClearAllEnabled
+            ) {
+                Text(
+                    "Alles Löschen",
+                    color = if (isClearAllEnabled) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     )

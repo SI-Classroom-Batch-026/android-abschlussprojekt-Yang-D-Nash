@@ -24,4 +24,3 @@ fun WelcomeImage(
             .height(200.dp)
     )
 }
-

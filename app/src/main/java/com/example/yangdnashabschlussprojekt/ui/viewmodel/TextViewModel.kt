@@ -13,8 +13,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
-import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
@@ -27,6 +27,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+// NEU: Notwendiger Import, um ML Kit Tasks mit Coroutines zu verwenden
+import kotlinx.coroutines.tasks.await
 
 sealed class CloudRecognitionState {
     object Idle : CloudRecognitionState()
@@ -45,7 +47,8 @@ class TextViewModel(
 
     private val _uiEvent = Channel<String>()
     val uiEvent = _uiEvent.receiveAsFlow()
-    
+
+    // ... (Weitere StateFlows bleiben unverändert) ...
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
 
@@ -81,6 +84,8 @@ class TextViewModel(
         super.onCleared()
         translator.close()
     }
+
+    // ... (sortAndStructureText und updateBoundingBoxes bleiben unverändert) ...
 
     private fun sortAndStructureText(blocks: List<Text.TextBlock>): String {
         if (blocks.isEmpty()) return ""
@@ -228,7 +233,9 @@ class TextViewModel(
 
                 _recognizedText.value = cloudText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
-                translateTextAsync(cloudText)
+
+                // KORRIGIERT: Aufruf der suspend Funktion
+                translateTextSuspend(cloudText)
 
             } catch (e: Exception) {
                 Log.e(tag, "Cloud-Erkennung fehlgeschlagen", e)
@@ -239,24 +246,27 @@ class TextViewModel(
         }
     }
 
+    // NEU: Suspend-Funktion für saubere Coroutine-Integration
+    private suspend fun translateTextSuspend(text: String) {
+        try {
+            translator.downloadModelIfNeeded().await() // Wartet auf Download
+
+            val translated = translator.translate(text).await() // Wartet auf Übersetzung
+            _translatedText.value = translated
+
+            // LOKALES SPEICHERN ENTFERNT: Jetzt muss der Benutzer explizit speichern.
+            // saveCurrentTextToHistory()
+
+        } catch (e: Exception) {
+            Log.e(tag, "Übersetzung fehlgeschlagen", e)
+            _translatedText.value = "Übersetzung fehlgeschlagen: ${e.message}"
+        }
+    }
+
+    // KORRIGIERT: translateTextAsync ruft jetzt die suspend Funktion auf
     private fun translateTextAsync(text: String) {
         viewModelScope.launch {
-            translator.downloadModelIfNeeded()
-                .addOnSuccessListener {
-                    translator.translate(text)
-                        .addOnSuccessListener { translated ->
-                            _translatedText.value = translated
-                            saveCurrentTextToHistory()
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e(tag, "Übersetzung fehlgeschlagen", e)
-                            _translatedText.value = "Übersetzung fehlgeschlagen: ${e.message}"
-                        }
-                }
-                .addOnFailureListener { e ->
-                    Log.e(tag, "Modell-Download fehlgeschlagen", e)
-                    _translatedText.value = "Modell-Download fehlgeschlagen: ${e.message}"
-                }
+            translateTextSuspend(text)
         }
     }
 
@@ -269,9 +279,12 @@ class TextViewModel(
                     timestamp = System.currentTimeMillis()
                 )
                 historyRepository.saveEntry(entity)
+                _uiEvent.send("Text lokal im Verlauf gespeichert.") // Zusätzliches Feedback
             }
         }
     }
+
+    // ... (saveTextToCloud und setCloudRecognitionState bleiben unverändert) ...
 
     fun saveTextToCloud() {
         val recognized = _recognizedText.value

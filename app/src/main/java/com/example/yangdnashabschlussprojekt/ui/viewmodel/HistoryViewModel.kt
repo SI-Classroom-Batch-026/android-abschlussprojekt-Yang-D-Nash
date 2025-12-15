@@ -33,18 +33,19 @@ class HistoryViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-    
+
     private fun formatTimestamp(timestamp: Long): String {
         val date = Date(timestamp)
+
         return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
     }
-    
+
     fun deleteHistoryItem(itemId: Long) {
         viewModelScope.launch {
             historyRepository.deleteEntryById(itemId)
         }
     }
-    
+
     fun clearAllHistory() {
         viewModelScope.launch {
             historyRepository.clearHistory()

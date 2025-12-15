@@ -8,6 +8,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,11 +27,27 @@ fun RegistrationScreen(
     viewModel: SettingsViewModel = koinViewModel(),
     onBack: () -> Unit
 ) {
+    val currentUser by viewModel.currentUser.collectAsState()
+    val registrationResult by viewModel.registrationResult.collectAsState()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
 
-    val registrationResult = viewModel.registrationResult.value
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            email = currentUser!!.email ?: ""
+
+            displayName = currentUser!!.displayName
+        }
+    }
+
+    LaunchedEffect(registrationResult) {
+        if (registrationResult?.success == true) {
+            onBack()
+            viewModel.resetRegistrationResult()
+        }
+    }
 
     Column(
         modifier = Modifier

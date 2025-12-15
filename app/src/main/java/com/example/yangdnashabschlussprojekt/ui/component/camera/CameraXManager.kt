@@ -42,7 +42,6 @@ class CameraXManager(
     @Volatile private var isCapturing = false
 
     fun interface FrameAnalyzer : ImageAnalysis.Analyzer
-
     fun startCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
@@ -75,13 +74,17 @@ class CameraXManager(
                 imageAnalyzer = analysis
             }
 
-            val allUseCases = mutableListOf<UseCase>()
-            preview?.let { allUseCases.add(it) }
-            imageCapture?.let { allUseCases.add(it) }
-            imageAnalyzer?.let { allUseCases.add(it) }
+            val useCasesToBind = mutableListOf<UseCase>()
+            preview?.let { useCasesToBind.add(it) }
+            imageCapture?.let { useCasesToBind.add(it) }
+            imageAnalyzer?.let { useCasesToBind.add(it) }
 
             provider.unbindAll()
-            provider.bindToLifecycle(lifecycleOwner, cameraSelector, *allUseCases.toTypedArray())
+            provider.bindToLifecycle(
+                lifecycleOwner,
+                cameraSelector,
+                *useCasesToBind.toTypedArray()
+            )
 
             onReady()
 
@@ -105,17 +108,7 @@ class CameraXManager(
             @OptIn(ExperimentalGetImage::class)
             override fun onCaptureSuccess(image: ImageProxy) {
                 try {
-                    val buffer = image.planes[0].buffer
-                    val bytes = ByteArray(buffer.remaining())
-                    buffer.get(bytes)
-
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-                    val matrix = Matrix()
-                    matrix.postRotate(image.imageInfo.rotationDegrees.toFloat())
-                    val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
-
-                    val base64 = rotatedBitmap.toBase64()
+                    val base64 = image.toBase64AndRotate()
 
                     mainExecutor.execute {
                         onCaptured(base64)
@@ -137,6 +130,23 @@ class CameraXManager(
 
     fun unbindAll() {
         cameraProvider?.unbindAll()
+    }
+
+    @OptIn(ExperimentalGetImage::class)
+    private fun ImageProxy.toBase64AndRotate(): String {
+        val buffer = this.planes[0].buffer
+        val bytes = ByteArray(buffer.remaining())
+        buffer.get(bytes)
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+        val matrix = Matrix().apply {
+            postRotate(this@toBase64AndRotate.imageInfo.rotationDegrees.toFloat())
+        }
+        val rotatedBitmap = Bitmap.createBitmap(
+            bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+        )
+
+        return rotatedBitmap.toBase64()
     }
 
     private fun Bitmap.toBase64(): String {

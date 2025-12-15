@@ -23,7 +23,12 @@ fun HistoryScreen(
 
     Scaffold(
         topBar = {
-            HistoryTopBar(onBack = onBack, onClearAll = viewModel::clearAllHistory)
+            HistoryTopBar(
+                onBack = onBack,
+                onClearAll = viewModel::clearAllHistory,
+                isClearAllEnabled = historyItems.isNotEmpty(),
+                modifier = Modifier
+            )
         }
     ) { paddingValues ->
 

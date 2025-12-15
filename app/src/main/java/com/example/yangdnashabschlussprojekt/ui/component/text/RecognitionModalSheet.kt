@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Translate // NEU: Icon für die manuelle Übersetzung
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,7 +50,10 @@ fun RecognitionModalSheet(
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Texterkennung überprüfen", style = MaterialTheme.typography.titleMedium)
+            Text(
+                "Texterkennung überprüfen",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+            )
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
@@ -64,15 +69,17 @@ fun RecognitionModalSheet(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // Etwas mehr Abstand
             ) {
                 Button(
                     onClick = onCloudScan,
                     enabled = editableText.isNotBlank() && !hasEditedText,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.tertiary)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Default.Cloud, contentDescription = "Cloud Scan")
+                        Spacer(Modifier.padding(horizontal = 4.dp))
                         Text("Cloud Scan")
                     }
                 }
@@ -81,9 +88,13 @@ fun RecognitionModalSheet(
                     onClick = { onTextEdited(editableText) },
                     enabled = editableText.isNotBlank(),
                     modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.secondary)
+                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
                 ) {
-                    Text("Manuell Übersetzen")
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Translate, contentDescription = "Manuell Übersetzen")
+                        Spacer(Modifier.padding(horizontal = 4.dp))
+                        Text("Anwenden & Übersetzen")
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))

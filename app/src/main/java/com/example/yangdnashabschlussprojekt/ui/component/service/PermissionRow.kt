@@ -18,6 +18,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
+    val statusText = if (enabled) "Erlaubt" else "Blockiert"
+    val statusColor = if (enabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.error
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -27,13 +30,20 @@ fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
     ) {
         Column {
             Text(title, style = MaterialTheme.typography.bodyLarge)
+
             Text(
-                if (enabled) "Erlaubt" else "Blockiert",
-                style = MaterialTheme.typography.bodyMedium
+                text = statusText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = statusColor
             )
         }
+
         IconButton(onClick = onClick) {
-            Icon(Icons.Default.Settings, contentDescription = null)
+            Icon(
+                Icons.Default.Settings,
+                contentDescription = "Einstellungen für $title öffnen",
+                tint = MaterialTheme.colorScheme.onSurfaceVariant // Gedämpfte Farbe
+            )
         }
     }
 }

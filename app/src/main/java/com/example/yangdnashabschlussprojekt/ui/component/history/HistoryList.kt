@@ -15,11 +15,11 @@ fun HistoryList(
     historyItems: List<HistoryItem>,
     onDelete: (Long) -> Unit,
     onSelect: (HistoryItem) -> Unit,
-    modifier: Modifier
+    modifier: Modifier = Modifier
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
     ) {
         items(
             items = historyItems,
@@ -30,7 +30,7 @@ fun HistoryList(
                 onDelete = { onDelete(item.id) },
                 onSelect = { onSelect(item) }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
         }
     }
 }

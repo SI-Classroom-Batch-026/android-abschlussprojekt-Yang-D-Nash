@@ -7,7 +7,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -15,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.HistoryScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
@@ -23,18 +21,15 @@ import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.util.`object`.ObjectDetectionAnalyzer
-import com.google.mlkit.vision.objects.DetectedObject
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController,
-    visionRepository: VisionRepository
 ) {
 
-    var topBarTitle by remember { mutableStateOf("") }
+    var topBarTitle by remember { mutableStateOf("") } // Unbenutzt, aber belassen
 
     Scaffold(
         topBar = {
@@ -58,15 +53,6 @@ fun AppNavHost(
             }
 
             composable(ARScreenRoute.route) {
-                val detectedObjects = remember { mutableStateListOf<DetectedObject>() }
-                remember {
-                    ObjectDetectionAnalyzer(object : ObjectDetectionAnalyzer.DetectionListener {
-                        override fun onObjectsDetected(objects: List<DetectedObject>) {
-                            detectedObjects.clear()
-                            detectedObjects.addAll(objects)
-                        }
-                    })
-                }
                 ARScreen(
                     viewModel = koinViewModel(),
                     textViewModel = koinViewModel()
@@ -76,11 +62,12 @@ fun AppNavHost(
 
             composable(SettingsRoute.route) {
                 SettingsScreen(
-                    onNavigateToRegister = { navController.navigate(RegisterRoute.route) },
-                    navController = navController,
                     settingsViewModel = koinViewModel(),
+                    onNavigateToRegister = { navController.navigate(RegisterRoute.route) },
+                    onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
+
             composable(TextScreenRoute.route) {
                 TextScreen(
                     textViewModel = koinViewModel(),
@@ -88,12 +75,14 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
+
             composable(RegisterRoute.route) {
                 RegistrationScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(HistoryRoute.route) {
                 val textViewModel: TextViewModel = koinViewModel()
 
@@ -106,7 +95,6 @@ fun AppNavHost(
                             recognized = item.recognizedText,
                             translated = item.translatedText
                         )
-
                         navController.popBackStack()
                     }
                 )
