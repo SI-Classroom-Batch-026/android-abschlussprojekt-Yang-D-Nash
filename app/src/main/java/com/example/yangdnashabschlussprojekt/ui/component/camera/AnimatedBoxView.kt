@@ -30,16 +30,11 @@ fun AnimatedBoxView(
         val composableWidthPx = with(density) { maxWidth.toPx() }
         val composableHeightPx = with(density) { maxHeight.toPx() }
 
-        // --- KORREKTUR: Aspect Fill Berechnung ---
-        // Wir berechnen den Scale-Faktor basierend darauf, welche Seite "bestimmend" ist (max),
-        // damit das Bild den Screen füllt (wie ScaleType.FILL_CENTER / CENTER_CROP).
         val scale = if (frameSize.width > 0 && frameSize.height > 0) {
             max(composableWidthPx / frameSize.width, composableHeightPx / frameSize.height)
         } else {
             0f
         }
-
-        // Berechne den Offset, um das Bild zu zentrieren (Center Crop)
         val dx = (composableWidthPx - frameSize.width * scale) / 2
         val dy = (composableHeightPx - frameSize.height * scale) / 2
 
@@ -58,7 +53,6 @@ fun AnimatedBoxView(
             val glowColor = Color.White.copy(alpha = alpha * 0.5f)
 
             boxes.forEach { box ->
-                // --- KORREKTUR: Koordinaten transformieren ---
                 val scaledLeft = box.left * scale + dx
                 val scaledTop = box.top * scale + dy
                 val scaledRight = box.right * scale + dx

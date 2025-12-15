@@ -1,7 +1,9 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -35,12 +37,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
+import androidx.compose.ui.zIndex // <-- WICHTIG: ZIndex Import
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
-import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
@@ -48,6 +49,8 @@ import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+// Bitte diesen Import prüfen und ggf. anpassen, falls der Pfad nicht stimmt:
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -68,12 +71,12 @@ fun TextScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     val vibrator = remember {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val manager = context.getSystemService(VibratorManager::class.java)
             manager?.defaultVibrator
         } else {
             @Suppress("DEPRECATION")
-            context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? Vibrator
+            context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
         }
     }
 
@@ -138,13 +141,16 @@ fun TextScreen(
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+            scope.launch {
+                snackbarHostState.showSnackbar(
+                    message = "Cloud-Analyse und Übersetzung abgeschlossen.",
+                    withDismissAction = false
+                )
+            }
         }
     }
 
     Scaffold(
-        snackbarHost = {
-            CustomSnackbarHost(hostState = snackbarHostState,modifier = Modifier.zIndex(10f))
-        },
         modifier = Modifier
             .fillMaxSize()
             .imePadding()
@@ -207,16 +213,38 @@ fun TextScreen(
                     onRestartClick = {
                         textViewModel.continueAnalysis()
                         vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Analyse neu gestartet.",
+                                withDismissAction = false
+                            )
+                        }
                     },
                     isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
 
                     onSaveClick = {
                         textViewModel.saveTextToCloud()
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = "Text wurde erfolgreich gespeichert.",
+                                withDismissAction = false
+                            )
+                        }
                     },
                     onHistoryClick = onNavigateToHistory,
                     isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                 )
             }
+
+            CustomSnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp)
+                    .padding(bottom = 150.dp)
+                    .zIndex(1f)
+            )
 
             if (showModal) {
                 RecognitionModalSheet(
@@ -236,10 +264,12 @@ fun TextScreen(
                         val timeoutJob = scope.launch {
                             delay(3000)
                             if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
-                                snackbarHostState.showSnackbar(
-                                    message = "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.",
-                                    withDismissAction = true
-                                )
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.",
+                                        withDismissAction = true
+                                    )
+                                }
                                 textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
                             }
                         }

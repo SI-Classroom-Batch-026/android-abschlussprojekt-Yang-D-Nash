@@ -88,7 +88,6 @@ class CameraXManager(
         }, mainExecutor)
     }
 
-    // --- OPTIMIERUNG: In-Memory Capture (ohne temporäre Datei) ---
     fun captureForCloudScan(onCaptured: (base64Image: String) -> Unit, onError: (Exception) -> Unit) {
         if (isCapturing) {
             onError(IllegalStateException("Capture already in progress."))
@@ -102,27 +101,22 @@ class CameraXManager(
             return
         }
 
-        // Wir nutzen ImageCapture im Speicher
         capture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
             @OptIn(ExperimentalGetImage::class)
             override fun onCaptureSuccess(image: ImageProxy) {
                 try {
-                    // Konvertierung von ImageProxy zu Bitmap für Base64
                     val buffer = image.planes[0].buffer
                     val bytes = ByteArray(buffer.remaining())
                     buffer.get(bytes)
 
-                    // Decode
                     val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
 
-                    // Rotation korrigieren
                     val matrix = Matrix()
                     matrix.postRotate(image.imageInfo.rotationDegrees.toFloat())
                     val rotatedBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
 
                     val base64 = rotatedBitmap.toBase64()
 
-                    // Zurück auf Main Thread
                     mainExecutor.execute {
                         onCaptured(base64)
                     }
@@ -145,7 +139,6 @@ class CameraXManager(
         cameraProvider?.unbindAll()
     }
 
-    // Hilfsfunktion: Bitmap zu Base64 String
     private fun Bitmap.toBase64(): String {
         val scaledBitmap = if (this.width > 1024) {
             val ratio = 1024.0 / this.width

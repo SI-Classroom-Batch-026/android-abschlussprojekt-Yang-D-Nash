@@ -15,8 +15,6 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 fun BoxesOverlay(
     viewModel: TextViewModel,
     arViewModel: ARViewModel,
-    screenWidth: Int,
-    screenHeight: Int
 ) {
     val textBoxes by viewModel.boundingBoxes.collectAsState()
 

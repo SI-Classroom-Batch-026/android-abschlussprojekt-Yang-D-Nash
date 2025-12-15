@@ -40,8 +40,6 @@ fun CameraWithLiveObjects(
             BoxesOverlay(
                 viewModel = textViewModel,
                 arViewModel = arViewModel,
-                screenWidth = previewSize.width,
-                screenHeight = previewSize.height
             )
         }
     }
