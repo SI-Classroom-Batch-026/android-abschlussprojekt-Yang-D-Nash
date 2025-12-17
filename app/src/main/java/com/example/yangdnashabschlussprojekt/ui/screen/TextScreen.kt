@@ -88,7 +88,6 @@ fun TextScreen(
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
-    val detectedTextLabel by textViewModel.detectedTextLabel.collectAsState()
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -158,7 +157,6 @@ fun TextScreen(
                 arViewModel = arViewModel,
                 isObjectDetectionMode = false,
                 detectedObjectLabel = detectedObjectLabel,
-                detectedTextLabel = detectedTextLabel
             )
             BottomTextCard(
                 recognizedText = recognizedText,
@@ -209,6 +207,7 @@ fun TextScreen(
                     },
                     isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
                     onSaveClick = {
+                        textViewModel.saveCurrentTextToHistory()
                         textViewModel.saveTextToCloud()
                         scope.launch {
                             snackbarHostState.showSnackbar(

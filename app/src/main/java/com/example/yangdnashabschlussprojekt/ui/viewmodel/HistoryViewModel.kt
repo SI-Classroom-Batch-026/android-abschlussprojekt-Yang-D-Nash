@@ -2,7 +2,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
+import com.example.yangdnashabschlussprojekt.data.local.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

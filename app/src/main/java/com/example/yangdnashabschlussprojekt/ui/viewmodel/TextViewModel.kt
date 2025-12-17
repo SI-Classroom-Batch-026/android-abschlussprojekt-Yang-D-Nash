@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-// NEU: Notwendiger Import, um ML Kit Tasks mit Coroutines zu verwenden
 import android.graphics.Rect
 import android.util.Log
 import android.util.Size
@@ -10,7 +9,9 @@ import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
+import com.example.yangdnashabschlussprojekt.data.local.repository.HistoryRepository // ⬅️ WICHTIG
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.google.mlkit.nl.translate.TranslateLanguage
@@ -33,8 +34,10 @@ sealed class CloudRecognitionState {
     data class Success(val text: String) : CloudRecognitionState()
     data class Error(val message: String) : CloudRecognitionState()
 }
+
 class TextViewModel(
     private val visionRepository: VisionRepository,
+    private val historyRepository: HistoryRepository,
     private val userRepository: UserRepository
 ) : ViewModel() {
     private val tag = "TextViewModel"
@@ -55,8 +58,29 @@ class TextViewModel(
     private var lastAnalyzedTimestamp = 0L
     private val frameThrottleIntervalMs = 100L
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    private val _detectedTextLabel = MutableStateFlow("")
-    val detectedTextLabel: StateFlow<String> = _detectedTextLabel
+    fun saveCurrentTextToHistory() {
+        val recognized = _recognizedText.value
+        val translated = _translatedText.value
+        if (recognized.isBlank() || translated.isBlank()) {
+            viewModelScope.launch {
+                _uiEvent.send("Kein Text zum lokalen Speichern vorhanden.")
+            }
+            return
+        }
+        val sourceLang = TranslateLanguage.ENGLISH
+        val targetLang = TranslateLanguage.GERMAN
+        viewModelScope.launch {
+            val entity = TextHistoryEntity(
+                recognizedText = recognized,
+                translatedText = translated,
+                timestamp = System.currentTimeMillis(),
+                sourceLanguage = sourceLang,
+                targetLanguage = targetLang
+            )
+            historyRepository.saveEntry(entity)
+            _uiEvent.send("Text lokal im Verlauf gespeichert.")
+        }
+    }
     private val translator by lazy {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)
@@ -95,7 +119,6 @@ class TextViewModel(
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
-
         if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < frameThrottleIntervalMs) {
             imageProxy.close()
             return
@@ -133,7 +156,6 @@ class TextViewModel(
                 imageProxy.close()
             }
     }
-
     fun continueAnalysis() {
         _isAnalyzing.value = true
         _recognizedText.value = ""
@@ -196,7 +218,6 @@ class TextViewModel(
             translateTextSuspend(text)
         }
     }
-
     fun saveTextToCloud() {
         val recognized = _recognizedText.value
         val translated = _translatedText.value

@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.remote.repository
+package com.example.yangdnashabschlussprojekt.data.local.repository
 
 import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistoryDao
 import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
