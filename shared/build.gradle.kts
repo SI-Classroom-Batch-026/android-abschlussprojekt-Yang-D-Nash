@@ -1,10 +1,11 @@
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     id("com.android.library")
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.jetbrains.kotlin.serialization)
     alias(libs.plugins.jetbrains.compose)
-    alias(libs.plugins.kotlin.compose)    
+    alias(libs.plugins.kotlin.compose)
 }
 
 kotlin {
@@ -20,10 +21,12 @@ kotlin {
         it.binaries.framework {
             baseName = "shared"
             isStatic = true
+            binaryOption("bundleId", "com.example.yangdnash.shared")
         }
     }
 
     sourceSets {
+        // Fix für Compose Extension Reference
         val composeDeps = project.extensions.getByType<org.jetbrains.compose.ComposeExtension>().dependencies
 
         commonMain.dependencies {
@@ -32,12 +35,15 @@ kotlin {
             implementation(composeDeps.material3)
             implementation(composeDeps.ui)
             implementation(composeDeps.components.resources)
-            implementation("io.insert-koin:koin-compose:1.1.0")
-            implementation("co.touchlab:stately-common:2.1.0")
+            implementation(libs.kotlinx.datetime)
+
+            // Namen exakt nach deiner TOML (Punkte statt Bindestriche)
+            implementation(libs.koin.compose)
+            implementation(libs.stately.common)
             implementation(libs.kotlinx.serialization)
             implementation(libs.koin.core)
             implementation(libs.androidx.room.runtime)
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+            implementation(libs.kotlinx.coroutines.core)
         }
 
         androidMain.dependencies {
@@ -47,7 +53,7 @@ kotlin {
 
         val iosMain by getting {
             dependencies {
-                implementation(composeDeps.ui)
+                // iOS spezifische deps falls nötig
             }
         }
     }
@@ -64,9 +70,13 @@ android {
 }
 
 dependencies {
-    // Room KSP Setup
     add("kspAndroid", libs.androidx.room.compiler)
-    add("kspIosX64", libs.androidx.room.compiler)
-    add("kspIosArm64", libs.androidx.room.compiler)
     add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosX64", libs.androidx.room.compiler)
+}
+configurations.all {
+    resolutionStrategy {
+        force("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")
+    }
 }
