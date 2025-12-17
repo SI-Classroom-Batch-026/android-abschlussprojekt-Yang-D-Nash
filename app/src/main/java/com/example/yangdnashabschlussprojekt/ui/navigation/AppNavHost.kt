@@ -54,7 +54,6 @@ fun AppNavHost(
 
             composable(ARScreenRoute.route) {
                 ARScreen(
-                    viewModel = koinViewModel(),
                     textViewModel = koinViewModel()
                 )
             }

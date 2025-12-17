@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.unit.IntSize
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
-import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.BoxesOverlay
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -21,8 +21,13 @@ fun CameraWithLiveObjects(
     cameraManager: CameraXManager,
     arViewModel: ARViewModel,
     textViewModel: TextViewModel,
+    isObjectDetectionMode: Boolean
 ) {
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
+
+    val isTextMode = remember(isObjectDetectionMode) {
+        !isObjectDetectionMode
+    }
 
     Box(
         modifier = Modifier
@@ -32,14 +37,15 @@ fun CameraWithLiveObjects(
         CameraPreview(
             cameraManager = cameraManager,
             textViewModel = textViewModel,
+            arViewModel = arViewModel,
             modifier = Modifier.fillMaxSize(),
-            arViewModel = arViewModel
+            isTextMode = isTextMode
         )
-
         if (previewSize.width > 0 && previewSize.height > 0) {
             BoxesOverlay(
-                viewModel = textViewModel,
                 arViewModel = arViewModel,
+                textViewModel = textViewModel,
+                isTextMode = isTextMode,
             )
         }
     }

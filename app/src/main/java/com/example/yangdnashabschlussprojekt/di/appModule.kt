@@ -9,12 +9,11 @@ import com.example.yangdnashabschlussprojekt.data.remote.repository.UserReposito
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -53,17 +52,12 @@ val appModule = module {
         apiKey = API_KEY,
         api = get()
     ) }
-    viewModel {
-        TextViewModel(
-            visionRepository = get(),
-            historyRepository = get(),
-            userRepository = get()
-        )
-    }
 
     viewModelOf(::WelcomeViewModel)
     viewModelOf(::SettingsViewModel)
     viewModelOf(::ARViewModel)
     viewModelOf(::HistoryViewModel)
+    viewModelOf(::TextViewModel)
 
-    }
+
+}
