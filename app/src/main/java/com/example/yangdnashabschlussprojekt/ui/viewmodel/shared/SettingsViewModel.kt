@@ -20,6 +20,12 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
 
     private val _authResult = MutableStateFlow<String?>(null)
     val authResult: StateFlow<String?> = _authResult.asStateFlow()
+    private val _isObjectDetectionMode = MutableStateFlow(true)
+    val isObjectDetectionMode: StateFlow<Boolean> = _isObjectDetectionMode.asStateFlow()
+
+    fun toggleDetectionMode(isObject: Boolean) {
+        _isObjectDetectionMode.value = isObject
+    }
 
     fun resetRegistrationResult() {
         _registrationResult.value = null

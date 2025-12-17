@@ -31,7 +31,7 @@ class ARViewModel(
     val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
 
     private val _detectedObjectLabel = MutableStateFlow("")
-
+    val detectedObjectLabel: StateFlow<String> = _detectedObjectLabel
     private val _frameSize = MutableStateFlow(Size(0, 0))
     val frameSize: StateFlow<Size> = _frameSize.asStateFlow()
 
@@ -39,6 +39,7 @@ class ARViewModel(
 
     private var lastAnalyzedTimestamp = 0L
     private val frameThrottleIntervalMs = 100L
+
 
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()

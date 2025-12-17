@@ -7,8 +7,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect // Wichtig!
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -16,6 +17,7 @@ import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObj
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -23,7 +25,8 @@ import java.util.concurrent.Executors
 @Composable
 fun ARScreen(
     arViewModel: ARViewModel = koinViewModel(),
-    textViewModel: TextViewModel = koinViewModel()
+    textViewModel: TextViewModel = koinViewModel(),
+    settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
@@ -32,13 +35,16 @@ fun ARScreen(
 
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
-    // Steuert den Lebenszyklus der Analyse und der Kamera-Ressourcen
+    val isObjectDetectionMode = settingsViewModel.isObjectDetectionMode.collectAsState().value
+
+    val detectedObjectLabel = arViewModel.detectedObjectLabel.collectAsState().value
+
+    val detectedTextLabel = textViewModel.detectedTextLabel.collectAsState().value
+
     DisposableEffect(Unit) {
-        // 1. Wenn der Screen betreten wird (oder Compose Composition startet)
         arViewModel.continueAnalysis()
 
         onDispose {
-            // 2. Wenn der Screen verlassen wird (oder Compose Composition endet)
             arViewModel.stopAnalysis()
             cameraManager.unbindAll()
             cameraExecutor.shutdown()
@@ -64,7 +70,9 @@ fun ARScreen(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
                 textViewModel = textViewModel,
-                isObjectDetectionMode = true
+                isObjectDetectionMode = isObjectDetectionMode,
+                detectedObjectLabel = detectedObjectLabel,
+                detectedTextLabel = detectedTextLabel
             )
         }
     }
