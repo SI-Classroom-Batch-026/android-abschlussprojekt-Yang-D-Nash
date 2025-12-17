@@ -8,16 +8,12 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TextHistoryDao {
-
     @Insert
     suspend fun insert(item: TextHistoryEntity)
-
     @Query("SELECT * FROM text_history ORDER BY timestamp DESC")
     fun getAllHistory(): Flow<List<TextHistoryEntity>>
-
     @Query("DELETE FROM text_history WHERE id = :itemId")
     suspend fun deleteById(itemId: Long)
-
     @Query("DELETE FROM text_history")
     suspend fun deleteAll()
 }

@@ -32,7 +32,6 @@ fun HistoryTopBar(
                 )
             }
         },
-
         actions = {
             TextButton(
                 onClick = onClearAll,

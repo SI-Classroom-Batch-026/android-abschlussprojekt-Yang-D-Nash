@@ -32,15 +32,12 @@ fun TextScreenFABs(
     val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     val activeContentColor = Color.White
-
     val saveContainerColor = if (isSaveButtonEnabled) MaterialTheme.colorScheme.primary else disabledContainerColor
     val restartContainerColor = if (isRestartButtonEnabled) MaterialTheme.colorScheme.error else disabledContainerColor
-
     Column(
         modifier = modifier.padding(FAB_SPACING),
         verticalArrangement = Arrangement.spacedBy(FAB_SPACING)
     ) {
-
         FloatingActionButton(
             onClick = {
                 if (isRestartButtonEnabled) {
@@ -65,7 +62,6 @@ fun TextScreenFABs(
                 }
             }
         )
-
         FloatingActionButton(
             onClick = {
                 if (isSaveButtonEnabled) {
@@ -89,7 +85,6 @@ fun TextScreenFABs(
                 }
             }
         )
-
         FloatingActionButton(
             onClick = onHistoryClick,
             containerColor = MaterialTheme.colorScheme.primary,

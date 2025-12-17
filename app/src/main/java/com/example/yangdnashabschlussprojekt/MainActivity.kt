@@ -12,9 +12,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             SmartVisionTheme {
-
                 val navController = rememberNavController()
-
                 AppNavHost(
                     navController = navController
                 )

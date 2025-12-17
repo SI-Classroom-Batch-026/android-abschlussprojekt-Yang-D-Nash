@@ -75,22 +75,16 @@ fun TextScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
-
     val snackbarHostState = remember { SnackbarHostState() }
-
     val vibrator = remember { createVibrator(context) }
-
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
-
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
-
     val isLoading = cloudState is CloudRecognitionState.Loading
-
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
@@ -107,13 +101,11 @@ fun TextScreen(
             }
         }
     }
-
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
-
     DisposableEffect(lifecycleOwner, vibrator) {
         onDispose {
             cameraManager.unbindAll()
@@ -124,7 +116,6 @@ fun TextScreen(
             }
         }
     }
-
     LaunchedEffect(snackbarHostState) {
         textViewModel.uiEvent.collect { message ->
             snackbarHostState.showSnackbar(
@@ -133,14 +124,12 @@ fun TextScreen(
             )
         }
     }
-
     LaunchedEffect(highlight) {
         if (highlight) {
             vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
             highlight = false
         }
     }
-
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -152,20 +141,17 @@ fun TextScreen(
             }
         }
     }
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
         snackbarHost = {}
     ) { paddingValues ->
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 textViewModel = textViewModel,
@@ -174,7 +160,6 @@ fun TextScreen(
                 detectedObjectLabel = detectedObjectLabel,
                 detectedTextLabel = detectedTextLabel
             )
-
             BottomTextCard(
                 recognizedText = recognizedText,
                 translatedText = translatedText,
@@ -182,7 +167,6 @@ fun TextScreen(
                 onEditClick = { showModal = true },
                 modifier = Modifier.align(Alignment.BottomStart)
             )
-
             if (isLoading) {
                 Box(
                     modifier = Modifier
@@ -209,7 +193,6 @@ fun TextScreen(
                     }
                 }
             }
-
             Box(
                 modifier = Modifier.align(Alignment.BottomEnd)
             ) {
@@ -225,7 +208,6 @@ fun TextScreen(
                         }
                     },
                     isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
-
                     onSaveClick = {
                         textViewModel.saveTextToCloud()
                         scope.launch {
@@ -239,7 +221,6 @@ fun TextScreen(
                     isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                 )
             }
-
             CustomSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
@@ -248,22 +229,17 @@ fun TextScreen(
                     .padding(bottom = 150.dp)
                     .zIndex(1f)
             )
-
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,
                     onDismiss = { showModal = false },
-
                     onTextEdited = { newText ->
                         textViewModel.recognizeText(newText)
                         showModal = false
                     },
-
                     onCloudScan = scanCheck@{
                         if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) return@scanCheck
-
                         showModal = false
-
                         val timeoutJob = scope.launch {
                             delay(3000)
                             if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
@@ -276,7 +252,6 @@ fun TextScreen(
                                 textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
                             }
                         }
-
                         cameraManager.captureForCloudScan(
                             onCaptured = { base64Image: String ->
                                 timeoutJob.cancel()

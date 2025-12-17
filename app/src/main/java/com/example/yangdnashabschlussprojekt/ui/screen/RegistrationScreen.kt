@@ -29,11 +29,9 @@ fun RegistrationScreen(
 ) {
     val currentUser by viewModel.currentUser.collectAsState()
     val registrationResult by viewModel.registrationResult.collectAsState()
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
-
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             email = currentUser!!.email ?: ""
@@ -41,14 +39,12 @@ fun RegistrationScreen(
             displayName = currentUser!!.displayName
         }
     }
-
     LaunchedEffect(registrationResult) {
         if (registrationResult?.success == true) {
             onBack()
             viewModel.resetRegistrationResult()
         }
     }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -57,7 +53,6 @@ fun RegistrationScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(onClick = onBack) { Text("Zurück") }
-
         RegistrationForm(
             email = email,
             onEmailChange = { email = it },

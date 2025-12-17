@@ -12,25 +12,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val userRepository: UserRepository) : ViewModel() {
-
     val currentUser: StateFlow<AppUser?> = userRepository.currentUser
-
     private val _registrationResult = MutableStateFlow<RegistrationResult?>(null)
     val registrationResult: StateFlow<RegistrationResult?> = _registrationResult.asStateFlow()
-
     private val _authResult = MutableStateFlow<String?>(null)
     val authResult: StateFlow<String?> = _authResult.asStateFlow()
     private val _isObjectDetectionMode = MutableStateFlow(true)
     val isObjectDetectionMode: StateFlow<Boolean> = _isObjectDetectionMode.asStateFlow()
-
-    fun toggleDetectionMode(isObject: Boolean) {
-        _isObjectDetectionMode.value = isObject
-    }
-
     fun resetRegistrationResult() {
         _registrationResult.value = null
     }
-
     fun registerUser(
         email: String,
         password: String,
@@ -44,7 +35,6 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
             }
         }
     }
-
     fun login(email: String, password: String) {
         viewModelScope.launch {
             userRepository.login(email, password) { success, error ->
@@ -52,7 +42,6 @@ class SettingsViewModel(private val userRepository: UserRepository) : ViewModel(
             }
         }
     }
-
     fun logout() {
         userRepository.logout()
     }

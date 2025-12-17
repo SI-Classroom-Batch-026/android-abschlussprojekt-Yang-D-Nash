@@ -26,9 +26,7 @@ fun WelcomeScreen(
     onOpenSettings: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState(initial = null)
-
     val displayName = currentUser?.displayName ?: "Gast"
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,11 +37,8 @@ fun WelcomeScreen(
     ) {
         WelcomeImage()
         Spacer(modifier = Modifier.height(24.dp))
-
         WelcomeGreeting(displayName)
-
         Spacer(modifier = Modifier.height(32.dp))
-
         if (currentUser == null) {
             SettingsButton(onClick = onOpenSettings)
         }

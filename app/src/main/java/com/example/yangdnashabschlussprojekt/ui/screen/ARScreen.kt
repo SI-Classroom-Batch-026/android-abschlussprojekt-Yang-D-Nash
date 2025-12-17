@@ -30,33 +30,24 @@ fun ARScreen(
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-
     val cameraExecutor: ExecutorService = remember { Executors.newSingleThreadExecutor() }
-
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
-
     val isObjectDetectionMode = settingsViewModel.isObjectDetectionMode.collectAsState().value
-
     val detectedObjectLabel = arViewModel.detectedObjectLabel.collectAsState().value
-
     val detectedTextLabel = textViewModel.detectedTextLabel.collectAsState().value
-
     DisposableEffect(Unit) {
         arViewModel.continueAnalysis()
-
         onDispose {
             arViewModel.stopAnalysis()
             cameraManager.unbindAll()
             cameraExecutor.shutdown()
         }
     }
-
     LaunchedEffect(key1 = true) {
         arViewModel.uiEvent.collect { event ->
             snackbarHostState.showSnackbar(event)
         }
     }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         modifier = Modifier.fillMaxSize()

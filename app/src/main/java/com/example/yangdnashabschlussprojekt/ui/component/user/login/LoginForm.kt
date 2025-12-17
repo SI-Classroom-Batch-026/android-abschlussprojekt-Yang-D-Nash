@@ -23,7 +23,6 @@ fun LoginForm(
     onLoginClick: () -> Unit
 ) {
     val isLoginEnabled = email.isNotBlank() && password.isNotBlank()
-
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = email,
@@ -33,7 +32,6 @@ fun LoginForm(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
@@ -42,9 +40,7 @@ fun LoginForm(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             modifier = Modifier.fillMaxWidth()
         )
-
         Spacer(modifier = Modifier.height(16.dp))
-
         Button(
             onClick = onLoginClick,
             enabled = isLoginEnabled,

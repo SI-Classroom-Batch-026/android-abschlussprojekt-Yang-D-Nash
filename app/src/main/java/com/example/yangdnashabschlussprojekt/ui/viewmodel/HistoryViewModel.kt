@@ -16,7 +16,6 @@ import java.util.Locale
 class HistoryViewModel(
     private val historyRepository: HistoryRepository
 ) : ViewModel() {
-
     val historyState: StateFlow<List<HistoryItem>> = historyRepository.getHistory()
         .map { entities ->
             entities.map { entity ->
@@ -33,19 +32,16 @@ class HistoryViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
-
     private fun formatTimestamp(timestamp: Long): String {
         val date = Date(timestamp)
 
         return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
     }
-
     fun deleteHistoryItem(itemId: Long) {
         viewModelScope.launch {
             historyRepository.deleteEntryById(itemId)
         }
     }
-
     fun clearAllHistory() {
         viewModelScope.launch {
             historyRepository.clearHistory()

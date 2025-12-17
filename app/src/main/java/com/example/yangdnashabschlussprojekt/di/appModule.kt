@@ -7,24 +7,16 @@ import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
 import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.koin.androidContext
-import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
 
 private const val VISION_BASE: String = "https://vision.googleapis.com/"
 private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
 
 val appModule = module {
-
     single {
         Room.databaseBuilder(
             androidContext() as Application,
@@ -32,14 +24,10 @@ val appModule = module {
             "text_history_db"
         ).build()
     }
-
     single { get<AppDatabase>().textHistoryDao() }
-
     single { HistoryRepository(get()) }
-
     single { FirebaseAuth.getInstance() }
     single { UserRepository(get()) }
-
     single<VisionApiService> {
         Retrofit.Builder()
             .baseUrl(VISION_BASE)
@@ -47,17 +35,13 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
-
-    single { VisionRepository(
-        apiKey = API_KEY,
-        api = get()
-    ) }
-
-    viewModelOf(::WelcomeViewModel)
-    viewModelOf(::SettingsViewModel)
-    viewModelOf(::ARViewModel)
-    viewModelOf(::HistoryViewModel)
-    viewModelOf(::TextViewModel)
-
-
+    single {
+        VisionRepository(
+            apiKey = API_KEY,
+            api = get()
+        )
+    }
+    includes(
+        viewModelModule
+    )
 }

@@ -22,9 +22,7 @@ fun CameraPreview(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-
     val previewView = remember { PreviewView(context) }
-
     val analyzer = remember(textViewModel, arViewModel, isTextMode) {
         CameraXManager.FrameAnalyzer { imageProxy ->
             if (isTextMode) {
@@ -34,17 +32,13 @@ fun CameraPreview(
             }
         }
     }
-
     AndroidView(factory = { previewView }, modifier = modifier)
-
     DisposableEffect(lifecycleOwner, cameraManager, analyzer) {
-
         cameraManager.startCamera(
             previewView = previewView,
             lifecycleOwner = lifecycleOwner,
             analyzer = analyzer
         )
-
         onDispose {
             cameraManager.unbindAll()
         }

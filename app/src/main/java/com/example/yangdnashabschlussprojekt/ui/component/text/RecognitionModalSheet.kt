@@ -39,9 +39,7 @@ fun RecognitionModalSheet(
     onTextEdited: (String) -> Unit
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
-
     val hasEditedText = editableText != recognizedText
-
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -55,7 +53,6 @@ fun RecognitionModalSheet(
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
             )
             Spacer(modifier = Modifier.height(16.dp))
-
             OutlinedTextField(
                 value = editableText,
                 onValueChange = { editableText = it },
@@ -66,7 +63,6 @@ fun RecognitionModalSheet(
                     .heightIn(max = 200.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp) // Etwas mehr Abstand
@@ -83,7 +79,6 @@ fun RecognitionModalSheet(
                         Text("Cloud Scan")
                     }
                 }
-
                 Button(
                     onClick = { onTextEdited(editableText) },
                     enabled = editableText.isNotBlank(),

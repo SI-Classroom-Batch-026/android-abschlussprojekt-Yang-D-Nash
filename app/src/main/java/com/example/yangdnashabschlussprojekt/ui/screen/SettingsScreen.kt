@@ -50,25 +50,20 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-
     val currentUser by settingsViewModel.currentUser.collectAsState()
     val authResult by settingsViewModel.authResult.collectAsState()
-
     var notificationsEnabled by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
     var locationGranted by remember { mutableStateOf(false) }
     var microphoneGranted by remember { mutableStateOf(false) }
-
     fun refreshSystemPermissions() {
         notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
         cameraGranted = isPermissionGranted(context, Manifest.permission.CAMERA)
         locationGranted = isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
         microphoneGranted = isPermissionGranted(context, Manifest.permission.RECORD_AUDIO)
     }
-
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
@@ -78,9 +73,7 @@ fun SettingsScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-
     LaunchedEffect(Unit) { refreshSystemPermissions() }
-
     LaunchedEffect(authResult) {
         authResult?.let { message ->
             scope.launch {
@@ -88,11 +81,8 @@ fun SettingsScreen(
             }
         }
     }
-
-
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
     Scaffold(
         snackbarHost = {
             CustomSnackbarHost(
@@ -101,7 +91,6 @@ fun SettingsScreen(
             )
         }
     ) { paddingValues ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -110,12 +99,10 @@ fun SettingsScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             ProfileImage()
             Spacer(Modifier.height(16.dp))
             UserInfo(currentUser?.displayName ?: "Gast")
             Spacer(Modifier.height(16.dp))
-
             if (currentUser != null) {
                 Button(onClick = onNavigateToHistory) {
                     Text("Verlauf anzeigen")
@@ -132,9 +119,7 @@ fun SettingsScreen(
             }
             else {
                 Button(onClick = onNavigateToRegister) { Text("Registrieren") }
-
                 Spacer(Modifier.height(16.dp))
-
                 LoginForm(
                     email = email,
                     onEmailChange = { email = it },
@@ -145,9 +130,7 @@ fun SettingsScreen(
                     }
                 )
             }
-
             Spacer(Modifier.height(32.dp))
-
             PermissionsCard(
                 notificationsEnabled = notificationsEnabled,
                 cameraGranted = cameraGranted,

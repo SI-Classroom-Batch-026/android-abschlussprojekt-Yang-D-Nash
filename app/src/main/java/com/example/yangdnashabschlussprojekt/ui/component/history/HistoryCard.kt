@@ -54,7 +54,6 @@ fun HistoryCard(
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-
                 if (item.translatedText.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -66,7 +65,6 @@ fun HistoryCard(
                     )
                 }
             }
-
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Filled.Delete,
