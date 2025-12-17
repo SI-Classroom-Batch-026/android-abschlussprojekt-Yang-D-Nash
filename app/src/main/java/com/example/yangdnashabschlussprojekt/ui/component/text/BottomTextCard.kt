@@ -66,9 +66,7 @@ fun BottomTextCard(
                     )
                 }
             }
-
             val scrollState = rememberScrollState()
-
             SelectionContainer(
                 modifier = Modifier
                     .weight(1f)
@@ -77,7 +75,6 @@ fun BottomTextCard(
                 Column(
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
                 ) {
-
                     when (cloudRecognitionState) {
                         is CloudRecognitionState.Error -> {
                             Text(
@@ -89,7 +86,6 @@ fun BottomTextCard(
                         }
                         else -> Unit
                     }
-
                     Text(
                         "Erkannter Text:",
                         color = Color.White.copy(alpha = 0.8f),
@@ -100,9 +96,7 @@ fun BottomTextCard(
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium
                     )
-
                     Spacer(modifier = Modifier.height(10.dp))
-
                     Text(
                         "Übersetzt:",
                         color = Color.White.copy(alpha = 0.8f),

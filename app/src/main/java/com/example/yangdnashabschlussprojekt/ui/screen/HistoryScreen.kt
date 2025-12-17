@@ -20,7 +20,6 @@ fun HistoryScreen(
     onHistoryItemSelected: (HistoryItem) -> Unit
 ) {
     val historyItems by viewModel.historyState.collectAsState()
-
     Scaffold(
         topBar = {
             HistoryTopBar(

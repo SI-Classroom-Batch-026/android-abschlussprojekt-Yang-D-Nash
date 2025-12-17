@@ -25,7 +25,6 @@ fun RegistrationForm(
     onRegisterClick: () -> Unit
 ) {
     val isRegistrationEnabled = email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank()
-
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = email,
@@ -35,7 +34,6 @@ fun RegistrationForm(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
@@ -45,7 +43,6 @@ fun RegistrationForm(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
-
         OutlinedTextField(
             value = displayName,
             onValueChange = onDisplayNameChange,
@@ -54,7 +51,6 @@ fun RegistrationForm(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
-
         Button(
             onClick = onRegisterClick,
             enabled = isRegistrationEnabled,

@@ -23,7 +23,6 @@ val items = listOf(
     BottomNavItem(ARScreenRoute, Icons.Default.Info),
     BottomNavItem(TextScreenRoute, Icons.Default.AccessibilityNew)
 )
-
 @Composable
 fun BottomNavigationBar(navController: NavController, modifier: Modifier = Modifier) {
     NavigationBar(
@@ -33,10 +32,8 @@ fun BottomNavigationBar(navController: NavController, modifier: Modifier = Modif
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-
         items.forEach { item ->
             val isSelected = currentRoute == item.routeObj.route
-
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = item.routeObj.label) },
                 label = { Text(item.routeObj.label) },

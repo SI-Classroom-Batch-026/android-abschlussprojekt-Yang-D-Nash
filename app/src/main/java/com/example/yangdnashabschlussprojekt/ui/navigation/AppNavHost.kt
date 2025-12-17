@@ -51,14 +51,11 @@ fun AppNavHost(
                     onOpenSettings = { navController.navigate(SettingsRoute.route) }
                 )
             }
-
             composable(ARScreenRoute.route) {
                 ARScreen(
                     textViewModel = koinViewModel()
                 )
             }
-
-
             composable(SettingsRoute.route) {
                 SettingsScreen(
                     settingsViewModel = koinViewModel(),
@@ -66,7 +63,6 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
-
             composable(TextScreenRoute.route) {
                 TextScreen(
                     textViewModel = koinViewModel(),
@@ -74,17 +70,14 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
-
             composable(RegisterRoute.route) {
                 RegistrationScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
             }
-
             composable(HistoryRoute.route) {
                 val textViewModel: TextViewModel = koinViewModel()
-
                 HistoryScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() },

@@ -29,9 +29,7 @@ fun EmptyHistoryMessage(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
-
             Spacer(modifier = Modifier.height(8.dp))
-
             Text(
                 text = "Um Texte hier zu sehen, verwenden Sie die Scan-Funktion und tippen Sie auf 'Speichern'.",
                 style = MaterialTheme.typography.bodyMedium,

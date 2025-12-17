@@ -31,7 +31,6 @@ fun PermissionsCard(
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.height(16.dp))
-
             PermissionRow("Benachrichtigungen", notificationsEnabled, onOpenSettings)
             PermissionRow("Kamera", cameraGranted, onOpenSettings)
             PermissionRow("Standort", locationGranted, onOpenSettings)

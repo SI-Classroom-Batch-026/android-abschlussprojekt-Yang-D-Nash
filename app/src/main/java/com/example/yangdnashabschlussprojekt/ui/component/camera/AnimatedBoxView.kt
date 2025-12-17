@@ -25,11 +25,9 @@ fun AnimatedBoxView(
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
-
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val composableWidthPx = with(density) { maxWidth.toPx() }
         val composableHeightPx = with(density) { maxHeight.toPx() }
-
         val scale = if (frameSize.width > 0 && frameSize.height > 0) {
             max(composableWidthPx / frameSize.width, composableHeightPx / frameSize.height)
         } else {
@@ -37,43 +35,33 @@ fun AnimatedBoxView(
         }
         val dx = (composableWidthPx - frameSize.width * scale) / 2
         val dy = (composableHeightPx - frameSize.height * scale) / 2
-
         val alphaAnimatable = remember { Animatable(0f) }
-
         LaunchedEffect(boxes) {
             if (boxes.isNotEmpty()) {
                 alphaAnimatable.snapTo(1f)
                 alphaAnimatable.animateTo(0f, animationSpec = tween(durationMillis = 3000, delayMillis = 50))
             }
         }
-
         val frameAccentColor = MaterialTheme.colorScheme.tertiary
-
         @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
         Canvas(modifier = Modifier.fillMaxSize()) {
             val alpha = alphaAnimatable.value
-
             val animatedColor = frameAccentColor.copy(alpha = alpha)
-
             boxes.forEach { box ->
                 val scaledLeft = box.left * scale + dx
                 val scaledTop = box.top * scale + dy
                 val scaledRight = box.right * scale + dx
                 val scaledBottom = box.bottom * scale + dy
-
                 val width = scaledRight - scaledLeft
                 val height = scaledBottom - scaledTop
-
                 val rectTopLeft = Offset(scaledLeft, scaledTop)
                 val rectSize = ComposeSize(width, height)
-
                 drawRect(
                     color = animatedColor,
                     topLeft = rectTopLeft,
                     size = rectSize,
                     style = Stroke(width = 6f)
                 )
-
                  drawRect(
                     color = box.color.copy(alpha = alpha * 0.15f),
                      topLeft = rectTopLeft,

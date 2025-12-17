@@ -19,20 +19,15 @@ fun BoxesOverlay(
     isTextMode: Boolean
 ) {
     val textBoxes by textViewModel.boundingBoxes.collectAsState()
-
     val arBoxes by arViewModel.boundingBoxes.collectAsState()
-
     val textFrameSize by textViewModel.frameSize.collectAsState()
     val arFrameSize by arViewModel.frameSize.collectAsState()
-
     val currentFrameSize: Size = if (isTextMode) {
         textFrameSize
     } else {
         arFrameSize
     }
-
     val allBoxes: List<TimedBoundingBox> = (textBoxes + arBoxes)
-
     Box(Modifier.fillMaxSize()) {
         if (currentFrameSize.width > 0 && currentFrameSize.height > 0) {
             AnimatedBoxView(

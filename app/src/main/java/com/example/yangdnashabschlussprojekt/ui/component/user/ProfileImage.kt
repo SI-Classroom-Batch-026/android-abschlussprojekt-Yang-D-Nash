@@ -33,14 +33,11 @@ fun ProfileImage(
     ) { uri: Uri? ->
         uri?.let { onImageSelected(it) }
     }
-
     val painter = rememberAsyncImagePainter(model = profileImageUri)
-
     val imageModifier = modifier
         .size(100.dp)
         .clip(CircleShape)
         .clickable { launcher.launch("image/*") }
-
     if (profileImageUri == null) {
         Box(
             modifier = imageModifier

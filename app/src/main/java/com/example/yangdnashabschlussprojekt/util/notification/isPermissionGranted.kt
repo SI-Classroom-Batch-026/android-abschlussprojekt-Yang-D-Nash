@@ -7,14 +7,12 @@ import android.net.Uri
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 
-
 fun isPermissionGranted(context: Context, permission: String): Boolean {
     return ContextCompat.checkSelfPermission(
         context,
         permission
     ) == PackageManager.PERMISSION_GRANTED
 }
-
 fun openAppSettings(context: Context) {
     val intent = Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,

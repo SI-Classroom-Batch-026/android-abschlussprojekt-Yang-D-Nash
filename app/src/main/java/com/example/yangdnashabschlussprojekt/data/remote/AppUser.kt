@@ -8,7 +8,6 @@ data class AppUser(
     val email: String?,
     val profileImageUrl: String?
 )
-
 fun firebaseToLocalUser(firebaseUser: FirebaseUser): AppUser {
     return AppUser(
         uid = firebaseUser.uid,
