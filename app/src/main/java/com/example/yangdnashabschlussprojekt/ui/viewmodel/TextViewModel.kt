@@ -10,12 +10,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
-// ✅ WICHTIG: Import aus dem Shared-Pfad (ohne .local)
-import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
-// ✅ WICHTIG: Das Shared-Modell nutzen
 import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
+import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
@@ -36,10 +34,9 @@ sealed class CloudRecognitionState {
     data class Success(val text: String) : CloudRecognitionState()
     data class Error(val message: String) : CloudRecognitionState()
 }
-
 class TextViewModel(
     private val visionRepository: VisionRepository,
-    private val historyRepository: HistoryRepository,
+    private val manageHistoryUseCase: ManageHistoryUseCase,
     private val userRepository: UserRepository
 ) : ViewModel() {
     private val tag = "TextViewModel"
@@ -60,7 +57,6 @@ class TextViewModel(
     private var lastAnalyzedTimestamp = 0L
     private val frameThrottleIntervalMs = 100L
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
     fun saveCurrentTextToHistory() {
         val recognized = _recognizedText.value
         val translated = _translatedText.value
@@ -71,9 +67,7 @@ class TextViewModel(
             }
             return
         }
-
         viewModelScope.launch {
-            // ✅ Wir erstellen das neutrale TextHistory Objekt
             val historyEntry = TextHistory(
                 id = null,
                 sourceText = recognized,
@@ -81,12 +75,11 @@ class TextViewModel(
                 timestamp = System.currentTimeMillis()
             )
 
-            // ✅ Das Shared-Repo akzeptiert nun TextHistory
-            historyRepository.saveEntry(historyEntry)
+            // ✅ AUFRUF: Damit ist die Warnung im Use Case Geschichte!
+            manageHistoryUseCase.save(historyEntry)
             _uiEvent.send("Text lokal im Verlauf gespeichert.")
         }
     }
-
     private val translator by lazy {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)
@@ -94,24 +87,22 @@ class TextViewModel(
             .build()
         Translation.getClient(options)
     }
-
     override fun onCleared() {
         super.onCleared()
         translator.close()
+        recognizer.close()
     }
-
     private fun sortAndStructureText(blocks: List<Text.TextBlock>): String {
         if (blocks.isEmpty()) return ""
         val allLines = blocks.flatMap { it.lines }
         val sortedLines = allLines.sortedBy { it.boundingBox?.top ?: 0 }
         return sortedLines.joinToString("\n") { line -> line.text }
     }
-
     private fun updateBoundingBoxes(textBlocks: List<Text.TextBlock>, frameWidth: Int, frameHeight: Int, timestamp: Long) {
         val boxes = textBlocks.map { block ->
             val rect: Rect = block.boundingBox ?: Rect(0, 0, 0, 0)
             TimedBoundingBox(
-                id = block.hashCode().toLong().toInt(),
+                id = block.hashCode(),
                 label = block.text,
                 left = rect.left.toFloat(),
                 top = rect.top.toFloat(),
@@ -125,7 +116,6 @@ class TextViewModel(
         }
         _boundingBoxes.value = boxes
     }
-
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
@@ -166,7 +156,6 @@ class TextViewModel(
                 imageProxy.close()
             }
     }
-
     fun continueAnalysis() {
         _isAnalyzing.value = true
         _recognizedText.value = ""
@@ -174,7 +163,6 @@ class TextViewModel(
         _boundingBoxes.value = emptyList()
         _cloudRecognitionState.value = CloudRecognitionState.Idle
     }
-
     fun loadFromHistory(recognized: String, translated: String) {
         _isAnalyzing.value = false
         _recognizedText.value = recognized
@@ -182,7 +170,6 @@ class TextViewModel(
         _cloudRecognitionState.value = CloudRecognitionState.Success(recognized)
         _boundingBoxes.value = emptyList()
     }
-
     fun recognizeText(text: String) {
         if (text.isNotBlank()) {
             _isAnalyzing.value = false
@@ -192,7 +179,6 @@ class TextViewModel(
             _cloudRecognitionState.value = CloudRecognitionState.Success(text)
         }
     }
-
     fun recognizeTextViaCloud(base64Image: String) {
         _isAnalyzing.value = false
         if (_cloudRecognitionState.value is CloudRecognitionState.Loading) return
@@ -217,7 +203,6 @@ class TextViewModel(
             }
         }
     }
-
     private suspend fun translateTextSuspend(text: String) {
         try {
             translator.downloadModelIfNeeded().await()
@@ -228,27 +213,23 @@ class TextViewModel(
             _translatedText.value = "Übersetzung fehlgeschlagen: ${e.message}"
         }
     }
-
     private fun translateTextAsync(text: String) {
         viewModelScope.launch {
             translateTextSuspend(text)
         }
     }
-
     fun saveTextToCloud() {
         val recognized = _recognizedText.value
         val translated = _translatedText.value
 
         if (!userRepository.isAuthenticated.value) {
             viewModelScope.launch {
-                Log.e(tag, "SNACKBAR EVENT: Nicht authentifiziert.")
                 _uiEvent.send("Speichern fehlgeschlagen: Sie sind nicht authentifiziert.")
             }
             return
         }
         if (recognized.isBlank() || translated.isBlank()) {
             viewModelScope.launch {
-                Log.e(tag, "SNACKBAR EVENT: Kein Text.")
                 _uiEvent.send("Kein Text zum Speichern vorhanden.")
             }
             return
@@ -256,16 +237,13 @@ class TextViewModel(
         viewModelScope.launch {
             userRepository.saveTextEntry(recognized, translated)
                 .onSuccess {
-                    Log.d(tag, "SNACKBAR EVENT: Erfolg.")
                     _uiEvent.send("Text erfolgreich in Firebase gespeichert!")
                 }
                 .onFailure { e ->
-                    Log.e(tag, "SNACKBAR EVENT: Fehler: ${e.message}")
                     _uiEvent.send("Speichern fehlgeschlagen: ${e.message}")
                 }
         }
     }
-
     fun setCloudRecognitionState(state: CloudRecognitionState) {
         _cloudRecognitionState.value = state
     }

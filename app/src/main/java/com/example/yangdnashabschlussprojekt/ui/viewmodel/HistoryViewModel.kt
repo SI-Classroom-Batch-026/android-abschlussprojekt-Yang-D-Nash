@@ -2,8 +2,9 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository
-import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryItem
+import com.example.yangdnashabschlussprojekt.domain.usecase.GetHistoryUseCase
+import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -14,10 +15,10 @@ import java.util.Date
 import java.util.Locale
 
 class HistoryViewModel(
-    private val historyRepository: HistoryRepository
+    getHistoryUseCase: GetHistoryUseCase,
+    private val manageHistoryUseCase: ManageHistoryUseCase
 ) : ViewModel() {
-
-    val historyState: StateFlow<List<HistoryItem>> = historyRepository.getAllHistory()
+    val historyState: StateFlow<List<HistoryItem>> = getHistoryUseCase()
         .map { models ->
             models.map { model ->
                 HistoryItem(
@@ -35,16 +36,16 @@ class HistoryViewModel(
         )
     fun clearAllHistory() {
         viewModelScope.launch {
-            historyRepository.clearHistory()
+            manageHistoryUseCase.clear()
+        }
+    }
+    fun deleteHistoryItem(itemId: Long) {
+        viewModelScope.launch {
+            manageHistoryUseCase.delete(itemId)
         }
     }
     private fun formatTimestamp(timestamp: Long): String {
         val date = Date(timestamp)
         return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
-    }
-    fun deleteHistoryItem(itemId: Long) {
-        viewModelScope.launch {
-            historyRepository.deleteEntryById(itemId)
-        }
     }
 }
