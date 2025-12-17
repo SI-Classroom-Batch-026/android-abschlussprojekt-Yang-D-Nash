@@ -18,7 +18,6 @@ fun TextHistory.toEntity() = TextHistoryEntity(
     translatedText = translatedText,
     timestamp = timestamp
 )
-
 fun TextHistoryEntity.toKmpModel() = TextHistory(
     id = id,
     sourceText = sourceText,

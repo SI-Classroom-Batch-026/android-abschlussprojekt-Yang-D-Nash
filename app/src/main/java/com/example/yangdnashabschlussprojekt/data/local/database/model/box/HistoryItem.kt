@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.history
+package com.example.yangdnashabschlussprojekt.data.local.database.model.box
 
 data class HistoryItem(
     val id: Long,
@@ -7,4 +7,3 @@ data class HistoryItem(
     val timestampFormatted: String,
     val rawTimestamp: Long
 )
-

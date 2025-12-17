@@ -64,7 +64,6 @@ private fun createVibrator(context: Context): Vibrator? {
         context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
     }
 }
-
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),

@@ -7,7 +7,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import com.example.yangdnashabschlussprojekt.ui.component.history.EmptyHistoryMessage
-import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryItem
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryList
 import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryTopBar
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
