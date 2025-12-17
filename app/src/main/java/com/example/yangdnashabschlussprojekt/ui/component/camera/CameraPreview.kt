@@ -16,8 +16,8 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 fun CameraPreview(
     cameraManager: CameraXManager,
     modifier: Modifier = Modifier,
-    textViewModel: TextViewModel,
-    arViewModel: ARViewModel,
+    textViewModel: TextViewModel? = null,
+    arViewModel: ARViewModel? = null,
     isTextMode: Boolean = true
 ) {
     val context = LocalContext.current
@@ -26,9 +26,9 @@ fun CameraPreview(
     val analyzer = remember(textViewModel, arViewModel, isTextMode) {
         CameraXManager.FrameAnalyzer { imageProxy ->
             if (isTextMode) {
-                textViewModel.analyzeImageProxy(imageProxy)
+                textViewModel?.analyzeImageProxy(imageProxy)
             } else {
-                arViewModel.analyzeImageProxy(imageProxy)
+                arViewModel?.analyzeImageProxy(imageProxy)
             }
         }
     }

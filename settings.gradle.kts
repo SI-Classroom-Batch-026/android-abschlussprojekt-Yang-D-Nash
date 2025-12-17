@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Yang D. Nash Abschlussprojekt"
 include(":app")
+include(":shared")

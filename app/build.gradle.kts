@@ -1,3 +1,4 @@
+
 import org.gradle.kotlin.dsl.implementation
 import java.util.Properties
 
@@ -92,9 +93,10 @@ android {
 
 dependencies {
 
+    implementation(project(":shared"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
-
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
@@ -106,15 +108,15 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
 
     implementation(platform(libs.koin.bom))
-    implementation(libs.koin.core)
+    // ❌ libs.koin.core WIRD HIER ENTFERNT (Wandert ins shared/commonMain)
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
+    // Room und KSP bleiben hier, da sie Android-spezifisch sind
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.object1.detection)
     implementation(libs.androidx.compose.foundation.layout)
-
     implementation(libs.firebase.firestore)
     implementation(platform(libs.firebase.bom))
     implementation(libs.androidx.ui)
@@ -124,71 +126,53 @@ dependencies {
     implementation(libs.genai.common)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.runtime)
-
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
-
     implementation(libs.camerax.camera2)
     implementation(libs.camerax.lifecycle)
     implementation(libs.camerax.view)
-
     implementation(libs.mlkit.text)
     implementation(libs.mlkit.translate)
-
     implementation(libs.arcore)
-
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
 
+    // ❌ libs.kotlinx.serialization WIRD HIER ENTFERNT (Wandert ins shared/commonMain)
     implementation(libs.retrofit)
     implementation(libs.converterMoshi)
     implementation(libs.moshi)
     implementation(libs.logging.interceptor)
     implementation(libs.okhttp)
     implementation(libs.gson)
-    implementation(libs.kotlinx.serialization)
 
+    // ... (Rest bleibt unverändert, da es Android-spezifisch ist oder später verschoben wird)
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
-
     implementation(libs.play.services.location)
     implementation(libs.play.services.maps)
     implementation(libs.google.maps.compose)
-
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
-
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
     implementation(libs.retrofit.converter.gson)
-
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
-
     implementation(libs.guava)
-
     implementation(libs.okio)
-
     implementation(libs.mediapipe.vision.detector)
-
-    implementation(libs.mlkit.barcode)       // Barcode Scanning
-    implementation(libs.mlkit.face)          // Face Detection
-    implementation(libs.mlkit.label)         // Image Labeling
-    implementation(libs.mlkit.pose)          // Pose Detection
-
-    implementation(libs.mlkit.custom)        // Custom Model
-
+    implementation(libs.mlkit.barcode)
+    implementation(libs.mlkit.face)
+    implementation(libs.mlkit.label)
+    implementation(libs.mlkit.pose)
+    implementation(libs.mlkit.custom)
     implementation(libs.mlkit.objectDetection)
     implementation(libs.mlkit.objectDetection.common)
-
     implementation(libs.androidx.compose.material.icons.extended)
-
     implementation(libs.camerax.core)
-
     implementation(libs.androidx.lifecycle.runtime.compose)
 }
