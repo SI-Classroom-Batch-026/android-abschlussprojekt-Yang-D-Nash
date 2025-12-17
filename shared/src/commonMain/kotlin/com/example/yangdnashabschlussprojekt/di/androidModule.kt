@@ -7,7 +7,6 @@ import org.koin.dsl.module
 
 val sharedModule = module {
     factory { HistoryRepository(get()) }
-
     factory { GetHistoryUseCase(get()) }
     factory { ManageHistoryUseCase(get()) }
 }
