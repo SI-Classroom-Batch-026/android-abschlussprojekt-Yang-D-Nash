@@ -7,7 +7,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.DisposableEffect // Wichtig!
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -32,8 +32,14 @@ fun ARScreen(
 
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
+    // Steuert den Lebenszyklus der Analyse und der Kamera-Ressourcen
     DisposableEffect(Unit) {
+        // 1. Wenn der Screen betreten wird (oder Compose Composition startet)
+        arViewModel.continueAnalysis()
+
         onDispose {
+            // 2. Wenn der Screen verlassen wird (oder Compose Composition endet)
+            arViewModel.stopAnalysis()
             cameraManager.unbindAll()
             cameraExecutor.shutdown()
         }
