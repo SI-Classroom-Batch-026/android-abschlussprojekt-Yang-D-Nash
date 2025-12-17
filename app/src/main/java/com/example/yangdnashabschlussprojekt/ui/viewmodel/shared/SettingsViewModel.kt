@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.viewmodel
+package com.example.yangdnashabschlussprojekt.ui.viewmodel.shared
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -8,7 +8,7 @@ import com.example.yangdnashabschlussprojekt.data.remote.RegistrationResult
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow // NEU: asStateFlow für Read-Only StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class SettingsViewModel(private val userRepository: UserRepository) : ViewModel() {

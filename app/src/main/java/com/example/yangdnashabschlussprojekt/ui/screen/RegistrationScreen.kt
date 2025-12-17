@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationFeedback
 import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationForm
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable

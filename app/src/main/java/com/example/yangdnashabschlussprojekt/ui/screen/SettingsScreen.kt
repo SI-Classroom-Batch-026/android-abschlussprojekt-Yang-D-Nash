@@ -34,7 +34,7 @@ import com.example.yangdnashabschlussprojekt.ui.component.service.PermissionsCar
 import com.example.yangdnashabschlussprojekt.ui.component.user.ProfileImage
 import com.example.yangdnashabschlussprojekt.ui.component.user.UserInfo
 import com.example.yangdnashabschlussprojekt.ui.component.user.login.LoginForm
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.SettingsViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
 import com.example.yangdnashabschlussprojekt.util.notification.isPermissionGranted
 import com.example.yangdnashabschlussprojekt.util.notification.openAppSettings
 import kotlinx.coroutines.launch

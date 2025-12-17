@@ -1,6 +1,4 @@
-@file:Suppress("SameReturnValue")
-
-package com.example.yangdnashabschlussprojekt.ui.component.camera
+package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.content.Context
 import android.graphics.Bitmap
@@ -50,7 +48,7 @@ class CameraXManager(
     ) {
         this.lifecycleOwner = lifecycleOwner
 
-        val providerFuture = ProcessCameraProvider.getInstance(context)
+        val providerFuture = ProcessCameraProvider.Companion.getInstance(context)
         providerFuture.addListener({
             cameraProvider = providerFuture.get()
             val provider = cameraProvider ?: return@addListener

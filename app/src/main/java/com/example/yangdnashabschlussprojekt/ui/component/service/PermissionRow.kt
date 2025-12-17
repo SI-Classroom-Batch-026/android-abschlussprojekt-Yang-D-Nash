@@ -42,7 +42,7 @@ fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
             Icon(
                 Icons.Default.Settings,
                 contentDescription = "Einstellungen für $title öffnen",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant // Gedämpfte Farbe
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
