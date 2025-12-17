@@ -16,23 +16,23 @@ moshiVersion = "1.15.2"
 retrofitVersion = "3.0.0"
 loggingInterceptor = "5.3.2"
 okhttp = "5.3.2"
-kotlinSerialization = "1.7.3"
+kotlinSerialization = "1.9.0"
 gson = "2.13.2"
 coilCompose = "3.3.0"
 koinBom = "4.1.1"
 playServicesLocation = "21.3.0"
 playServicesMaps = "19.2.0"
 mapsCompose = "6.12.2"
-roomRuntime = "2.7.0-alpha01"
-roomCommonJvm = "2.7.0-alpha01"
+roomRuntime = "2.8.4"
+roomCommonJvm = "2.8.4"
 datastorePreferences = "1.2.0"
 workRuntimeKtx = "2.11.0"
-firebase-bom = "34.6.0"
+firebase-bom = "34.7.0"
 #noinspection GradleDependency
 camerax = "1.4.1"
 mlkit-text = "16.0.1"
 mlkit-translate = "17.0.3"
-arCore = "1.51.0"
+arCore = "1.52.0"
 objectDetection = "17.0.2"
 retrofit = "3.0.0"
 foundationLayout = "1.10.0"
@@ -53,7 +53,7 @@ uiGraphics = "1.10.0"
 runtime = "1.10.0"
 mlkit-object-detection = "17.0.2"
 mlkit-object-detection-common = "18.0.0"
-compose-plugin = "1.7.1"
+compose-plugin = "1.9.3"
 stately = "2.1.0"
 [libraries]
 
@@ -132,7 +132,7 @@ sceneform-base = { group = "com.google.ar.sceneform", name = "sceneform-base", v
 guava = { group = "com.google.guava", name = "guava", version.ref = "guava" }
 
 okio = { module = "com.squareup.okio:okio", version = "3.16.4" }
-#noinspection Aligned16KB
+#noinspection Aligned16KB,Aligned16KB
 mediapipe-vision-detector = { module = "com.google.mediapipe:tasks-vision", version.ref = "mediapipe" }
 genai-common = { group = "com.google.mlkit", name = "genai-common", version.ref = "genaiCommon" }
 
