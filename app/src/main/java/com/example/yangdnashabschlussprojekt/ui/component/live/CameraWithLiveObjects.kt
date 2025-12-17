@@ -29,7 +29,6 @@ fun CameraWithLiveObjects(
     textViewModel: TextViewModel,
     isObjectDetectionMode: Boolean,
     detectedObjectLabel: String,
-    detectedTextLabel: String
 ) {
     var previewSize by remember { mutableStateOf(IntSize.Zero) }
 
@@ -37,7 +36,7 @@ fun CameraWithLiveObjects(
         !isObjectDetectionMode
     }
 
-    val currentLabel = if (isObjectDetectionMode) detectedObjectLabel else detectedTextLabel
+    val currentLabel = detectedObjectLabel
 
 
     Box(

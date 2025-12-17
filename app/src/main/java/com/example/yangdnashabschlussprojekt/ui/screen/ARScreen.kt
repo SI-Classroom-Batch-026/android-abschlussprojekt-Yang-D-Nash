@@ -34,7 +34,6 @@ fun ARScreen(
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
     val isObjectDetectionMode = settingsViewModel.isObjectDetectionMode.collectAsState().value
     val detectedObjectLabel = arViewModel.detectedObjectLabel.collectAsState().value
-    val detectedTextLabel = textViewModel.detectedTextLabel.collectAsState().value
     DisposableEffect(Unit) {
         arViewModel.continueAnalysis()
         onDispose {
@@ -63,7 +62,6 @@ fun ARScreen(
                 textViewModel = textViewModel,
                 isObjectDetectionMode = isObjectDetectionMode,
                 detectedObjectLabel = detectedObjectLabel,
-                detectedTextLabel = detectedTextLabel
             )
         }
     }

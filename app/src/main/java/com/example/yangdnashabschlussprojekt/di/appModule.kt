@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.room.Room
 import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
-import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
+import com.example.yangdnashabschlussprojekt.data.local.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.google.firebase.auth.FirebaseAuth
