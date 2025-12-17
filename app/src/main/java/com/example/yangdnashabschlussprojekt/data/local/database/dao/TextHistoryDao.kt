@@ -3,7 +3,7 @@ package com.example.yangdnashabschlussprojekt.data.local.database.dao
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
-import com.example.yangdnashabschlussprojekt.data.local.database.model.TextHistoryEntity
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TextHistoryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

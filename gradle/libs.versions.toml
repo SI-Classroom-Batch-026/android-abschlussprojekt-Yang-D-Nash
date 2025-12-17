@@ -52,6 +52,7 @@ uiGraphics = "1.10.0"
 runtime = "1.10.0"
 mlkit-object-detection = "17.0.2"
 mlkit-object-detection-common = "18.0.0"
+roomCommonJvm = "2.8.4"
 
 [libraries]
 
@@ -78,9 +79,9 @@ play-services-maps = { group = "com.google.android.gms", name = "play-services-m
 google-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
-koin-core = { module = "io.insert-koin:koin-core" }
-koin-android = { module = "io.insert-koin:koin-android" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinBom" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koinBom" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koinBom" }
 
 moshi = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshiVersion" }
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofitVersion" }
@@ -148,9 +149,13 @@ mlkit-objectDetection = { module = "com.google.mlkit:object-detection", version.
 mlkit-objectDetection-common = { module = "com.google.mlkit:object-detection-common", version.ref = "mlkit-object-detection-common" }
 
 camerax-core = { module = "androidx.camera:camera-core", version.ref = "camerax" }
+androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
+
+# ...
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
