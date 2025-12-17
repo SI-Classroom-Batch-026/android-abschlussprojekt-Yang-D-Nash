@@ -71,7 +71,12 @@ class TextViewModel(
     private val frameThrottleIntervalMs = 100L
 
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    private val _detectedTextLabel = MutableStateFlow("")
+    val detectedTextLabel: StateFlow<String> = _detectedTextLabel
 
+    private fun processDetectedText(texts: List<Text.TextBlock>) {
+        _detectedTextLabel.value = "Erkannter Text: ABC-123"
+    }
     private val translator by lazy {
         val options = TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)

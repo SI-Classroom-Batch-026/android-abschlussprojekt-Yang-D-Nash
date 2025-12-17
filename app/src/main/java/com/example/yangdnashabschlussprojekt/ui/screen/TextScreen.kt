@@ -91,9 +91,10 @@ fun TextScreen(
 
     val isLoading = cloudState is CloudRecognitionState.Loading
 
-    var highlight by remember { mutableStateOf(false) } // Trigger für haptisches Feedback
+    var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
-
+    val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
+    val detectedTextLabel by textViewModel.detectedTextLabel.collectAsState()
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -169,7 +170,9 @@ fun TextScreen(
                 cameraManager = cameraManager,
                 textViewModel = textViewModel,
                 arViewModel = arViewModel,
-                isObjectDetectionMode = false
+                isObjectDetectionMode = false,
+                detectedObjectLabel = detectedObjectLabel,
+                detectedTextLabel = detectedTextLabel
             )
 
             BottomTextCard(
