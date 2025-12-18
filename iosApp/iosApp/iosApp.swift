@@ -2,19 +2,14 @@ import SwiftUI
 import shared
 
 @main
-struct ComposeApp: App {
+struct iOSApp: App {
+    init() {
+        KoinHelperKt.startKoin()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView().ignoresSafeArea(.all)
+            ContentView()
         }
-    }
-}
-
-struct ContentView: UIViewControllerRepresentable {
-    func makeUIViewController(context: Context) -> UIViewController {
-        return MainViewControllerKt.mainViewController()
-    }
-
-    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {
     }
 }

@@ -8,11 +8,13 @@
 
 /* Begin PBXBuildFile section */
 		907F1B2A2EF48367003215D2 /* shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 907F1B292EF48367003215D2 /* shared.framework */; };
+		907F1B2C2EF485FE003215D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907F1B2B2EF485FE003215D2 /* ContentView.swift */; };
 		A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93A953A29CC810C00F8E227 /* iosApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		907F1B292EF48367003215D2 /* shared.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = shared.framework; path = ../shared/build/bin/iosSimulatorArm64/debugFramework/shared.framework; sourceTree = "<group>"; };
+		907F1B2B2EF485FE003215D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A93A953729CC810C00F8E227 /* Multiplatform App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Multiplatform App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A93A953A29CC810C00F8E227 /* iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iosApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -49,6 +51,7 @@
 		A93A953929CC810C00F8E227 /* iosApp */ = {
 			isa = PBXGroup;
 			children = (
+				907F1B2B2EF485FE003215D2 /* ContentView.swift */,
 				A93A953A29CC810C00F8E227 /* iosApp.swift */,
 			);
 			path = iosApp;
@@ -141,6 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				907F1B2C2EF485FE003215D2 /* ContentView.swift in Sources */,
 				A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
