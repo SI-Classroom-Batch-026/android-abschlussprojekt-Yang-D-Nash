@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     id("com.android.library")
@@ -22,28 +21,37 @@ kotlin {
             baseName = "shared"
             isStatic = true
             binaryOption("bundleId", "com.example.yangdnash.shared")
+            export(libs.koin.core)
         }
     }
 
     sourceSets {
-        // Fix für Compose Extension Reference
         val composeDeps = project.extensions.getByType<org.jetbrains.compose.ComposeExtension>().dependencies
 
         commonMain.dependencies {
+            implementation("dev.gitlive:firebase-auth:1.13.0")
+            implementation("dev.gitlive:firebase-firestore:1.13.0")
+            implementation("dev.gitlive:firebase-storage:1.13.0")
+
             implementation(composeDeps.runtime)
             implementation(composeDeps.foundation)
             implementation(composeDeps.material3)
             implementation(composeDeps.ui)
             implementation(composeDeps.components.resources)
-            implementation(libs.kotlinx.datetime)
 
-            // Namen exakt nach deiner TOML (Punkte statt Bindestriche)
-            implementation(libs.koin.compose)
-            implementation(libs.stately.common)
-            implementation(libs.kotlinx.serialization)
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
+            implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.2")
+
             implementation(libs.koin.core)
-            implementation(libs.androidx.room.runtime)
+            implementation(libs.koin.compose)
+            implementation("io.insert-koin:koin-compose-viewmodel:1.2.0-Beta4")
+
+            implementation(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serialization)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.stately.common)
+
+            implementation(libs.androidx.room.runtime)
         }
 
         androidMain.dependencies {
@@ -53,7 +61,7 @@ kotlin {
 
         val iosMain by getting {
             dependencies {
-                // iOS spezifische deps falls nötig
+                api(libs.koin.core)
             }
         }
     }
@@ -62,7 +70,9 @@ kotlin {
 android {
     namespace = "com.example.yangdnashabschlussprojekt.shared"
     compileSdk = 35
-    defaultConfig { minSdk = 26 }
+    defaultConfig {
+        minSdk = 26
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -75,6 +85,7 @@ dependencies {
     add("kspIosArm64", libs.androidx.room.compiler)
     add("kspIosX64", libs.androidx.room.compiler)
 }
+
 configurations.all {
     resolutionStrategy {
         force("org.jetbrains.kotlinx:kotlinx-datetime:0.6.1")

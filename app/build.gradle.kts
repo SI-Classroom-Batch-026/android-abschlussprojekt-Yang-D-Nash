@@ -175,4 +175,10 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.camerax.core)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(platform(libs.firebase.bom))
+
+    implementation(libs.firebase.firestore.ktx)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.common.ktx)
 }

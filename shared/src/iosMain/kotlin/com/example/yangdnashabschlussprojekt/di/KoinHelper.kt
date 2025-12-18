@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt
+package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.di.sharedModul.commonModule
 import org.koin.core.context.startKoin
@@ -9,6 +9,6 @@ import kotlin.native.ObjCName
 @ObjCName("startKoin")
 fun initKoin() {
     startKoin {
-        modules(commonModule)
+        modules(commonModule, iosModule)
     }
 }

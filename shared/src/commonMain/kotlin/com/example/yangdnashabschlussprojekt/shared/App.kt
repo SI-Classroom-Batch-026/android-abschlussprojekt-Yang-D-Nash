@@ -1,26 +1,42 @@
 package com.example.yangdnashabschlussprojekt.shared
 
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import org.koin.compose.KoinContext
+import org.koin.compose.viewmodel.koinViewModel
+import org.koin.core.annotation.KoinExperimentalAPI
 
+@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun App() {
-    MaterialTheme {
-        KoinContext {
-            androidx.compose.material3.Scaffold(
-                modifier = androidx.compose.ui.Modifier.fillMaxSize()
-            ) { padding ->
-                androidx.compose.foundation.layout.Box(
-                    modifier = androidx.compose.ui.Modifier
+    KoinContext {
+        MaterialTheme {
+            val viewModel: WelcomeViewModel = koinViewModel()
+            val textState by viewModel.uiState.collectAsState()
+
+            Scaffold(modifier = Modifier.fillMaxSize()) { padding ->
+                Column(
+                    modifier = Modifier
                         .fillMaxSize()
                         .padding(padding),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Hallo vom Shared Modul! Deine App läuft.")
+                    Text(
+                        text = textState,
+                        style = MaterialTheme.typography.headlineMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = {
+                        viewModel.updateText("Es funktioniert! 🚀")
+                    }) {
+                        Text("Text ändern")
+                    }
                 }
             }
         }

@@ -27,8 +27,7 @@ roomRuntime = "2.7.0-beta01"
 roomCommonJvm = "2.7.0-beta01"
 datastorePreferences = "1.2.0"
 workRuntimeKtx = "2.11.0"
-firebase-bom = "34.7.0"
-#noinspection GradleDependency
+firebase-bom = "33.7.0"#noinspection GradleDependency
 camerax = "1.4.1"
 mlkit-text = "16.0.1"
 mlkit-translate = "17.0.3"
@@ -57,9 +56,15 @@ compose-plugin = "1.9.3"
 stately = "2.1.0"
 kotlinxDatetime = "0.6.1"
 room = "2.7.0-alpha11"
-ksp = "2.1.0-1.0.29"
+firebaseKmp = "1.13.0"
 
 [libraries]
+firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
+firebase-auth-ktx = { group = "com.google.firebase", name = "firebase-auth-ktx" }
+firebase-common-ktx = { group = "com.google.firebase", name = "firebase-common-ktx" }
+
+firebase-gitlive-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebaseKmp" }
+firebase-gitlive-firestore = { module = "dev.gitlive:firebase-firestore", version.ref = "firebaseKmp" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 kotlinx-datetime = { group = "org.jetbrains.kotlinx", name = "kotlinx-datetime", version.ref = "kotlinxDatetime" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }

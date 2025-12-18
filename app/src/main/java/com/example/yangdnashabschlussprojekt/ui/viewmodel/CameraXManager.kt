@@ -19,6 +19,7 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.scale
 import androidx.lifecycle.LifecycleOwner
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
@@ -27,7 +28,7 @@ import java.util.concurrent.Executors
 class CameraXManager(
     val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
-) {
+): CameraManager {
     private val mainExecutor = ContextCompat.getMainExecutor(context)
     private var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
@@ -37,6 +38,10 @@ class CameraXManager(
     private var cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
     @Volatile private var isCapturing = false
     fun interface FrameAnalyzer : ImageAnalysis.Analyzer
+
+    override fun openCamera() {
+        println("Kamera-Schnittstelle wurde über das Interface aufgerufen.")
+    }
     fun startCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
