@@ -14,15 +14,14 @@ class WelcomeViewModel(
     private val userRepository: UserRepository,
     private val cameraManager: CameraManager,
     private val settingsRepository: SettingsRepository,
-    onNavigateToOnboarding: () -> Unit
 ) : ViewModel() {
-    fun startOnboardingAgain() {
-        settingsRepository.setOnboardingComplete(false)
-    }
     val currentUser: StateFlow<AppUser?> = userRepository.currentUser
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = null
         ) as StateFlow<AppUser?>
+    fun startOnboardingAgain() {
+        settingsRepository.setOnboardingComplete(false)
+    }
 }
