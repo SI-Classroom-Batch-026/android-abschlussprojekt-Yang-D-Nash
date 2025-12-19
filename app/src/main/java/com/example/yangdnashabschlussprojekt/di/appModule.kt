@@ -8,12 +8,13 @@ import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.data.source.IHistoryDataSource
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import com.google.firebase.auth.FirebaseAuth
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
 private const val VISION_BASE: String = "https://vision.googleapis.com/"
 private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
 val appModule = module {
@@ -38,6 +39,7 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
+    single<CameraManager> { CameraXManager(androidContext()) }
     single { VisionRepository(apiKey = API_KEY, api = get()) }
     includes(viewModelModule)
 }
