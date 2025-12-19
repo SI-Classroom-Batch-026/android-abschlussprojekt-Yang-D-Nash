@@ -9,15 +9,22 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Translate // NEU: Icon für die manuelle Übersetzung
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,65 +41,83 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun RecognitionModalSheet(
     recognizedText: String,
+    translatedText: String,
     onDismiss: () -> Unit,
-    onCloudScan: () -> Unit,
     onTextEdited: (String) -> Unit
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
-    val hasEditedText = editableText != recognizedText
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
         Column(
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .imePadding()
-                .fillMaxWidth(),
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 40.dp)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Texterkennung überprüfen",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                "Analyse Ergebnis",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        "Übersetzung:",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = translatedText.ifBlank { "Keine Übersetzung verfügbar" },
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = editableText,
                 onValueChange = { editableText = it },
-                label = { Text("Erkannter Text (bearbeitbar)") },
-                minLines = 5,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(max = 200.dp)
+                label = { Text("Erkannter Text (Original)") },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 3
             )
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp) // Etwas mehr Abstand
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Button(
-                    onClick = onCloudScan,
-                    enabled = editableText.isNotBlank() && !hasEditedText,
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.tertiary)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Cloud, contentDescription = "Cloud Scan")
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text("Cloud Scan")
-                    }
-                }
-                Button(
+                OutlinedButton(
                     onClick = { onTextEdited(editableText) },
-                    enabled = editableText.isNotBlank(),
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary)
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Translate, contentDescription = "Manuell Übersetzen")
-                        Spacer(Modifier.padding(horizontal = 4.dp))
-                        Text("Anwenden & Übersetzen")
-                    }
+                    Icon(Icons.Default.Translate, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Neu Übersetzen")
+                }
+
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Fertig")
                 }
             }
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }

@@ -20,7 +20,7 @@ class WelcomeViewModel(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,
             initialValue = null
-        ) as StateFlow<AppUser?>
+        )
     fun startOnboardingAgain() {
         settingsRepository.setOnboardingComplete(false)
     }
