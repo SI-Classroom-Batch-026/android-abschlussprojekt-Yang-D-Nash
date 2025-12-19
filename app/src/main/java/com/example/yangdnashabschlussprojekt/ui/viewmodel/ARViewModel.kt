@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import android.graphics.Rect
 import android.util.Log
 import android.util.Size
 import androidx.annotation.OptIn
@@ -8,120 +7,123 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.DetectedObject
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
-class ARViewModel(
-) : ViewModel() {
-    private val tag = "ARViewModel"
-    private val _uiEvent = Channel<String>()
-    val uiEvent = _uiEvent.receiveAsFlow()
+class ARViewModel : ViewModel() {
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
-    val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
+    val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes.asStateFlow()
+
     private val _detectedObjectLabel = MutableStateFlow("")
-    val detectedObjectLabel: StateFlow<String> = _detectedObjectLabel
+    val detectedObjectLabel: StateFlow<String> = _detectedObjectLabel.asStateFlow()
+
+    private val _isCloudLoading = MutableStateFlow(false)
+    val isCloudLoading = _isCloudLoading.asStateFlow()
+
+    private val _isCloudResult = MutableStateFlow(false)
+    val isCloudResult = _isCloudResult.asStateFlow()
+
     private val _frameSize = MutableStateFlow(Size(0, 0))
-    val frameSize: StateFlow<Size> = _frameSize.asStateFlow()
-    private val _isAnalyzing = MutableStateFlow(true)
+    val frameSize = _frameSize.asStateFlow()
+
+    private var cloudLabelOverride: String? = null
     private var lastAnalyzedTimestamp = 0L
-    private val frameThrottleIntervalMs = 100L
+
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()
             .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
             .enableClassification()
-            .enableMultipleObjects()
             .build()
     )
-    override fun onCleared() {
-        super.onCleared()
-        objectDetector.close()
+
+    fun analyzeWithCloudVision(base64Image: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isCloudLoading.value = true
+            _isCloudResult.value = false
+            try {
+                delay(2000) // Simulation
+                val result = "Sony Alpha 7 IV"
+
+                cloudLabelOverride = result
+                _detectedObjectLabel.value = result
+                _isCloudResult.value = true
+            } catch (e: Exception) {
+                Log.e("ARViewModel", "Cloud Error: ${e.message}")
+            } finally {
+                _isCloudLoading.value = false
+            }
+        }
     }
+
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
-        val currentTimestamp = System.currentTimeMillis()
-        if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < frameThrottleIntervalMs) {
+        val ts = System.currentTimeMillis()
+        if (ts - lastAnalyzedTimestamp < 150) {
             imageProxy.close()
             return
         }
-        val mediaImage = imageProxy.image
-        if (mediaImage == null) {
-            imageProxy.close()
-            return
-        }
-        lastAnalyzedTimestamp = currentTimestamp
+        val mediaImage = imageProxy.image ?: return imageProxy.close()
         val rotation = imageProxy.imageInfo.rotationDegrees
-        val isRotated = rotation == 90 || rotation == 270
-        val width = if (isRotated) imageProxy.height else imageProxy.width
-        val height = if (isRotated) imageProxy.width else imageProxy.height
-        if (_frameSize.value.width != width || _frameSize.value.height != height) {
-            _frameSize.value = Size(width, height)
-        }
-        val image = InputImage.fromMediaImage(mediaImage, rotation)
-        objectDetector.process(image)
-            .addOnSuccessListener { detectedObjects ->
-                processDetectedObjects(detectedObjects, width, height, currentTimestamp)
+        val width = if (rotation == 90 || rotation == 270) imageProxy.height else imageProxy.width
+        val height = if (rotation == 90 || rotation == 270) imageProxy.width else imageProxy.height
+
+        if (_frameSize.value.width != width) _frameSize.value = Size(width, height)
+
+        objectDetector.process(InputImage.fromMediaImage(mediaImage, rotation))
+            .addOnSuccessListener { objects ->
+                processDetectedObjects(objects, width, height, ts)
             }
-            .addOnFailureListener { e ->
-                Log.e(tag, "Objekterkennung fehlgeschlagen", e)
-            }
-            .addOnCompleteListener {
-                imageProxy.close()
-            }
+            .addOnCompleteListener { imageProxy.close() }
+        lastAnalyzedTimestamp = ts
     }
-    private fun processDetectedObjects(
-        objects: List<DetectedObject>,
-        frameWidth: Int,
-        frameHeight: Int,
-        timestamp: Long
-    ) {
+
+    private fun processDetectedObjects(objects: List<DetectedObject>, w: Int, h: Int, ts: Long) {
+        // Wenn keine Objekte gefunden werden:
         if (objects.isEmpty()) {
-            _boundingBoxes.value = emptyList()
-            _detectedObjectLabel.value = ""
+            // Nur löschen, wenn wir NICHT im Cloud-Modus sind
+            if (!_isCloudResult.value) {
+                _boundingBoxes.value = emptyList()
+                _detectedObjectLabel.value = ""
+            }
             return
         }
 
-        val mappedBoxes = objects.map { obj ->
-            val rect: Rect = obj.boundingBox
-
-            val labelObj = obj.labels.firstOrNull()
-            val labelText = if (labelObj != null) {
-                "${labelObj.text} ${(labelObj.confidence * 100).toInt()}%"
-            } else {
-                "Objekt"
-            }
+        // Mappe die gefundenen Objekte auf unsere Boxen
+        val mapped = objects.map { obj ->
             TimedBoundingBox(
                 id = obj.trackingId ?: obj.hashCode(),
-                label = labelText,
-                left = rect.left.toFloat(),
-                top = rect.top.toFloat(),
-                right = rect.right.toFloat(),
-                bottom = rect.bottom.toFloat(),
-                timestamp = timestamp,
-                color = Color.Cyan,
-                frameWidth = frameWidth,
-                frameHeight = frameHeight
+                // WICHTIG: Wenn Cloud-Ergebnis da, nutze IMMER das Cloud-Label
+                label = cloudLabelOverride ?: (obj.labels.firstOrNull()?.text ?: "Objekt"),
+                left = obj.boundingBox.left.toFloat(),
+                top = obj.boundingBox.top.toFloat(),
+                right = obj.boundingBox.right.toFloat(),
+                bottom = obj.boundingBox.bottom.toFloat(),
+                timestamp = ts,
+                color = if (_isCloudResult.value) Color.Green else Color.Cyan,
+                frameWidth = w,
+                frameHeight = h
             )
         }
-        _boundingBoxes.value = mappedBoxes
-        mappedBoxes.maxByOrNull {
-            (it.right - it.left) * (it.bottom - it.top)
-        }?.let {
-            _detectedObjectLabel.value = it.label
+
+        _boundingBoxes.value = mapped
+        if (!_isCloudResult.value) {
+            _detectedObjectLabel.value = mapped.firstOrNull()?.label ?: ""
         }
     }
-    fun stopAnalysis() {
-        _isAnalyzing.value = false
-    }
-    fun continueAnalysis() {
-        _isAnalyzing.value = true
+
+    fun resetCloudResult() {
+        cloudLabelOverride = null
+        _isCloudResult.value = false
         _detectedObjectLabel.value = ""
         _boundingBoxes.value = emptyList()
     }

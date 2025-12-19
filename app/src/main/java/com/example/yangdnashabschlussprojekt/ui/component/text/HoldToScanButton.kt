@@ -61,7 +61,7 @@ fun HoldToScanButton(
             if (progress.value == 1f) {
                 try {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                } catch (e: Exception) {  }
+                } catch (_: Exception) {  }
 
                 onTrigger()
 
