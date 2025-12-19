@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.remote.AppUser
-import com.example.yangdnashabschlussprojekt.data.repository.UserRepository // Check this path!
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager // Check this path!
+import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn

@@ -18,7 +18,7 @@ fun WelcomeImage(
     Image(
         painter = painterResource(id = imageRes),
         contentDescription = "Willkommens Icon",
-        contentScale = ContentScale.Crop,
+        contentScale = ContentScale.Fit,
         modifier = modifier
             .fillMaxWidth()
             .height(200.dp)

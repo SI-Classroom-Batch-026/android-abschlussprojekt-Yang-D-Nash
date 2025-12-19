@@ -27,18 +27,15 @@ import androidx.compose.ui.unit.dp
 fun FocusIllustration(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "focus")
 
-    // 1. Stärkere Größen-Animation (0.7 bis 1.1)
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.7f,
         targetValue = 1.1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(800, easing = FastOutSlowInEasing), // Schneller & geschmeidiger
+            animation = tween(800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "scale"
     )
-
-    // 2. Transparenz-Animation (Pulsieren)
     val alpha by infiniteTransition.animateFloat(
         initialValue = 0.3f,
         targetValue = 1f,
@@ -50,7 +47,7 @@ fun FocusIllustration(modifier: Modifier = Modifier) {
     )
 
     Box(
-        modifier = modifier.size(200.dp), // Etwas größer
+        modifier = modifier.size(200.dp),
         contentAlignment = Alignment.Center
     ) {
         Icon(
@@ -66,22 +63,17 @@ fun FocusIllustration(modifier: Modifier = Modifier) {
             val stroke = 10.dp.toPx() // Dickere Linien
             val length = 50.dp.toPx() * scale // Deutlichere Längenänderung
 
-            // Wir nutzen hier das animierte Alpha für die Farbe
             val pulseColor = color.copy(alpha = alpha)
 
-            // Oben Links
             drawLine(pulseColor, Offset(0f, 0f), Offset(length, 0F) , stroke)
             drawLine(pulseColor, Offset(0f, 0f), Offset(0F, length), stroke)
 
-            // Oben Rechts
             drawLine(pulseColor, Offset(size.width, 0f), Offset(size.width - length, 0f), stroke)
             drawLine(pulseColor, Offset(size.width, 0f), Offset(0f + size.width, length), stroke)
 
-            // Unten Links
             drawLine(pulseColor, Offset(0f, size.height), Offset(length, size.height), stroke)
             drawLine(pulseColor, Offset(0f, size.height), Offset(0f, size.height - length), stroke)
 
-            // Unten Rechts
             drawLine(pulseColor, Offset(size.width, size.height), Offset(size.width - length, size.height), stroke)
             drawLine(pulseColor, Offset(size.width, size.height), Offset(size.width, size.height - length), stroke)
         }

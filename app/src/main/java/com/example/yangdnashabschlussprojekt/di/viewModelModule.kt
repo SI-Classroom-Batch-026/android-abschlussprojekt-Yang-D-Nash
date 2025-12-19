@@ -6,14 +6,15 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
+import org.koin.core.module.dsl.viewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 @Suppress("DEPRECATION")
 @SuppressLint("RestrictedApi")
 val viewModelModule = module {
-    viewModelOf(::WelcomeViewModel)
-    viewModelOf(::SettingsViewModel)
+    viewModel { WelcomeViewModel(get(), get(), get()) }
+    viewModel { SettingsViewModel(get()) }
     viewModelOf(::ARViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::TextViewModel)

@@ -9,29 +9,14 @@ import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +49,7 @@ private fun createVibrator(context: Context): Vibrator? {
         context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
     }
 }
+
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
@@ -78,78 +64,76 @@ fun TextScreen(
     val vibrator = remember { createVibrator(context) }
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
+
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
+
     val isLoading = cloudState is CloudRecognitionState.Loading
     var highlight by remember { mutableStateOf(false) }
     var showModal by remember { mutableStateOf(false) }
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
+
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (!isGranted) {
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Kameraberechtigung ist notwendig!",
-                    withDismissAction = true
-                )
-            }
+            scope.launch { snackbarHostState.showSnackbar("Kameraberechtigung notwendig!") }
         }
     }
+
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
-    DisposableEffect(lifecycleOwner, vibrator) {
+
+    DisposableEffect(lifecycleOwner) {
         onDispose {
             cameraManager.unbindAll()
             cameraExecutor.shutdown()
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                vibrator?.cancel()
-            }
         }
     }
-    LaunchedEffect(snackbarHostState) {
-        textViewModel.uiEvent.collect { message ->
-            snackbarHostState.showSnackbar(
-                message = message,
-                withDismissAction = true
+
+    val triggerCloudScan = {
+        if (cloudState !is CloudRecognitionState.Loading) {
+            val timeoutJob = scope.launch {
+                delay(4000) // Etwas mehr Puffer für Cloud
+                if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
+                    snackbarHostState.showSnackbar("Zeitüberschreitung beim Cloud-Scan.")
+                    textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout"))
+                }
+            }
+
+            cameraManager.captureForCloudScan(
+                onCaptured = { base64 ->
+                    timeoutJob.cancel()
+                    textViewModel.recognizeTextViaCloud(base64)
+                    highlight = true
+                },
+                onError = { e ->
+                    timeoutJob.cancel()
+                    textViewModel.setCloudRecognitionState(CloudRecognitionState.Error(e.message ?: "Fehler"))
+                }
             )
         }
     }
-    LaunchedEffect(highlight) {
-        if (highlight) {
-            vibrator?.vibrate(VibrationEffect.createOneShot(120, VibrationEffect.DEFAULT_AMPLITUDE))
-            highlight = false
-        }
-    }
+
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-            scope.launch {
-                snackbarHostState.showSnackbar(
-                    message = "Cloud-Analyse und Übersetzung abgeschlossen.",
-                    withDismissAction = false
-                )
-            }
+            snackbarHostState.showSnackbar("Cloud-Analyse abgeschlossen.")
         }
     }
+
     Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .imePadding(),
-        snackbarHost = {}
+        modifier = Modifier.fillMaxSize().imePadding(),
+        snackbarHost = { }
     ) { paddingValues ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-        ) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 textViewModel = textViewModel,
@@ -157,6 +141,7 @@ fun TextScreen(
                 isObjectDetectionMode = false,
                 detectedObjectLabel = detectedObjectLabel,
             )
+
             BottomTextCard(
                 recognizedText = recognizedText,
                 translatedText = translatedText,
@@ -164,7 +149,12 @@ fun TextScreen(
                 onEditClick = { showModal = true },
                 modifier = Modifier.align(Alignment.BottomStart)
             )
-            if (isLoading) {
+
+            AnimatedVisibility(
+                visible = isLoading,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -180,53 +170,36 @@ fun TextScreen(
                     ) {
                         CircularProgressIndicator()
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "Analysiere Bild in der Cloud...")
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "(Timeout in 3s)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                        )
+                        Text("Analysiere Bild...")
                     }
                 }
             }
-            Box(
-                modifier = Modifier.align(Alignment.BottomEnd)
-            ) {
+
+            Box(modifier = Modifier.align(Alignment.BottomEnd)) {
                 TextScreenFABs(
                     onRestartClick = {
                         textViewModel.continueAnalysis()
                         vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "Analyse neu gestartet.",
-                                withDismissAction = false
-                            )
-                        }
                     },
                     isRestartButtonEnabled = !isAnalyzing && recognizedText.isNotBlank(),
                     onSaveClick = {
                         textViewModel.saveCurrentTextToHistory()
                         textViewModel.saveTextToCloud()
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = "Text wurde erfolgreich gespeichert.",
-                                withDismissAction = false
-                            )
-                        }
                     },
-                    onHistoryClick = onNavigateToHistory,
                     isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
+                    onHistoryClick = onNavigateToHistory,
+                    onCloudScanTriggered = { triggerCloudScan() } // Hier geht's ab!
                 )
             }
+
             CustomSnackbarHost(
                 hostState = snackbarHostState,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp)
-                    .padding(bottom = 150.dp)
+                    .padding(bottom = 160.dp) // Damit sie über den FABs schwebt
                     .zIndex(1f)
             )
+
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,
@@ -235,38 +208,9 @@ fun TextScreen(
                         textViewModel.recognizeText(newText)
                         showModal = false
                     },
-                    onCloudScan = scanCheck@{
-                        if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) return@scanCheck
+                    onCloudScan = {
                         showModal = false
-                        val timeoutJob = scope.launch {
-                            delay(3000)
-                            if (textViewModel.cloudRecognitionState.value is CloudRecognitionState.Loading) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Cloud-Scan-Vorgang hat das Zeitlimit überschritten.",
-                                        withDismissAction = true
-                                    )
-                                }
-                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Timeout (Kamera/Cloud)"))
-                            }
-                        }
-                        cameraManager.captureForCloudScan(
-                            onCaptured = { base64Image: String ->
-                                timeoutJob.cancel()
-                                textViewModel.recognizeTextViaCloud(base64Image)
-                                highlight = true
-                            },
-                            onError = { e: Exception ->
-                                timeoutJob.cancel()
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = "Kamerafehler: ${e.message}",
-                                        withDismissAction = true
-                                    )
-                                }
-                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error("Aufnahme fehlgeschlagen: ${e.message}"))
-                            }
-                        )
+                        triggerCloudScan()
                     }
                 )
             }
