@@ -7,6 +7,11 @@ interface NavRoute {
     val label: String
 }
 @Serializable
+object OnboardingRoute : NavRoute {
+    override val route = "onboarding"
+    override val label = "Info"
+}
+@Serializable
 object WelcomeRoute: NavRoute {
     override val route = "welcome"
     override val label = "Home"

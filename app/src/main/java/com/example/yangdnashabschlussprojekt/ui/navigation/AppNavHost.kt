@@ -14,22 +14,37 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.HistoryScreen
+import com.example.yangdnashabschlussprojekt.ui.screen.OnboardingScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(
     navController: NavHostController,
+    settingsRepository: SettingsRepository = koinInject()
 ) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    var topBarTitle by remember { mutableStateOf("") } // Unbenutzt, aber belassen
+    var topBarTitle by remember { mutableStateOf("") }
+
+    val startDest = remember {
+        if (settingsRepository.isOnboardingComplete()) {
+            WelcomeRoute.route
+        } else {
+            OnboardingRoute.route
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -37,25 +52,44 @@ fun AppNavHost(
                 TopAppBar(title = { Text(topBarTitle) })
             }
         },
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = {
+            if (currentRoute != OnboardingRoute.route) {
+                BottomNavigationBar(navController)
+            }
+        }
     ) { innerPadding ->
         NavHost(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = WelcomeRoute.route
+            startDestination = startDest
         ) {
 
             composable(WelcomeRoute.route) {
                 WelcomeScreen(
                     viewModel = koinViewModel(),
-                    onOpenSettings = { navController.navigate(SettingsRoute.route) }
+                    onOpenSettings = { navController.navigate(SettingsRoute.route) },
+                    onNavigateToOnboarding = { navController.navigate(OnboardingRoute.route) }
                 )
             }
+
+            composable(OnboardingRoute.route) {
+                OnboardingScreen(
+                    onFinished = {
+                        settingsRepository.setOnboardingComplete(true)
+
+                        navController.navigate(WelcomeRoute.route) {
+                            popUpTo(OnboardingRoute.route) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable(ARScreenRoute.route) {
                 ARScreen(
                     textViewModel = koinViewModel()
                 )
             }
+
             composable(SettingsRoute.route) {
                 SettingsScreen(
                     settingsViewModel = koinViewModel(),
@@ -63,6 +97,7 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
+
             composable(TextScreenRoute.route) {
                 TextScreen(
                     textViewModel = koinViewModel(),
@@ -70,19 +105,20 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
+
             composable(RegisterRoute.route) {
                 RegistrationScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
             }
+
             composable(HistoryRoute.route) {
                 val textViewModel: TextViewModel = koinViewModel()
                 HistoryScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() },
                     onHistoryItemSelected = { item ->
-
                         textViewModel.loadFromHistory(
                             recognized = item.recognizedText,
                             translated = item.translatedText

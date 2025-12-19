@@ -3,6 +3,7 @@ package com.example.yangdnashabschlussprojekt.di
 import androidx.room.Room
 import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistoryDao
+import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.local.source.HistoryDataSourceImpl
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
@@ -39,6 +40,7 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
+    single { SettingsRepository(androidContext()) }
     single<CameraManager> { CameraXManager(androidContext()) }
     single { VisionRepository(apiKey = API_KEY, api = get()) }
     includes(viewModelModule)
