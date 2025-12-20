@@ -1,8 +1,6 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import android.content.Context
-import com.example.yangdnashabschlussprojekt.data.repository.SettingsRepository
-import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.camera.AndroidCameraManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
@@ -13,11 +11,11 @@ import org.koin.compose.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 val androidModule = module {
-    viewModel<WelcomeViewModel> {
+    viewModel {
         WelcomeViewModel(
-            userRepository = get<UserRepository>(),
-            cameraManager = get<CameraManager>(),
-            settingsRepository = get<SettingsRepository>()
+            userRepository = get(),
+            cameraManager = get(),      // Move this to 2nd position
+            settingsRepository = get()   // Move this to 3rd position
         )
     }
     single<CameraManager> { AndroidCameraManager() }

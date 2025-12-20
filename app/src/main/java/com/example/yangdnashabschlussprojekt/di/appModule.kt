@@ -42,6 +42,7 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
+    single<CameraManager> { CameraXManager(get()) }
     single { SettingsRepository(androidContext()) }
     single<CameraManager> { CameraXManager(androidContext()) }
     single { VisionRepository(apiKey = API_KEY, api = get()) }
