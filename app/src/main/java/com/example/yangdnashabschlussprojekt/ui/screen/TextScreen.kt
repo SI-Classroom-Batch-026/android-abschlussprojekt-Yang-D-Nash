@@ -102,7 +102,13 @@ fun TextScreen(
     }
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding(),
-        snackbarHost = { CustomSnackbarHost(snackbarHostState, Modifier.padding(bottom = 100.dp).zIndex(50f)) }
+        snackbarHost = {
+            CustomSnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier.padding(bottom = 100.dp).zIndex(50f),
+                isTextMode = true
+            )
+        }
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
             CameraWithLiveObjects(cameraManager, arViewModel, textViewModel, false, detectedObjectLabel)
