@@ -5,14 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.remote.AppUser
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
-class WelcomeViewModel(
+class AndroidWelcomeViewModel(
     private val userRepository: UserRepository,
-    private val cameraManager: CameraManager,
+    private val cameraManager: CameraXManager,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     val currentUser: StateFlow<AppUser?> = userRepository.currentUser

@@ -27,17 +27,15 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import org.koin.androidx.compose.koinViewModel
-import java.util.concurrent.Executors
+import org.koin.compose.koinInject
 
 @Composable
 fun ARScreen(
     arViewModel: ARViewModel = koinViewModel(),
     textViewModel: TextViewModel = koinViewModel(),
+    cameraManager: CameraXManager = koinInject()
 ) {
     val context = LocalContext.current
-    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-    val cameraManager = remember { CameraXManager(context, cameraExecutor) }
-
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
     val isCloudLoading by arViewModel.isCloudLoading.collectAsState()
     val isCloudResult by arViewModel.isCloudResult.collectAsState()
@@ -46,24 +44,17 @@ fun ARScreen(
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { hasCameraPermission = it }
-
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        hasCameraPermission = it
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraManager.unbindAll()
-            cameraExecutor.shutdown()
-        }
+    LaunchedEffect(Unit) {
+        cameraManager.isTextMode = false // Wichtig für den Analyzer Switch
+        if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (hasCameraPermission) {
-            // LAYER 1: Kamera
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
@@ -72,15 +63,11 @@ fun ARScreen(
                 detectedObjectLabel = detectedObjectLabel
             )
 
-            // LAYER 2: Result-Card (Ganz oben durch zIndex)
             AnimatedVisibility(
                 visible = isCloudResult && !isCloudLoading,
                 enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = 50.dp)
-                    .zIndex(10f)
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 50.dp).zIndex(10f)
             ) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
@@ -88,47 +75,37 @@ fun ARScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.Cyan),
                     modifier = Modifier.fillMaxWidth(0.9f)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Info, contentDescription = null, tint = Color.Cyan, modifier = Modifier.size(24.dp))
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
+                    Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Info, null, tint = Color.Cyan)
+                        Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
                             Text("SCAN RESULT", color = Color.Cyan.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
                             Text(detectedObjectLabel.uppercase(), color = Color.White, style = MaterialTheme.typography.titleLarge)
                         }
                         IconButton(onClick = { arViewModel.resetCloudResult() }) {
-                            Icon(Icons.Default.Close, contentDescription = "Reset", tint = Color.White)
+                            Icon(Icons.Default.Close, null, tint = Color.White)
                         }
                     }
                 }
             }
 
-            // LAYER 3: Scan Button
             if (!isCloudResult && !isCloudLoading) {
-                Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp)) {
-                    HoldToScanButton(
-                        onTrigger = {
-                            cameraManager.captureForCloudScan(
-                                onCaptured = { base64 -> arViewModel.analyzeWithCloudVision(base64) },
-                                onError = { Log.e("AR_SCREEN", "Capture failed") }
-                            )
-                        }
-                    )
+                Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp)) {
+                    HoldToScanButton(onTrigger = {
+                        cameraManager.captureForCloudScan(
+                            onCaptured = { arViewModel.analyzeWithCloudVision(it) },
+                            onError = { Log.e("AR_SCREEN", "Capture failed: $it") }
+                        )
+                    })
                 }
             }
         }
 
-        // LAYER 4: Loading Overlay
         if (isCloudLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).zIndex(20f),
-                contentAlignment = Alignment.Center
-            ) {
+            Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).zIndex(20f), Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     CircularProgressIndicator(color = Color.Cyan)
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(Modifier.height(16.dp))
                     Text("PROCESSING AR DATA...", color = Color.Cyan)
                 }
             }

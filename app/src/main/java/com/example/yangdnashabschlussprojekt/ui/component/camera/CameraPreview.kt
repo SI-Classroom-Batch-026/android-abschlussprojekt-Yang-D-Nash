@@ -1,35 +1,31 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import androidx.camera.view.PreviewView
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-
 @Composable
 fun CameraPreview(
     cameraManager: CameraXManager,
     modifier: Modifier = Modifier,
-    textViewModel: TextViewModel? = null,
-    arViewModel: ARViewModel? = null,
-    isTextMode: Boolean = true
+    textViewModel: TextViewModel,
+    arViewModel: ARViewModel,
+    isTextMode: Boolean
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // WICHTIG: Der Analyzer muss stabil sein und den Frame sofort schließen!
+    // Der Analyzer bleibt hier, da er das ImageProxy direkt an die ViewModels gibt
     val analyzer = remember(isTextMode) {
         CameraXManager.FrameAnalyzer { imageProxy ->
             if (isTextMode) {
-                textViewModel?.analyzeImageProxy(imageProxy)
+                textViewModel.analyzeImageProxy(imageProxy)
             } else {
-                arViewModel?.analyzeImageProxy(imageProxy)
+                arViewModel.analyzeImageProxy(imageProxy)
             }
-            // Falls das ViewModel das ImageProxy nicht schließt,
-            // bleibt der Stream hier hängen!
         }
     }
 
@@ -42,10 +38,11 @@ fun CameraPreview(
         },
         modifier = modifier,
         update = { previewView ->
+            // WICHTIG: Nutze hier den analyzer-Parameter deiner startCamera Funktion
             cameraManager.startCamera(
                 previewView = previewView,
                 lifecycleOwner = lifecycleOwner,
-                analyzer = analyzer
+                analyzer = analyzer // Hier wird der analyzer übergeben!
             )
         }
     )

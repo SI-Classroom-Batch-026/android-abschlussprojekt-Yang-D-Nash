@@ -26,7 +26,6 @@ import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavHost(
@@ -63,7 +62,6 @@ fun AppNavHost(
             navController = navController,
             startDestination = startDest
         ) {
-
             composable(WelcomeRoute.route) {
                 WelcomeScreen(
                     viewModel = koinViewModel(),
@@ -77,9 +75,7 @@ fun AppNavHost(
                     onFinished = {
                         settingsRepository.setOnboardingComplete(true)
                         navController.navigate(WelcomeRoute.route) {
-                            popUpTo(navController.graph.startDestinationId) {
-                                inclusive = true
-                            }
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
                             launchSingleTop = true
                         }
                     }
@@ -87,9 +83,7 @@ fun AppNavHost(
             }
 
             composable(ARScreenRoute.route) {
-                ARScreen(
-                    textViewModel = koinViewModel()
-                )
+                ARScreen() // ViewModel-Injection passiert im Screen selbst
             }
 
             composable(SettingsRoute.route) {
@@ -102,8 +96,6 @@ fun AppNavHost(
 
             composable(TextScreenRoute.route) {
                 TextScreen(
-                    textViewModel = koinViewModel(),
-                    arViewModel = koinViewModel(),
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
@@ -116,12 +108,17 @@ fun AppNavHost(
             }
 
             composable(HistoryRoute.route) {
-                val textViewModel: TextViewModel = koinViewModel()
+                // ✅ SCOPED VIEWMODEL: Greift auf das TextViewModel des TextScreens zu
+                val textBackStackEntry = remember(it) {
+                    navController.getBackStackEntry(TextScreenRoute.route)
+                }
+                val sharedTextViewModel: TextViewModel = koinViewModel(viewModelStoreOwner = textBackStackEntry)
+
                 HistoryScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() },
                     onHistoryItemSelected = { item ->
-                        textViewModel.loadFromHistory(
+                        sharedTextViewModel.loadFromHistory(
                             recognized = item.recognizedText,
                             translated = item.translatedText
                         )

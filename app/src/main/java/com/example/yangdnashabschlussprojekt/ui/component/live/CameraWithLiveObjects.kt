@@ -1,21 +1,24 @@
 package com.example.yangdnashabschlussprojekt.ui.component.live
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.BoxesOverlay
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+
 @Composable
 fun CameraWithLiveObjects(
     cameraManager: CameraXManager,
@@ -24,19 +27,12 @@ fun CameraWithLiveObjects(
     isObjectDetectionMode: Boolean,
     detectedObjectLabel: String,
 ) {
-    var previewSize by remember { mutableStateOf(IntSize.Zero) }
+    // Beobachte die Bounding Boxes direkt hier, um zu sehen ob Daten fließen
+    val arBoxes by arViewModel.boundingBoxes.collectAsState()
+    val textBoxes by textViewModel.boundingBoxes.collectAsState()
     val isCloudResult by arViewModel.isCloudResult.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            // Wichtig: onGloballyPositioned muss auf dem Container sitzen,
-            // der die exakte Größe der Kamera-Fläche hat
-            .onGloballyPositioned { coordinates ->
-                previewSize = coordinates.size
-            }
-    ) {
-        // 1. Hintergrund: Kamera
+    Box(modifier = Modifier.fillMaxSize()) {
         CameraPreview(
             cameraManager = cameraManager,
             textViewModel = textViewModel,
@@ -45,31 +41,29 @@ fun CameraWithLiveObjects(
             isTextMode = !isObjectDetectionMode
         )
 
-        // 2. Mittlere Ebene: Die Boxen (Z-Index beachten!)
-        if (previewSize.width > 0 && previewSize.height > 0) {
-            // Wir packen das Overlay in eine Box mit matchParentSize,
-            // damit es exakt auf der Kamera liegt
-            Box(modifier = Modifier.matchParentSize()) {
-                BoxesOverlay(
-                    arViewModel = arViewModel,
-                    textViewModel = textViewModel,
-                    isTextMode = !isObjectDetectionMode,
-                    // Gib die Größe explizit mit, falls dein Overlay sie braucht
-                )
-            }
-        }
+        // Das Overlay für die Rahmen
+        BoxesOverlay(
+            arViewModel = arViewModel,
+            textViewModel = textViewModel,
+            isTextMode = !isObjectDetectionMode,
+        )
 
-        // 3. Obere Ebene: Label
+        // Das Label unter dem Objekt
         if (detectedObjectLabel.isNotBlank() && !isCloudResult) {
-            Text(
-                text = detectedObjectLabel,
+            Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 180.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
-                    .padding(8.dp),
-                color = Color.White
-            )
+                    .padding(bottom = 120.dp), // Etwas höher schieben
+                color = Color.Black.copy(alpha = 0.7f),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = detectedObjectLabel,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    color = Color.Cyan, // Cyan für bessere Sichtbarkeit auf Kamera
+                    style = androidx.compose.material3.MaterialTheme.typography.titleMedium
+                )
+            }
         }
     }
 }

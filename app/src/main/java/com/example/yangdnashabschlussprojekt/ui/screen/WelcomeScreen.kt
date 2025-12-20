@@ -32,12 +32,12 @@ import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.SettingsButton
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeGreeting
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeImage
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.AndroidWelcomeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun WelcomeScreen(
-    viewModel: WelcomeViewModel = koinViewModel(),
+    viewModel: AndroidWelcomeViewModel = koinViewModel(),
     onOpenSettings: () -> Unit,
     onNavigateToOnboarding: () -> Unit
 ) {

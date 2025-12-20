@@ -1,13 +1,21 @@
-// In shared/src/androidMain/kotlin/com/example/yangdnashabschlussprojekt/di/AndroidModule.kt
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
-import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import org.koin.dsl.module
+import java.util.concurrent.Executor
+import androidx.core.content.ContextCompat
+import org.koin.android.ext.koin.androidContext
 
 val platformModule = module {
-    single<CameraManager> { CameraXManager(get()) }
-    
-    single { SettingsRepository(get()) }
+    single<Executor> {
+        ContextCompat.getMainExecutor(androidContext())
+    }
+
+    single<CameraManager> {
+        CameraXManager(
+            context = androidContext(),
+            executor = get()
+        )
+    }
 }

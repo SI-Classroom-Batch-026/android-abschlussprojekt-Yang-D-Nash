@@ -1,7 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import android.util.Size
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -12,9 +11,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -32,44 +29,39 @@ import com.example.yangdnashabschlussprojekt.data.local.database.model.box.Timed
 import kotlin.math.max
 import kotlin.math.min
 
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @Composable
 fun AnimatedBoxView(boxes: List<TimedBoundingBox>, frameSize: Size, modifier: Modifier = Modifier) {
     val density = LocalDensity.current
     val textMeasurer = rememberTextMeasurer()
     val infiniteTransition = rememberInfiniteTransition(label = "CyberHud")
 
-    // Animationen
-    val pulseAlpha by infiniteTransition.animateFloat(0.4f, 1f, infiniteRepeatable(tween(1000), RepeatMode.Reverse))
+    val pulseAlpha by infiniteTransition.animateFloat(0.6f, 1f, infiniteRepeatable(tween(1000), RepeatMode.Reverse))
     val scanLineY by infiniteTransition.animateFloat(0f, 1f, infiniteRepeatable(tween(2000, easing = LinearEasing)))
 
     BoxWithConstraints(modifier.fillMaxSize()) {
         val screenW = with(density) { maxWidth.toPx() }
         val screenH = with(density) { maxHeight.toPx() }
+
+        // Skalierung berechnen
         val scale = max(screenW / frameSize.width, screenH / frameSize.height)
         val dx = (screenW - frameSize.width * scale) / 2
         val dy = (screenH - frameSize.height * scale) / 2
 
-        val alphaAnimatable = remember { Animatable(0f) }
-        LaunchedEffect(boxes) {
-            if (boxes.any { it.timestamp != Long.MAX_VALUE }) {
-                alphaAnimatable.snapTo(1f)
-                alphaAnimatable.animateTo(0f, tween(1000))
-            }
-        }
-
-        @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
         Canvas(Modifier.fillMaxSize()) {
             boxes.forEach { box ->
                 val isCloud = box.timestamp == Long.MAX_VALUE
-                val alpha = if (isCloud) 1f else alphaAnimatable.value
-                if (alpha <= 0f) return@forEach
+
+                // LIVE BOXEN sollen IMMER sichtbar sein (alpha = 1f)
+                // CLOUD BOXEN sind ebenfalls 1f
+                val alpha = 1f
 
                 val left = box.left * scale + dx
                 val top = box.top * scale + dy
                 val w = (box.right - box.left) * scale
                 val h = (box.bottom - box.top) * scale
 
-                // 1. NEON BRACKETS
+                // 1. NEON BRACKETS (Ecken)
                 val corner = min(w, h) * 0.25f
                 val path = Path().apply {
                     moveTo(left, top + corner); lineTo(left, top); lineTo(left + corner, top)
@@ -77,11 +69,11 @@ fun AnimatedBoxView(boxes: List<TimedBoundingBox>, frameSize: Size, modifier: Mo
                     moveTo(left + w, top + h - corner); lineTo(left + w, top + h); lineTo(left + w - corner, top + h)
                     moveTo(left + corner, top + h); lineTo(left, top + h); lineTo(left, top + h - corner)
                 }
-                // Glow & Line
+
                 drawPath(path, box.color.copy(alpha = alpha * 0.3f * pulseAlpha), style = Stroke(15f, cap = StrokeCap.Round))
                 drawPath(path, box.color.copy(alpha = alpha), style = Stroke(6f))
 
-                // 2. SCANLINE (Nur Cloud)
+                // 2. SCANLINE (Nur bei Cloud-Scan für den Effekt)
                 if (isCloud) {
                     val y = top + (h * scanLineY)
                     drawLine(
@@ -90,17 +82,31 @@ fun AnimatedBoxView(boxes: List<TimedBoundingBox>, frameSize: Size, modifier: Mo
                     )
                 }
 
-                // 3. TYPEWRITER LABEL
-                if (isCloud) {
+                // 3. LABEL ZEICHNEN (Jetzt für Cloud UND Live!)
+                if (box.label.isNotBlank()) {
                     val textLayout = textMeasurer.measure(
                         box.label.uppercase(),
-                        TextStyle(color = Color.Black, fontWeight = FontWeight.ExtraBold, fontSize = 12.sp)
+                        TextStyle(
+                            color = Color.Black,
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 12.sp
+                        )
                     )
-                    drawRect(box.color.copy(alpha * 0.9f), Offset(left, top - textLayout.size.height - 20f), androidx.compose.ui.geometry.Size(textLayout.size.width + 30f, textLayout.size.height + 10f))
+
+                    val labelWidth = textLayout.size.width.toFloat()
+                    val labelHeight = textLayout.size.height.toFloat()
+
+                    // Hintergrund-Rechteck für das Label (Cyan/Magenta)
+                    drawRect(
+                        color = box.color.copy(alpha = 0.9f),
+                        topLeft = Offset(left, top - labelHeight - 20f),
+                        size = androidx.compose.ui.geometry.Size(labelWidth + 30f, labelHeight + 10f)
+                    )
+
+                    // Der eigentliche Text
                     drawText(
                         textLayoutResult = textLayout,
-                        color = Color.Black, // <-- Das hat gefehlt
-                        topLeft = Offset(left + 15f, top - textLayout.size.height - 15f)
+                        topLeft = Offset(left + 15f, top - labelHeight - 15f)
                     )
                 }
             }
