@@ -2,7 +2,6 @@ package com.example.yangdnashabschlussprojekt.di
 
 import androidx.room.Room
 import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
-import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistoryDao
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.local.source.HistoryDataSourceImpl
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
@@ -17,9 +16,11 @@ import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-private const val VISION_BASE: String = "https://vision.googleapis.com/"
-private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
+private const val VISION_BASE = "https://vision.googleapis.com/"
+private const val API_KEY = "DEIN_API_KEY"
+
 val appModule = module {
+    // 1. DATABASE & DAO
     single {
         Room.databaseBuilder(
             androidContext(),
@@ -27,14 +28,14 @@ val appModule = module {
             "text_history_db"
         ).build()
     }
-    single { CameraXManager(get()) }
     single { get<AppDatabase>().textHistoryDao() }
-    single<IHistoryDataSource> {
-        val dao: TextHistoryDao = get()
-        HistoryDataSourceImpl(dao)
-    }
-    single { FirebaseAuth.getInstance() }
+
+    // 2. DATA SOURCES & REPOSITORIES
+    single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
     single { UserRepository(get()) }
+    single { SettingsRepository(androidContext()) }
+    single { VisionRepository(apiKey = API_KEY, api = get()) }
+
     single<VisionApiService> {
         Retrofit.Builder()
             .baseUrl(VISION_BASE)
@@ -42,9 +43,14 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
-    single<CameraManager> { CameraXManager(get()) }
-    single { SettingsRepository(androidContext()) }
+
+    // 4. FIREBASE
+    single { FirebaseAuth.getInstance() }
+
+    // 5. PLATFORM SPECIFIC (Camera)
+    // Wir registrieren den Manager unter seinem Interface
     single<CameraManager> { CameraXManager(androidContext()) }
-    single { VisionRepository(apiKey = API_KEY, api = get()) }
+
+    // 6. INCLUDE VIEWMODELS
     includes(viewModelModule)
 }

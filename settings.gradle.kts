@@ -20,3 +20,4 @@ dependencyResolutionManagement {
 rootProject.name = "YangDNashAbschlussprojekt"
 include(":app")
 include(":shared")
+include(":iosApp")
