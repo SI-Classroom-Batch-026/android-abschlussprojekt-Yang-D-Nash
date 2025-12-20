@@ -13,7 +13,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -63,6 +62,7 @@ fun TextScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val vibrator = remember { createVibrator(context) }
 
+    // Kamera-Ressourcen stabil im Screen-Lifecycle halten
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
@@ -92,6 +92,7 @@ fun TextScreen(
         }
     }
 
+    // WICHTIG: Ressourcen freigeben, wenn der Screen verlassen wird
     DisposableEffect(lifecycleOwner) {
         onDispose {
             cameraManager.unbindAll()
@@ -99,7 +100,7 @@ fun TextScreen(
         }
     }
 
-    // Automatisches Öffnen des Modals
+    // Modal automatisch öffnen bei Cloud-Erfolg
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             vibrator?.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
@@ -109,37 +110,40 @@ fun TextScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding(),
-        snackbarHost = { }
+        snackbarHost = {
+            CustomSnackbarHost(
+                hostState = snackbarHostState,
+                modifier = Modifier
+                    .padding(bottom = 100.dp)
+                    .zIndex(50f)
+            )
+        }
     ) { paddingValues ->
-        // WICHTIG: Die Box nutzt fillMaxSize, um den gesamten Viewport zu füllen
         Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
 
-            // 1. Kamera (Hintergrund)
+            // 1. Kamera-Layer MIT LIVE-BOXEN
+            // Hier wird CameraWithLiveObjects genutzt, damit BoxesOverlay geladen wird
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
-                textViewModel = textViewModel,
                 arViewModel = arViewModel,
-                isObjectDetectionMode = false,
-                detectedObjectLabel = detectedObjectLabel,
+                textViewModel = textViewModel,
+                isObjectDetectionMode = false, // Wir sind im Text-Modus
+                detectedObjectLabel = detectedObjectLabel
             )
 
-            // 2. UI-Layer (Vorschau Card)
-            // Wir nutzen hier eine explizite AnimatedVisibility mit hohem zIndex
-            Box(modifier = Modifier.fillMaxSize().zIndex(10f)) {
-                AnimatedVisibility(
-                    visible = recognizedText.isNotBlank() && !showModal && !isLoading,
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                    modifier = Modifier.align(Alignment.BottomStart)
-                ) {
-                    // Hier die Card Komponente
-                    BottomTextCard(
-                        recognizedText = recognizedText
-                    )
-                }
+            // 2. UI-Layer: Vorschau Card (Erkannter Text am unteren Rand)
+            AnimatedVisibility(
+                visible = recognizedText.isNotBlank() && !showModal && !isLoading,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .zIndex(10f)
+            ) {
+                BottomTextCard(recognizedText = recognizedText)
             }
 
-            // 3. FAB Layer (Ganz oben rechts/unten)
+            // 3. FAB Layer (Buttons)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -170,26 +174,20 @@ fun TextScreen(
                 )
             }
 
-            // 4. Lade-Overlay
+            // 4. Lade-Overlay für Cloud-Scan
             if (isLoading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.6f))
-                        .zIndex(30f)
-                        .clickable(enabled = false) {},
+                        .zIndex(30f),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             }
 
-            // 5. Snackbar & Modal
-            CustomSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp).zIndex(40f)
-            )
-
+            // 5. Recognition Result Modal
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,

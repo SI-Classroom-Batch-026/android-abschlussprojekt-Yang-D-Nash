@@ -2,11 +2,8 @@ package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
@@ -21,44 +18,35 @@ fun CameraPreview(
     arViewModel: ARViewModel? = null,
     isTextMode: Boolean = true
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val previewView = remember { PreviewView(context) }
 
-    // Update den Modus im Manager, ohne die Kamera-Hardware neu zu starten
-    LaunchedEffect(isTextMode) {
-        cameraManager.isTextMode = isTextMode
-    }
-
-    // Erstelle den Analyzer nur einmal. Er entscheidet intern anhand des Flags,
-    // welches ViewModel die Daten bekommt.
-    val analyzer = remember {
+    // WICHTIG: Der Analyzer muss stabil sein und den Frame sofort schließen!
+    val analyzer = remember(isTextMode) {
         CameraXManager.FrameAnalyzer { imageProxy ->
-            if (cameraManager.isTextMode) {
+            if (isTextMode) {
                 textViewModel?.analyzeImageProxy(imageProxy)
             } else {
                 arViewModel?.analyzeImageProxy(imageProxy)
             }
-            // Falls deine ViewModels imageProxy.close() nicht selbst rufen,
-            // müsste es hier stehen. Aber laut Standard-Pattern machen das die ViewModels.
+            // Falls das ViewModel das ImageProxy nicht schließt,
+            // bleibt der Stream hier hängen!
         }
     }
 
     AndroidView(
-        factory = { previewView },
-        modifier = modifier
-    )
-
-    // Kamera binden, wenn der Screen geladen wird
-    DisposableEffect(lifecycleOwner) {
-        cameraManager.startCamera(
-            previewView = previewView,
-            lifecycleOwner = lifecycleOwner,
-            analyzer = analyzer
-        )
-        onDispose {
-            // Nur beim Verlassen des Screens unbinden
-            cameraManager.unbindAll()
+        factory = { ctx ->
+            PreviewView(ctx).apply {
+                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                scaleType = PreviewView.ScaleType.FILL_CENTER
+            }
+        },
+        modifier = modifier,
+        update = { previewView ->
+            cameraManager.startCamera(
+                previewView = previewView,
+                lifecycleOwner = lifecycleOwner,
+                analyzer = analyzer
+            )
         }
-    }
+    )
 }

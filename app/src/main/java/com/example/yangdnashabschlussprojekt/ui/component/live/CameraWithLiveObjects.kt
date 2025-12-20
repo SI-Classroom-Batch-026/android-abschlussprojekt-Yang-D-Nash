@@ -16,7 +16,6 @@ import com.example.yangdnashabschlussprojekt.ui.component.overlay.BoxesOverlay
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-
 @Composable
 fun CameraWithLiveObjects(
     cameraManager: CameraXManager,
@@ -31,8 +30,13 @@ fun CameraWithLiveObjects(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .onGloballyPositioned { previewSize = it.size }
+            // Wichtig: onGloballyPositioned muss auf dem Container sitzen,
+            // der die exakte Größe der Kamera-Fläche hat
+            .onGloballyPositioned { coordinates ->
+                previewSize = coordinates.size
+            }
     ) {
+        // 1. Hintergrund: Kamera
         CameraPreview(
             cameraManager = cameraManager,
             textViewModel = textViewModel,
@@ -41,23 +45,28 @@ fun CameraWithLiveObjects(
             isTextMode = !isObjectDetectionMode
         )
 
-        // Die Boxen-Ebene
+        // 2. Mittlere Ebene: Die Boxen (Z-Index beachten!)
         if (previewSize.width > 0 && previewSize.height > 0) {
-            BoxesOverlay(
-                arViewModel = arViewModel,
-                textViewModel = textViewModel,
-                isTextMode = !isObjectDetectionMode,
-            )
+            // Wir packen das Overlay in eine Box mit matchParentSize,
+            // damit es exakt auf der Kamera liegt
+            Box(modifier = Modifier.matchParentSize()) {
+                BoxesOverlay(
+                    arViewModel = arViewModel,
+                    textViewModel = textViewModel,
+                    isTextMode = !isObjectDetectionMode,
+                    // Gib die Größe explizit mit, falls dein Overlay sie braucht
+                )
+            }
         }
 
-        // Live-Label unten (nur zeigen, wenn kein Cloud-Ergebnis oben klebt)
+        // 3. Obere Ebene: Label
         if (detectedObjectLabel.isNotBlank() && !isCloudResult) {
             Text(
                 text = detectedObjectLabel,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(bottom = 180.dp)
-                    .background(Color.Black.copy(alpha = 0.6f), shape = RoundedCornerShape(8.dp))
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
                     .padding(8.dp),
                 color = Color.White
             )
