@@ -35,7 +35,6 @@ fun RegistrationScreen(
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             email = currentUser!!.email ?: ""
-
             displayName = currentUser!!.displayName
         }
     }

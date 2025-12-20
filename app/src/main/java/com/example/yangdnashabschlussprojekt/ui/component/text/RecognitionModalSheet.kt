@@ -38,30 +38,25 @@ fun RecognitionModalSheet(
     isLoggedIn: Boolean
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
-
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(20.dp).fillMaxWidth().verticalScroll(rememberScrollState())) {
             Text("Analyse Ergebnis", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(16.dp))
-
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Übersetzung:", style = MaterialTheme.typography.labelSmall)
                     Text(translatedText.ifBlank { "Wird übersetzt..." })
                 }
             }
-
             OutlinedTextField(
                 value = editableText,
                 onValueChange = { editableText = it },
                 modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
             )
-
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = { onTextEdited(editableText) }, modifier = Modifier.weight(1f)) { Text("Update") }
                 Button(onClick = onDismiss, modifier = Modifier.weight(1f)) { Text("Fertig") }
             }
-
             Button(
                 onClick = onSaveToCloud,
                 enabled = isLoggedIn,

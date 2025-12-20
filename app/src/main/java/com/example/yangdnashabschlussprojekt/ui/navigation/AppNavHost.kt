@@ -44,7 +44,6 @@ fun AppNavHost(
             OnboardingRoute.route
         }
     }
-
     Scaffold(
         topBar = {
             if (topBarTitle.isNotEmpty()) {
@@ -69,7 +68,6 @@ fun AppNavHost(
                     onNavigateToOnboarding = { navController.navigate(OnboardingRoute.route) }
                 )
             }
-
             composable(OnboardingRoute.route) {
                 OnboardingScreen(
                     onFinished = {
@@ -81,11 +79,9 @@ fun AppNavHost(
                     }
                 )
             }
-
             composable(ARScreenRoute.route) {
-                ARScreen() // ViewModel-Injection passiert im Screen selbst
+                ARScreen()
             }
-
             composable(SettingsRoute.route) {
                 SettingsScreen(
                     settingsViewModel = koinViewModel(),
@@ -93,27 +89,22 @@ fun AppNavHost(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
-
             composable(TextScreenRoute.route) {
                 TextScreen(
                     onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
                 )
             }
-
             composable(RegisterRoute.route) {
                 RegistrationScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() }
                 )
             }
-
             composable(HistoryRoute.route) {
-                // ✅ SCOPED VIEWMODEL: Greift auf das TextViewModel des TextScreens zu
                 val textBackStackEntry = remember(it) {
                     navController.getBackStackEntry(TextScreenRoute.route)
                 }
                 val sharedTextViewModel: TextViewModel = koinViewModel(viewModelStoreOwner = textBackStackEntry)
-
                 HistoryScreen(
                     viewModel = koinViewModel(),
                     onBack = { navController.popBackStack() },

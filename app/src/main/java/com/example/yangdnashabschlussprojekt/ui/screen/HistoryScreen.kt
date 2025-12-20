@@ -30,7 +30,6 @@ fun HistoryScreen(
             )
         }
     ) { paddingValues ->
-
         if (historyItems.isEmpty()) {
             EmptyHistoryMessage(Modifier.padding(paddingValues))
         } else {

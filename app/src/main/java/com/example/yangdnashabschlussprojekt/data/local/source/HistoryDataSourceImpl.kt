@@ -13,21 +13,17 @@ import kotlinx.coroutines.flow.map
 class HistoryDataSourceImpl(
     private val dao: TextHistoryDao
 ) : IHistoryDataSource {
-
     override fun getAllHistory(): Flow<List<TextHistory>> {
         return dao.getAllHistory().map { entityList ->
             entityList.map { it.toKmpModel() }
         }
     }
-
     override suspend fun saveEntry(history: TextHistory) {
         dao.insert(history.toEntity())
     }
-
     override suspend fun deleteEntryById(id: Long) {
         dao.deleteById(id)
     }
-
     override suspend fun clearHistory() {
         dao.deleteAll()
     }

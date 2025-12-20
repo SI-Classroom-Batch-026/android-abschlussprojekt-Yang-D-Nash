@@ -27,29 +27,22 @@ class ARViewModel(
     val uiState: StateFlow<TextUiState> = _uiState.asStateFlow()
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes = _boundingBoxes.asStateFlow()
-
     private val _detectedObjectLabel = MutableStateFlow("")
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
-
     private val _isCloudLoading = MutableStateFlow(false)
     val isCloudLoading = _isCloudLoading.asStateFlow()
-
     private val _isCloudResult = MutableStateFlow(false)
     val isCloudResult = _isCloudResult.asStateFlow()
-
     private val _frameSize = MutableStateFlow(Size(0, 0))
     val frameSize = _frameSize.asStateFlow()
-
     private var cloudLabelOverride: String? = null
     private var lastAnalyzedTimestamp = 0L
-
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()
             .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
             .enableClassification()
             .build()
     )
-
     fun analyzeWithCloudVision(base64Image: String) {
         viewModelScope.launch {
             _isCloudLoading.value = true
@@ -61,12 +54,10 @@ class ARViewModel(
                         Feature(type = "TEXT_DETECTION", maxResults = 1)
                     )
                 )
-
                 val firstResponse = response.responses.firstOrNull()
                 val result = firstResponse?.labelAnnotations?.firstOrNull()?.description
                     ?: firstResponse?.fullTextAnnotation?.text?.take(20)
                     ?: "OBJEKT ERKANNT"
-
                 cloudLabelOverride = result
                 _detectedObjectLabel.value = result
                 _isCloudResult.value = true
@@ -78,7 +69,6 @@ class ARViewModel(
             }
         }
     }
-
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val ts = System.currentTimeMillis()
@@ -88,18 +78,15 @@ class ARViewModel(
             return
         }
         lastAnalyzedTimestamp = ts
-
         val mediaImage = imageProxy.image ?: run {
             imageProxy.close()
             return
         }
-
         val rotation = imageProxy.imageInfo.rotationDegrees
         _frameSize.value = Size(
             if (rotation % 180 != 0) imageProxy.height else imageProxy.width,
             if (rotation % 180 != 0) imageProxy.width else imageProxy.height
         )
-
         val image = InputImage.fromMediaImage(mediaImage, rotation)
         objectDetector.process(image)
             .addOnSuccessListener { objects ->
@@ -130,7 +117,6 @@ class ARViewModel(
         _detectedObjectLabel.value = ""
         _boundingBoxes.value = emptyList()
     }
-
     override fun onCleared() {
         super.onCleared()
         objectDetector.close()

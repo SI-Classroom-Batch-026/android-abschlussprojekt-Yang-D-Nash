@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt.ui.component.overlay
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,27 +15,20 @@ fun BoxesOverlay(
     arViewModel: ARViewModel,
     isTextMode: Boolean
 ) {
-    // Beobachte beide States
     val textBoxes by textViewModel.boundingBoxes.collectAsState()
     val arBoxes by arViewModel.boundingBoxes.collectAsState()
     val textFrameSize by textViewModel.frameSize.collectAsState()
     val arFrameSize by arViewModel.frameSize.collectAsState()
 
-    // Wähle NUR die Daten aus, die zum aktuellen Modus gehören
-    val (activeBoxes, activeFrameSize) = if (isTextMode) {
-        textBoxes to textFrameSize
-    } else {
-        arBoxes to arFrameSize
-    }
+    val activeBoxes = if (isTextMode) textBoxes else arBoxes
+    val activeFrameSize = if (isTextMode) textFrameSize else arFrameSize
 
-    Box(Modifier.fillMaxSize()) {
-        // Wichtig: Nur zeichnen, wenn wir eine gültige Frame-Größe haben
-        if (activeFrameSize.width > 0 && activeFrameSize.height > 0) {
-            AnimatedBoxView(
-                boxes = activeBoxes,
-                frameSize = activeFrameSize,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+    if (activeFrameSize.width > 0 && activeFrameSize.height > 0) {
+        AnimatedBoxView(
+            boxes = activeBoxes,
+            frameSize = activeFrameSize,
+            isTextMode = isTextMode,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }

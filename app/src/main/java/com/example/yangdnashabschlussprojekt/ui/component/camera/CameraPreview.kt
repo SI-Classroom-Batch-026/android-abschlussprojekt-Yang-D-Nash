@@ -1,5 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
+import androidx.camera.core.ImageProxy // WICHTIGER IMPORT
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -8,6 +9,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+
 @Composable
 fun CameraPreview(
     cameraManager: CameraXManager,
@@ -18,14 +20,20 @@ fun CameraPreview(
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Der Analyzer bleibt hier, da er das ImageProxy direkt an die ViewModels gibt
+    // Typ explizit angeben: CameraXManager.FrameAnalyzer { imageProxy: ImageProxy -> ... }
     val analyzer = remember(isTextMode) {
-        CameraXManager.FrameAnalyzer { imageProxy ->
+        CameraXManager.FrameAnalyzer { imageProxy: ImageProxy ->
             if (isTextMode) {
                 textViewModel.analyzeImageProxy(imageProxy)
             } else {
                 arViewModel.analyzeImageProxy(imageProxy)
             }
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+        onDispose {
+            cameraManager.unbindAll() // Jetzt im Manager definiert
         }
     }
 
@@ -38,11 +46,10 @@ fun CameraPreview(
         },
         modifier = modifier,
         update = { previewView ->
-            // WICHTIG: Nutze hier den analyzer-Parameter deiner startCamera Funktion
             cameraManager.startCamera(
                 previewView = previewView,
                 lifecycleOwner = lifecycleOwner,
-                analyzer = analyzer // Hier wird der analyzer übergeben!
+                analyzer = analyzer
             )
         }
     )

@@ -38,20 +38,16 @@ fun HoldToScanButton(
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val haptic = LocalHapticFeedback.current
-
     val primaryColor = MaterialTheme.colorScheme.primary
     val secondaryContainerColor = MaterialTheme.colorScheme.secondaryContainer
     val onSecondaryContainerColor = MaterialTheme.colorScheme.onSecondaryContainer
     val ringBgColor = Color.LightGray.copy(alpha = 0.2f)
-
     val myRipple = ripple(bounded = false, radius = 42.dp, color = primaryColor)
-
     val buttonScale by animateFloatAsState(
         targetValue = if (isPressed) 0.92f else 1f,
         animationSpec = tween(150),
         label = "scale"
     )
-
     LaunchedEffect(isPressed) {
         if (isPressed) {
             progress.animateTo(
@@ -62,9 +58,7 @@ fun HoldToScanButton(
                 try {
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 } catch (_: Exception) {  }
-
                 onTrigger()
-
                 progress.snapTo(0f)
             }
         } else {
@@ -82,7 +76,6 @@ fun HoldToScanButton(
                 color = ringBgColor,
                 style = Stroke(width = strokeWidth)
             )
-
             drawArc(
                 color = if (progress.value >= 1f) Color.Green else primaryColor,
                 startAngle = -90f,
@@ -91,7 +84,6 @@ fun HoldToScanButton(
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
         }
-
         Surface(
             onClick = {  },
             interactionSource = interactionSource,
@@ -101,7 +93,7 @@ fun HoldToScanButton(
             modifier = Modifier
                 .size(80.dp)
                 .scale(buttonScale)
-                .indication(interactionSource, myRipple) // Ripple ist zurück!
+                .indication(interactionSource, myRipple)
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(

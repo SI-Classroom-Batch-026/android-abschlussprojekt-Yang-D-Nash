@@ -27,7 +27,6 @@ fun CameraWithLiveObjects(
     isObjectDetectionMode: Boolean,
     detectedObjectLabel: String,
 ) {
-    // Beobachte die Bounding Boxes direkt hier, um zu sehen ob Daten fließen
     val arBoxes by arViewModel.boundingBoxes.collectAsState()
     val textBoxes by textViewModel.boundingBoxes.collectAsState()
     val isCloudResult by arViewModel.isCloudResult.collectAsState()
@@ -40,27 +39,23 @@ fun CameraWithLiveObjects(
             modifier = Modifier.fillMaxSize(),
             isTextMode = !isObjectDetectionMode
         )
-
-        // Das Overlay für die Rahmen
         BoxesOverlay(
             arViewModel = arViewModel,
             textViewModel = textViewModel,
             isTextMode = !isObjectDetectionMode,
         )
-
-        // Das Label unter dem Objekt
         if (detectedObjectLabel.isNotBlank() && !isCloudResult) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 120.dp), // Etwas höher schieben
+                    .padding(bottom = 120.dp),
                 color = Color.Black.copy(alpha = 0.7f),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
                     text = detectedObjectLabel,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = Color.Cyan, // Cyan für bessere Sichtbarkeit auf Kamera
+                    color = Color.Cyan,
                     style = androidx.compose.material3.MaterialTheme.typography.titleMedium
                 )
             }

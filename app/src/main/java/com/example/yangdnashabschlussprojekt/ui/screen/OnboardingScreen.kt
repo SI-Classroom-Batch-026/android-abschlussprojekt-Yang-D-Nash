@@ -61,10 +61,8 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             Icons.Default.CloudUpload
         )
     )
-
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -91,25 +89,20 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
-
                 Text(
                     text = data.title,
                     style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-
                 Spacer(Modifier.height(16.dp))
-
                 Text(
                     text = data.desc,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-
                 Spacer(Modifier.height(32.dp))
-
                 Surface(
                     color = MaterialTheme.colorScheme.secondaryContainer,
                     shape = RoundedCornerShape(12.dp)
@@ -123,7 +116,6 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 }
             }
         }
-
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,7 +137,6 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     )
                 }
             }
-
             Button(
                 onClick = {
                     if (pagerState.currentPage < pages.size - 1) {

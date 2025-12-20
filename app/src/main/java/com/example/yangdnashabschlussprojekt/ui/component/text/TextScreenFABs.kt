@@ -36,11 +36,9 @@ fun TextScreenFABs(
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
-
     val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
     val activeContentColor = Color.White
-
     Column(
         modifier = modifier.padding(FAB_SPACING),
         verticalArrangement = Arrangement.spacedBy(FAB_SPACING),
@@ -68,7 +66,6 @@ fun TextScreenFABs(
                 )
             }
         }
-
         AnimatedFab(isVisible = visible, delay = 200) {
             val containerColor by animateColorAsState(
                 if (isSaveButtonEnabled) MaterialTheme.colorScheme.primary else disabledContainerColor,
@@ -86,7 +83,6 @@ fun TextScreenFABs(
                 )
             }
         }
-
         AnimatedFab(isVisible = visible, delay = 300) {
             FloatingActionButton(
                 onClick = onHistoryClick,

@@ -10,19 +10,14 @@ class VisionRepository(
     private val apiKey: String,
     private val api: VisionApiService
 ) {
-    /**
-     * Eine universelle Methode für Text- und Label-Erkennung
-     */
     suspend fun analyzeImage(
         base64Image: String,
         features: List<Feature>
     ): VisionApiResponse = withContext(Dispatchers.IO) {
         withTimeout(5000L) {
-            // Bereinigung: Entfernt Präfixe wie "data:image/jpeg;base64," falls vorhanden
             val cleanBase64 = if (base64Image.contains(",")) {
                 base64Image.split(",")[1]
             } else base64Image
-
             val requestBody = VisionApiRequest(
                 requests = listOf(
                     AnnotateImageRequest(
@@ -31,7 +26,6 @@ class VisionRepository(
                     )
                 )
             )
-
             api.annotateImage(apiKey = apiKey, request = requestBody)
         }
     }

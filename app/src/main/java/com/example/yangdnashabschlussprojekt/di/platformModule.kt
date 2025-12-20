@@ -11,7 +11,6 @@ val platformModule = module {
     single<Executor> {
         ContextCompat.getMainExecutor(androidContext())
     }
-
     single<CameraManager> {
         CameraXManager(
             context = androidContext(),

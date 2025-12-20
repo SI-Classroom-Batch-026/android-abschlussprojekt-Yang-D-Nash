@@ -33,7 +33,6 @@ val appModule = module {
     single { UserRepository(get()) }
     single { SettingsRepository(androidContext()) }
     single { VisionRepository(apiKey = API_KEY, api = get()) }
-
     single<VisionApiService> {
         Retrofit.Builder()
             .baseUrl(VISION_BASE)
@@ -41,12 +40,9 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
-
     single { FirebaseAuth.getInstance() }
-
     single { Executors.newSingleThreadExecutor() }
     single { CameraXManager(androidContext(), get()) }
-    single<CameraManager> { get<CameraXManager>() }
-
+    single<CameraManager> { CameraXManager(get()) }
     includes(viewModelModule)
 }

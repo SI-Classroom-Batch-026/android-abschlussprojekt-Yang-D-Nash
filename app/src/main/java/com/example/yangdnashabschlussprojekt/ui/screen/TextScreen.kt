@@ -68,63 +68,50 @@ fun TextScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
-
     var showModal by remember { mutableStateOf(false) }
-
-    // ✅ Automatisches Öffnen des Modals, wenn Daten aus History geladen werden
     LaunchedEffect(recognizedText, isAnalyzing) {
         if (recognizedText.isNotEmpty() && !isAnalyzing) {
             showModal = true
         }
     }
-
     LaunchedEffect(Unit) {
         cameraManager.isTextMode = true
     }
-
     LaunchedEffect(Unit) {
         textViewModel.uiEvent.collectLatest { snackbarHostState.showSnackbar(it) }
     }
-
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
-
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (!isGranted) scope.launch { snackbarHostState.showSnackbar("Kamera benötigt.") }
     }
-
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             permissionLauncher.launch(Manifest.permission.CAMERA)
         }
     }
-
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding(),
         snackbarHost = { CustomSnackbarHost(snackbarHostState, Modifier.padding(bottom = 100.dp).zIndex(50f)) }
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
             CameraWithLiveObjects(cameraManager, arViewModel, textViewModel, false, detectedObjectLabel)
-
-            // Live-Vorschau unten links (nur wenn kein Modal offen ist)
             androidx.compose.animation.AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal && cloudState !is CloudRecognitionState.Loading,
                 modifier = Modifier.align(Alignment.BottomStart).zIndex(10f)
             ) {
                 BottomTextCard(recognizedText)
             }
-
             Box(Modifier.fillMaxSize().padding(16.dp).zIndex(20f), Alignment.BottomEnd) {
                 TextScreenFABs(
                     onRestartClick = { textViewModel.continueAnalysis(); triggerVibration(context) },
@@ -140,13 +127,11 @@ fun TextScreen(
                     }
                 )
             }
-
             if (cloudState is CloudRecognitionState.Loading) {
                 Box(Modifier.fillMaxSize().background(Color.Black.copy(0.6f)).zIndex(30f), Alignment.Center) {
                     CircularProgressIndicator(color = Color.Magenta)
                 }
             }
-
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText, translatedText,

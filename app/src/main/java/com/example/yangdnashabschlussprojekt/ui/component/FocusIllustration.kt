@@ -26,7 +26,6 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FocusIllustration(modifier: Modifier = Modifier) {
     val infiniteTransition = rememberInfiniteTransition(label = "focus")
-
     val scale by infiniteTransition.animateFloat(
         initialValue = 0.7f,
         targetValue = 1.1f,
@@ -45,7 +44,6 @@ fun FocusIllustration(modifier: Modifier = Modifier) {
         ),
         label = "alpha"
     )
-
     Box(
         modifier = modifier.size(200.dp),
         contentAlignment = Alignment.Center
@@ -56,12 +54,10 @@ fun FocusIllustration(modifier: Modifier = Modifier) {
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
         )
-
         val color = MaterialTheme.colorScheme.primary
-
         Canvas(modifier = Modifier.fillMaxSize().padding(20.dp)) {
-            val stroke = 10.dp.toPx() // Dickere Linien
-            val length = 50.dp.toPx() * scale // Deutlichere Längenänderung
+            val stroke = 10.dp.toPx()
+            val length = 50.dp.toPx() * scale
 
             val pulseColor = color.copy(alpha = alpha)
 

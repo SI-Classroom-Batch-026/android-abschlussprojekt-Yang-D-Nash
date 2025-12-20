@@ -8,20 +8,19 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight // Hinzugefügt für FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
+import com.example.yangdnashabschlussprojekt.ui.component.overlay.ARResultOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.text.HoldToScanButton
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
@@ -32,7 +31,7 @@ import org.koin.compose.koinInject
 @Composable
 fun ARScreen(
     arViewModel: ARViewModel = koinViewModel(),
-    textViewModel: TextViewModel = koinViewModel(),
+    textViewModel: TextViewModel = koinViewModel(), // Hinzugefügt für CameraWithLiveObjects
     cameraManager: CameraXManager = koinInject()
 ) {
     val context = LocalContext.current
@@ -43,13 +42,10 @@ fun ARScreen(
     var hasCameraPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
-
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        hasCameraPermission = it
-    }
+    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { hasCameraPermission = it }
 
     LaunchedEffect(Unit) {
-        cameraManager.isTextMode = false // Wichtig für den Analyzer Switch
+        cameraManager.isTextMode = false
         if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
@@ -58,35 +54,21 @@ fun ARScreen(
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
-                textViewModel = textViewModel,
+                textViewModel = textViewModel, // Jetzt übergeben
                 isObjectDetectionMode = true,
                 detectedObjectLabel = detectedObjectLabel
             )
 
             AnimatedVisibility(
                 visible = isCloudResult && !isCloudLoading,
-                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 50.dp).zIndex(10f)
+                enter = fadeIn() + slideInVertically { -it },
+                exit = fadeOut() + slideOutVertically { -it },
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.dp).zIndex(10f)
             ) {
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = Color.Black.copy(alpha = 0.85f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Cyan),
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                ) {
-                    Row(modifier = Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Info, null, tint = Color.Cyan)
-                        Spacer(Modifier.width(16.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text("SCAN RESULT", color = Color.Cyan.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
-                            Text(detectedObjectLabel.uppercase(), color = Color.White, style = MaterialTheme.typography.titleLarge)
-                        }
-                        IconButton(onClick = { arViewModel.resetCloudResult() }) {
-                            Icon(Icons.Default.Close, null, tint = Color.White)
-                        }
-                    }
-                }
+                ARResultOverlay(
+                    label = detectedObjectLabel,
+                    onReset = { arViewModel.resetCloudResult() }
+                )
             }
 
             if (!isCloudResult && !isCloudLoading) {
@@ -104,9 +86,9 @@ fun ARScreen(
         if (isCloudLoading) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).zIndex(20f), Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = Color.Cyan)
+                    CircularProgressIndicator(color = Color.Cyan, strokeWidth = 4.dp)
                     Spacer(Modifier.height(16.dp))
-                    Text("PROCESSING AR DATA...", color = Color.Cyan)
+                    Text("UPLOADING TO CLOUD...", color = Color.Cyan, fontWeight = FontWeight.Bold)
                 }
             }
         }

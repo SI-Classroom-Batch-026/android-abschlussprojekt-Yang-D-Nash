@@ -44,16 +44,12 @@ fun WelcomeScreen(
     val currentUser by viewModel.currentUser.collectAsState(initial = null)
     val displayName = currentUser?.displayName ?: "Gast"
     val isNotLoggedIn = displayName == "Gast"
-
-    // Animation-States
     val visible = remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { visible.value = true } // Triggert Animation beim Start
-
+    LaunchedEffect(Unit) { visible.value = true }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
-                // Subtiler Gradient für mehr Tiefe
                 Brush.verticalGradient(
                     colors = listOf(
                         MaterialTheme.colorScheme.surface,
@@ -66,27 +62,20 @@ fun WelcomeScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // 1. Das Bild schwebt sanft ein
         AnimatedVisibility(
             visible = visible.value,
             enter = fadeIn(animationSpec = tween(1000)) + expandVertically()
         ) {
             WelcomeImage()
         }
-
         Spacer(modifier = Modifier.height(24.dp))
-
-        // 2. Begrüßung mit Slide-In Effekt
         AnimatedVisibility(
             visible = visible.value,
             enter = slideInVertically(initialOffsetY = { 40 }) + fadeIn(animationSpec = tween(800, delayMillis = 300))
         ) {
             WelcomeGreeting(displayName)
         }
-
         Spacer(modifier = Modifier.height(32.dp))
-
-        // 3. Buttons erscheinen versetzt (Staggered)
         AnimatedVisibility(
             visible = visible.value,
             enter = slideInVertically(initialOffsetY = { 60 }) + fadeIn(animationSpec = tween(800, delayMillis = 500))
@@ -97,12 +86,11 @@ fun WelcomeScreen(
                     onNavigateToOnboarding()
                 },
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp) // Modernere Ecken
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Text("Anleitung (Onboarding) zeigen", modifier = Modifier.padding(8.dp))
             }
         }
-
         if (isNotLoggedIn) {
             Spacer(modifier = Modifier.height(16.dp))
             AnimatedVisibility(

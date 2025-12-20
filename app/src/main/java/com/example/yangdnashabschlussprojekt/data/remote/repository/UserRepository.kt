@@ -18,22 +18,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class UserRepository(private val firebaseAuth: FirebaseAuth) {
-
     private val firestore = FirebaseFirestore.getInstance()
     private val storage = FirebaseStorage.getInstance()
     private val scope = CoroutineScope(Dispatchers.IO)
-
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
-
     private val _currentUser = MutableStateFlow(firebaseAuth.currentUser?.let { firebaseToLocalUser(it) })
     val currentUser = _currentUser.asStateFlow()
-
     val isAuthenticated = _currentUser.map { it != null }.stateIn(
         scope = scope,
         started = SharingStarted.Eagerly,
         initialValue = firebaseAuth.currentUser != null
     )
-
     fun registerUser(
         email: String,
         password: String,
@@ -47,13 +42,11 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                     onComplete(false, task.exception?.localizedMessage)
                     return@addOnCompleteListener
                 }
-
                 val user = firebaseAuth.currentUser
                 if (user == null) {
                     onComplete(false, "Firebase User ist null")
                     return@addOnCompleteListener
                 }
-
                 scope.launch {
                     var profileImageUrl: String? = null
                     profileImageUri?.let { uri ->
@@ -66,30 +59,24 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                             null
                         }
                     }
-
                     val userMap = hashMapOf(
                         "displayName" to displayName,
                         "email" to email,
                         "profileImageUrl" to profileImageUrl
                     )
-
                     try {
                         firestore.collection("users")
                             .document(user.uid)
                             .set(userMap)
                             .await()
-
                         val profileUpdates = UserProfileChangeRequest.Builder()
                             .setDisplayName(displayName)
                             .apply { profileImageUrl?.let { photoUri = it.toUri() } }
                             .build()
-
                         user.updateProfile(profileUpdates).await()
-
                         val localUser = firebaseToLocalUser(user)
                         _currentUser.value = localUser
                         _userName.value = displayName
-
                         onComplete(true, null)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -98,7 +85,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                 }
             }
     }
-
     fun login(
         email: String,
         password: String,
@@ -119,37 +105,31 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                 }
             }
     }
-
     fun logout() {
         firebaseAuth.signOut()
         _userName.value = "Gast"
         _currentUser.value = null
     }
-
     suspend fun saveTextEntry(
         recognizedText: String,
         translatedText: String
     ): Result<Unit> {
         val userId = firebaseAuth.currentUser?.uid
             ?: return Result.failure(IllegalStateException("User not logged in. Cannot save text."))
-
         if (recognizedText.isBlank()) {
             return Result.failure(IllegalArgumentException("Recognized text cannot be empty."))
         }
-
         val textData = hashMapOf(
             "recognizedText" to recognizedText,
             "translatedText" to translatedText,
             "timestamp" to System.currentTimeMillis()
         )
-
         return try {
             firestore.collection("users")
                 .document(userId)
                 .collection("texts")
                 .add(textData)
                 .await()
-
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

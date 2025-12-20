@@ -23,13 +23,10 @@ import androidx.compose.ui.unit.dp
 fun BottomTextCard(
     recognizedText: String,
     modifier: Modifier = Modifier,
-    // Diese Standardwerte sorgen dafür, dass die Card über den FABs schwebt
     bottomPadding: androidx.compose.ui.unit.Dp = 116.dp,
     horizontalPadding: androidx.compose.ui.unit.Dp = 16.dp
 ) {
     val bgColor = remember { Color.Black.copy(alpha = 0.7f) }
-
-    // Die Card wird nur gerendert, wenn auch Text da ist
     if (recognizedText.isNotBlank()) {
         Card(
             modifier = modifier
@@ -47,9 +44,7 @@ fun BottomTextCard(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold
                 )
-
                 Spacer(modifier = Modifier.height(4.dp))
-
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
