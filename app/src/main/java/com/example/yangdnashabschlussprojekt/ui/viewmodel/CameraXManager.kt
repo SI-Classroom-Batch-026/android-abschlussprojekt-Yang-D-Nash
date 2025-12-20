@@ -49,7 +49,7 @@ class CameraXManager(
         onReady: () -> Unit = {}
     ) {
         this.lifecycleOwner = lifecycleOwner
-        val providerFuture = ProcessCameraProvider.Companion.getInstance(context)
+        val providerFuture = ProcessCameraProvider.getInstance(context)
         providerFuture.addListener({
             cameraProvider = providerFuture.get()
             val provider = cameraProvider ?: return@addListener

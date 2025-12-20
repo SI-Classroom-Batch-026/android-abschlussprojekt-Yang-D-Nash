@@ -13,8 +13,14 @@ import org.koin.dsl.module
 @Suppress("DEPRECATION")
 @SuppressLint("RestrictedApi")
 val viewModelModule = module {
-    viewModel { WelcomeViewModel(get(), get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel {
+        WelcomeViewModel(
+            userRepository = get(),
+            settingsRepository = get(),
+            cameraManager = get()
+        )
+    }
+    viewModelOf(::SettingsViewModel)
     viewModelOf(::ARViewModel)
     viewModelOf(::HistoryViewModel)
     viewModelOf(::TextViewModel)

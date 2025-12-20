@@ -76,9 +76,11 @@ fun AppNavHost(
                 OnboardingScreen(
                     onFinished = {
                         settingsRepository.setOnboardingComplete(true)
-
                         navController.navigate(WelcomeRoute.route) {
-                            popUpTo(OnboardingRoute.route) { inclusive = true }
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                            launchSingleTop = true
                         }
                     }
                 )

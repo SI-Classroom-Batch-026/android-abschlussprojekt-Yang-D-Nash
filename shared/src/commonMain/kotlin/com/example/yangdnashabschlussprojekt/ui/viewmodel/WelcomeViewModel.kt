@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.yangdnashabschlussprojekt.data.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -8,8 +9,9 @@ import kotlinx.coroutines.flow.asStateFlow
 
 class WelcomeViewModel(
     private val userRepository: UserRepository,
-    private val cameraManager: CameraManager
-) : ViewModel() {
+    private val cameraManager: CameraManager,
+    private val settingsRepository: SettingsRepository,
+    ) : ViewModel() {
 
     private val _uiState = MutableStateFlow("Bereit")
     val uiState = _uiState.asStateFlow()

@@ -32,7 +32,8 @@ kotlin {
             implementation("dev.gitlive:firebase-auth:1.13.0")
             implementation("dev.gitlive:firebase-firestore:1.13.0")
             implementation("dev.gitlive:firebase-storage:1.13.0")
-
+            implementation("com.russhwolf:multiplatform-settings-no-arg:1.2.0")
+            implementation("com.russhwolf:multiplatform-settings-coroutines:1.2.0")
             implementation(composeDeps.runtime)
             implementation(composeDeps.foundation)
             implementation(composeDeps.material3)
@@ -57,6 +58,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.room.ktx)
             implementation(composeDeps.uiTooling)
+            implementation("io.insert-koin:koin-android:3.5.0") // oder deine Koin Version
         }
 
         val iosMain by getting {
