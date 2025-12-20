@@ -5,43 +5,21 @@ import android.content.pm.PackageManager
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.core.content.ContextCompat
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.text.HoldToScanButton
@@ -57,45 +35,35 @@ fun ARScreen(
     textViewModel: TextViewModel = koinViewModel(),
 ) {
     val context = LocalContext.current
-
-    // Kamera-Ressourcen
     val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
     val cameraManager = remember { CameraXManager(context, cameraExecutor) }
 
-    // States
     val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
     val isCloudLoading by arViewModel.isCloudLoading.collectAsState()
     val isCloudResult by arViewModel.isCloudResult.collectAsState()
 
-    // --- NEU: Permission Logic ---
     var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-        )
+        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-    }
+    ) { hasCameraPermission = it }
 
     LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
+        if (!hasCameraPermission) permissionLauncher.launch(Manifest.permission.CAMERA)
     }
 
-    // Lifecycle Management für den Executor
     DisposableEffect(Unit) {
         onDispose {
+            cameraManager.unbindAll()
             cameraExecutor.shutdown()
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (hasCameraPermission) {
-            // Kamera nur anzeigen, wenn Permission da ist
+            // LAYER 1: Kamera
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
@@ -104,66 +72,65 @@ fun ARScreen(
                 detectedObjectLabel = detectedObjectLabel
             )
 
-            // Result Card (Oben)
+            // LAYER 2: Result-Card (Ganz oben durch zIndex)
             AnimatedVisibility(
                 visible = isCloudResult && !isCloudLoading,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut(),
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.dp)
+                enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 50.dp)
+                    .zIndex(10f)
             ) {
-                Card(
-                    onClick = { arViewModel.resetCloudResult() },
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF1C1C1C).copy(alpha = 0.9f)),
-                    shape = RoundedCornerShape(24.dp),
-                    modifier = Modifier.fillMaxWidth(0.85f).padding(8.dp)
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color.Black.copy(alpha = 0.85f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Cyan),
+                    modifier = Modifier.fillMaxWidth(0.9f)
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Info,
-                            contentDescription = null,
-                            tint = Color.Cyan,
-                            modifier = Modifier.size(30.dp)
-                        )
+                        Icon(Icons.Default.Info, contentDescription = null, tint = Color.Cyan, modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text("IDENTIFIZIERT", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
-                            Text(detectedObjectLabel, color = Color.White, style = MaterialTheme.typography.titleMedium)
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text("SCAN RESULT", color = Color.Cyan.copy(alpha = 0.6f), style = MaterialTheme.typography.labelSmall)
+                            Text(detectedObjectLabel.uppercase(), color = Color.White, style = MaterialTheme.typography.titleLarge)
+                        }
+                        IconButton(onClick = { arViewModel.resetCloudResult() }) {
+                            Icon(Icons.Default.Close, contentDescription = "Reset", tint = Color.White)
                         }
                     }
                 }
             }
 
-            // Scan Button (Unten)
-            HoldToScanButton(
-                onTrigger = {
-                    Log.d("AR_DEBUG", "Button getriggert")
-                    cameraManager.captureForCloudScan(
-                        onCaptured = { base64 ->
-                            Log.d("AR_DEBUG", "Bild erfolgreich gecaptured")
-                            arViewModel.analyzeWithCloudVision(base64)
-                        },
-                        onError = { Log.e("AR_DEBUG", "Capture-Fehler: ${it.message}") }
+            // LAYER 3: Scan Button
+            if (!isCloudResult && !isCloudLoading) {
+                Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp)) {
+                    HoldToScanButton(
+                        onTrigger = {
+                            cameraManager.captureForCloudScan(
+                                onCaptured = { base64 -> arViewModel.analyzeWithCloudVision(base64) },
+                                onError = { Log.e("AR_SCREEN", "Capture failed") }
+                            )
+                        }
                     )
-                },
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp)
-            )
-        } else {
-            // Fallback, wenn keine Permission gegeben wurde
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Kamera-Berechtigung wird benötigt", color = Color.White)
+                }
             }
         }
 
-        // Loading Overlay
+        // LAYER 4: Loading Overlay
         if (isCloudLoading) {
             Box(
-                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)),
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)).zIndex(20f),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.Cyan)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    CircularProgressIndicator(color = Color.Cyan)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("PROCESSING AR DATA...", color = Color.Cyan)
+                }
             }
         }
     }
