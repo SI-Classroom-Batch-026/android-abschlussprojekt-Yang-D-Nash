@@ -1,16 +1,16 @@
 -- Merging decision tree log ---
 manifest
-ADDED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml:2:13-83
-INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml:2:13-83
+ADDED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml:2:13-83
+INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml:2:13-83
 	package
-		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml
+		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml
 	xmlns:android
-		ADDED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml:2:23-81
+		ADDED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml:2:23-81
 uses-sdk
-INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml reason: use-sdk injection requested
-INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml
-INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml
+INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml reason: use-sdk injection requested
+INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml
+INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml
 	android:targetSdkVersion
-		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml
+		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml
 	android:minSdkVersion
-		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest8708386553269678756.xml
+		INJECTED from /Users/nashfirstmac/StudioProjects/android-abschlussprojekt-Yang-D-Nash/shared/build/intermediates/tmp/ProcessLibraryManifest/debug/tempAndroidManifest11705668048514496758.xml
