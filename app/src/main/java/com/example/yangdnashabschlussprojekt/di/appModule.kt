@@ -5,14 +5,17 @@ import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.local.source.HistoryDataSourceImpl
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
+import com.example.yangdnashabschlussprojekt.data.remote.repository.HistoryRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
-import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository
-import com.example.yangdnashabschlussprojekt.data.source.IHistoryDataSource
+import com.example.yangdnashabschlussprojekt.domain.usecase.IHistoryDataSource
+import com.example.yangdnashabschlussprojekt.domain.usecase.GetHistoryUseCase
 import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -23,16 +26,12 @@ private const val VISION_BASE = "https://vision.googleapis.com/"
 private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
 
 val appModule = module {
-    single {
-        Room.databaseBuilder(androidContext(), AppDatabase::class.java, "text_history_db").build()
-    }
-    single { HistoryRepository(get()) }
-    single { get<AppDatabase>().textHistoryDao() }
-    factory { ManageHistoryUseCase(get()) }
-    single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
-    single { UserRepository(get()) }
-    single { SettingsRepository(androidContext()) }
-    single { VisionRepository(apiKey = API_KEY, api = get()) }
+
+    // 1. Firebase & Netzwerk (Basics)
+    single { FirebaseAuth.getInstance() }
+    single { FirebaseFirestore.getInstance() }
+    single { FirebaseStorage.getInstance() }
+
     single<VisionApiService> {
         Retrofit.Builder()
             .baseUrl(VISION_BASE)
@@ -40,9 +39,33 @@ val appModule = module {
             .build()
             .create(VisionApiService::class.java)
     }
-    single { FirebaseAuth.getInstance() }
+
+    // 2. Datenbank
+    single {
+        Room.databaseBuilder(androidContext(), AppDatabase::class.java, "text_history_db")
+            .fallbackToDestructiveMigration()
+            .build()
+    }
+    single { get<AppDatabase>().textHistoryDao() }
+
+    // 3. Repositories (Wichtig: Reihenfolge!)
+    single { UserRepository(firebaseAuth = get()) }
+    single { VisionRepository(apiKey = API_KEY, api = get()) }
+
+    // HistoryRepository braucht das Dao und die API/DataSource
+    single { HistoryRepository(get(), get()) }
+
+    single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
+    single { SettingsRepository(androidContext()) }
+
+    // 4. Use Cases
+    factory { GetHistoryUseCase(get()) }
+    factory { ManageHistoryUseCase(get(), get()) }
+
+    // 5. Sonstiges
     single { Executors.newSingleThreadExecutor() }
     single { CameraXManager(androidContext(), get()) }
-    single<CameraManager> { CameraXManager(get()) }
+    single<CameraManager> { get<CameraXManager>() }
+
     includes(viewModelModule)
 }

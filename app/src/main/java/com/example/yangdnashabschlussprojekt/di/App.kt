@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import android.app.Application
+import com.example.yangdnashabschlussprojekt.di.sharedModul.commonModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
 
@@ -9,6 +10,6 @@ class App : Application() {
        super.onCreate()
        startKoin {
            androidContext(this@App)
-           modules(appModule,platformModule)       }
+           modules(appModule,platformModule, commonModule)       }
    }
 }

@@ -39,9 +39,18 @@ class HistoryViewModel(
             manageHistoryUseCase.clear()
         }
     }
-    fun deleteHistoryItem(itemId: Long) {
+    fun deleteHistoryItem(item: HistoryItem) {
         viewModelScope.launch {
-            manageHistoryUseCase.delete(itemId)
+            // Lösche lokal, wenn eine Room-ID da ist
+            item.id?.let { localId ->
+                manageHistoryUseCase.delete(localId)
+            }
+
+            // Lösche aus der Cloud, wenn eine Firestore-ID da ist
+            item.firestoreId?.let { cloudId ->
+                // Falls du diese Methode noch nicht hast:
+                // repository.deleteFromCloud(cloudId)
+            }
         }
     }
     private fun formatTimestamp(timestamp: Long): String {

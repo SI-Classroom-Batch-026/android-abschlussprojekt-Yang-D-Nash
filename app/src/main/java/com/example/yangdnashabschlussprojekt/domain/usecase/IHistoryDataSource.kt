@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.data.source
+package com.example.yangdnashabschlussprojekt.domain.usecase
 
 import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
 import kotlinx.coroutines.flow.Flow

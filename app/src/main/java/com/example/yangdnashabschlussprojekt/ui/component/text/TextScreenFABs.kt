@@ -6,8 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -26,49 +27,53 @@ private val FAB_SPACING = 16.dp
 
 @Composable
 fun TextScreenFABs(
+    isLiveActive: Boolean,
+    onLiveToggle: () -> Unit,
     onSaveClick: () -> Unit,
     isSaveButtonEnabled: Boolean,
     onHistoryClick: () -> Unit,
-    onRestartClick: () -> Unit,
-    isRestartButtonEnabled: Boolean,
     onCloudScanTriggered: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Steuert das Einfliegen der Buttons beim Start
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
+
     val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-    val activeContentColor = Color.White
+
     Column(
         modifier = modifier.padding(FAB_SPACING),
         verticalArrangement = Arrangement.spacedBy(FAB_SPACING),
         horizontalAlignment = Alignment.End
     ) {
+        // 1. High-Precision Cloud Scan (Der große Button)
         AnimatedFab(isVisible = visible, delay = 0) {
-            HoldToScanButton(
-                onTrigger = onCloudScanTriggered
-            )
+            HoldToScanButton(onTrigger = onCloudScanTriggered)
         }
+
+        // 2. Live-Scanner Toggle (Der Anti-Abfuck Schalter)
         AnimatedFab(isVisible = visible, delay = 100) {
             val containerColor by animateColorAsState(
-                if (isRestartButtonEnabled) MaterialTheme.colorScheme.error else disabledContainerColor,
-                label = "restartColor"
+                if (isLiveActive) MaterialTheme.colorScheme.primary else Color(0xFF424242),
+                label = "liveColor"
             )
             FloatingActionButton(
-                onClick = { if (isRestartButtonEnabled) onRestartClick() },
+                onClick = onLiveToggle,
                 containerColor = containerColor,
-                elevation = FloatingActionButtonDefaults.elevation(if (isRestartButtonEnabled) 6.dp else 0.dp)
             ) {
                 FabContent(
-                    icon = Icons.Filled.RestartAlt,
-                    label = "Restart",
-                    tint = if (isRestartButtonEnabled) activeContentColor else disabledContentColor
+                    icon = if (isLiveActive) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                    label = if (isLiveActive) "Live Scan" else "Fixiert",
+                    tint = Color.White
                 )
             }
         }
+
+        // 3. Lokal Speichern
         AnimatedFab(isVisible = visible, delay = 200) {
             val containerColor by animateColorAsState(
-                if (isSaveButtonEnabled) MaterialTheme.colorScheme.primary else disabledContainerColor,
+                if (isSaveButtonEnabled) MaterialTheme.colorScheme.secondary else disabledContainerColor,
                 label = "saveColor"
             )
             FloatingActionButton(
@@ -79,23 +84,23 @@ fun TextScreenFABs(
                 FabContent(
                     icon = Icons.Default.Save,
                     label = "Save",
-                    tint = if (isSaveButtonEnabled) activeContentColor else disabledContentColor
+                    tint = if (isSaveButtonEnabled) Color.White else disabledContentColor
                 )
             }
         }
+
+        // 4. Verlauf / Historie
         AnimatedFab(isVisible = visible, delay = 300) {
             FloatingActionButton(
                 onClick = onHistoryClick,
-                containerColor = MaterialTheme.colorScheme.secondary
+                containerColor = MaterialTheme.colorScheme.tertiary
             ) {
                 FabContent(
                     icon = Icons.AutoMirrored.Filled.List,
                     label = "Verlauf",
-                    tint = activeContentColor
+                    tint = Color.White
                 )
             }
         }
     }
 }
-
-

@@ -14,6 +14,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,6 +30,7 @@ import androidx.core.content.ContextCompat
 import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.ARResultOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.overlay.ScanningLaserOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.text.HoldToScanButton
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
@@ -52,6 +54,13 @@ fun ARScreen(
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
 
+    // Vibration-Effekt während des Scannens
+    LaunchedEffect(isCloudLoading) {
+        if (isCloudLoading) {
+            triggerVibration(context)
+        }
+    }
+
     Scaffold(
         snackbarHost = {
             CustomSnackbarHost(hostState = snackbarHostState, isTextMode = false)
@@ -67,7 +76,11 @@ fun ARScreen(
                     detectedObjectLabel = detectedObjectLabel
                 )
 
-                // HUD-Overlay für Scan-Resultate
+                if (isCloudLoading) {
+                    ScanningLaserOverlay(laserColor = Color.Cyan)
+                }
+
+                // HUD-Overlay für Resultate
                 AnimatedVisibility(
                     visible = isCloudResult && !isCloudLoading,
                     modifier = Modifier.align(Alignment.TopCenter).padding(top = 40.dp).zIndex(10f)
@@ -88,13 +101,17 @@ fun ARScreen(
             }
 
             if (isCloudLoading) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.7f)).zIndex(20f), Alignment.Center) {
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.3f)).zIndex(20f), Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = Color.Cyan)
-                        Text("UPLOADING...", color = Color.Cyan, modifier = Modifier.padding(top = 8.dp))
+                        Text("ANALYZING...", color = Color.Cyan, modifier = Modifier.padding(top = 8.dp))
                     }
                 }
             }
         }
     }
 }
+
+/**
+ * Universelles Scanning Overlay für AR und Text
+ */

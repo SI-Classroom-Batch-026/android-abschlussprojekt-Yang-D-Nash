@@ -4,7 +4,7 @@ import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistory
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.toEntity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.toKmpModel
 // Diese kommen aus dem Shared-Modul (das ist erlaubt)
-import com.example.yangdnashabschlussprojekt.data.source.IHistoryDataSource
+import com.example.yangdnashabschlussprojekt.domain.usecase.IHistoryDataSource
 import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
 
 import kotlinx.coroutines.flow.Flow

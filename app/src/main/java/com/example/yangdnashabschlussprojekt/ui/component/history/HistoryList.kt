@@ -13,8 +13,8 @@ import com.example.yangdnashabschlussprojekt.data.local.database.model.box.Histo
 
 @Composable
 fun HistoryList(
-    historyItems: List<HistoryItem>,
-    onDelete: (Long) -> Unit,
+    historyItems: List<HistoryItem>, // Nutzt jetzt das neue Domain-Modell
+    onDelete: (HistoryItem) -> Unit, // Übergibt das ganze Objekt statt nur der Long-ID
     onSelect: (HistoryItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -24,11 +24,12 @@ fun HistoryList(
     ) {
         items(
             items = historyItems,
-            key = { it.id }
+            // Wir nutzen die Cloud-ID oder die lokale ID als Key
+            key = { it.firestoreId ?: it.id ?: it.rawTimestamp }
         ) { item ->
             HistoryCard(
                 item = item,
-                onDelete = { onDelete(item.id) },
+                onDelete = { onDelete(item) }, // Reicht das Item an das ViewModel weiter
                 onSelect = { onSelect(item) }
             )
             Spacer(modifier = Modifier.height(10.dp))

@@ -1,14 +1,11 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +20,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,10 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
-import androidx.core.content.ContextCompat
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
+import com.example.yangdnashabschlussprojekt.ui.component.overlay.ScanningLaserOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
 import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
@@ -42,21 +37,9 @@ import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
-private fun triggerVibration(context: Context) {
-    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        manager.defaultVibrator
-    } else {
-        @Suppress("DEPRECATION")
-        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    }
-    vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
-}
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
@@ -66,81 +49,81 @@ fun TextScreen(
     onNavigateToHistory: () -> Unit
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val snackbarHostState = remember { SnackbarHostState() }
-    val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
-    val detectedObjectLabel by arViewModel.detectedObjectLabel.collectAsState()
+    val isAuthenticated by userRepository.isAuthenticated.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showModal by remember { mutableStateOf(false) }
-    LaunchedEffect(recognizedText, isAnalyzing) {
-        if (recognizedText.isNotEmpty() && !isAnalyzing) {
-            showModal = true
-        }
-    }
-    LaunchedEffect(Unit) {
-        cameraManager.isTextMode = true
-    }
-    LaunchedEffect(Unit) {
-        textViewModel.uiEvent.collectLatest { snackbarHostState.showSnackbar(it) }
-    }
+
+    // Steuerung der Vibration und des Modals bei Cloud-Erfolg
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
-    val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if (!isGranted) scope.launch { snackbarHostState.showSnackbar("Kamera benötigt.") }
-    }
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(Manifest.permission.CAMERA)
-        }
-    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding(),
         snackbarHost = {
-            CustomSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = 100.dp).zIndex(50f),
-                isTextMode = true
-            )
+            androidx.compose.material3.SnackbarHost(hostState = snackbarHostState)
         }
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
-            CameraWithLiveObjects(cameraManager, arViewModel, textViewModel, false, detectedObjectLabel)
-            androidx.compose.animation.AnimatedVisibility(
-                visible = recognizedText.isNotBlank() && !showModal && cloudState !is CloudRecognitionState.Loading,
+
+            CameraWithLiveObjects(
+                cameraManager = cameraManager,
+                arViewModel = arViewModel,
+                textViewModel = textViewModel,
+                isObjectDetectionMode = false,
+                detectedObjectLabel = ""
+            )
+
+            if (cloudState is CloudRecognitionState.Loading) {
+                ScanningLaserOverlay(laserColor = Color.Blue)
+                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.4f)).zIndex(30f), Alignment.Center) {
+                    CircularProgressIndicator(color = Color.Magenta)
+                }
+            }
+
+            AnimatedVisibility(
+                visible = recognizedText.isNotBlank() && !showModal,
                 modifier = Modifier.align(Alignment.BottomStart).zIndex(10f)
             ) {
                 BottomTextCard(recognizedText)
             }
+
             Box(Modifier.fillMaxSize().padding(16.dp).zIndex(20f), Alignment.BottomEnd) {
                 TextScreenFABs(
-                    onRestartClick = { textViewModel.continueAnalysis(); triggerVibration(context) },
-                    isRestartButtonEnabled = !isAnalyzing,
+                    onLiveToggle = {
+                        textViewModel.toggleLiveDetection()
+                        triggerVibration(context)
+                    },
+                    isLiveActive = isAnalyzing,
                     onSaveClick = { textViewModel.saveCurrentTextToHistory() },
                     isSaveButtonEnabled = isAuthenticated && translatedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
                     onCloudScanTriggered = {
                         cameraManager.captureForCloudScan(
-                            onCaptured = { textViewModel.recognizeTextViaCloud(it) },
-                            onError = { textViewModel.setCloudRecognitionState(CloudRecognitionState.Error(it.message ?: "Error")) }
+                            onCaptured = {
+                                // Wichtig: Erst stoppen, dann scannen
+                                textViewModel.pauseAnalysis()
+                                textViewModel.recognizeTextViaCloud(it)
+                            },
+                            onError = {
+                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error(it.message ?: "Error"))
+                            }
                         )
                     }
                 )
             }
-            if (cloudState is CloudRecognitionState.Loading) {
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.6f)).zIndex(30f), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Magenta)
-                }
-            }
+
             if (showModal) {
                 RecognitionModalSheet(
-                    recognizedText, translatedText,
+                    recognizedText = recognizedText,
+                    translatedText = translatedText,
                     onDismiss = {
                         showModal = false
                         textViewModel.continueAnalysis()
@@ -152,4 +135,14 @@ fun TextScreen(
             }
         }
     }
+}
+fun triggerVibration(context: Context) {
+    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+        manager.defaultVibrator
+    } else {
+        @Suppress("DEPRECATION")
+        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+    }
+    vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
 }

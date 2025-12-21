@@ -15,10 +15,11 @@ fun AnimatedFab(
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(
-            initialOffsetY = { 50 },
-            animationSpec = tween(durationMillis = 400, delayMillis = delay)
-        ) + fadeIn(animationSpec = tween(400, delayMillis = delay))
+            initialOffsetY = { it },
+            animationSpec = tween(durationMillis = 500, delayMillis = delay)
+        ) + fadeIn(animationSpec = tween(500, delayMillis = delay))
     ) {
         content()
     }
 }
+

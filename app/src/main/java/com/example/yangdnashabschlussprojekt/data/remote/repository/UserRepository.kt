@@ -6,6 +6,7 @@ import com.example.yangdnashabschlussprojekt.data.remote.firebaseToLocalUser
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,11 +43,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                     onComplete(false, task.exception?.localizedMessage)
                     return@addOnCompleteListener
                 }
-                val user = firebaseAuth.currentUser
-                if (user == null) {
-                    onComplete(false, "Firebase User ist null")
-                    return@addOnCompleteListener
-                }
+                val user = firebaseAuth.currentUser ?: return@addOnCompleteListener
                 scope.launch {
                     var profileImageUrl: String? = null
                     profileImageUri?.let { uri ->
@@ -55,7 +52,6 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                             ref.putFile(uri).await()
                             ref.downloadUrl.await().toString()
                         } catch (e: Exception) {
-                            e.printStackTrace()
                             null
                         }
                     }
@@ -65,39 +61,29 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                         "profileImageUrl" to profileImageUrl
                     )
                     try {
-                        firestore.collection("users")
-                            .document(user.uid)
-                            .set(userMap)
-                            .await()
+                        firestore.collection("users").document(user.uid).set(userMap).await()
                         val profileUpdates = UserProfileChangeRequest.Builder()
                             .setDisplayName(displayName)
                             .apply { profileImageUrl?.let { photoUri = it.toUri() } }
                             .build()
                         user.updateProfile(profileUpdates).await()
-                        val localUser = firebaseToLocalUser(user)
-                        _currentUser.value = localUser
+
+                        _currentUser.value = firebaseToLocalUser(user)
                         _userName.value = displayName
                         onComplete(true, null)
                     } catch (e: Exception) {
-                        e.printStackTrace()
                         onComplete(false, e.localizedMessage)
                     }
                 }
             }
     }
-    fun login(
-        email: String,
-        password: String,
-        onComplete: (Boolean, String?) -> Unit
-    ) {
+    fun login(email: String, password: String, onComplete: (Boolean, String?) -> Unit) {
         firebaseAuth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    val firebaseUser = firebaseAuth.currentUser
-                    firebaseUser?.let {
-                        val localUser = firebaseToLocalUser(it)
-                        _currentUser.value = localUser
-                        _userName.value = localUser.displayName
+                    firebaseAuth.currentUser?.let {
+                        _currentUser.value = firebaseToLocalUser(it)
+                        _userName.value = it.displayName ?: "User"
                     }
                     onComplete(true, null)
                 } else {
@@ -110,29 +96,41 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
         _userName.value = "Gast"
         _currentUser.value = null
     }
-    suspend fun saveTextEntry(
-        recognizedText: String,
-        translatedText: String
-    ): Result<Unit> {
+    suspend fun saveToFirestore(sourceText: String, translatedText: String): Result<Unit> {
         val userId = firebaseAuth.currentUser?.uid
-            ?: return Result.failure(IllegalStateException("User not logged in. Cannot save text."))
-        if (recognizedText.isBlank()) {
-            return Result.failure(IllegalArgumentException("Recognized text cannot be empty."))
-        }
-        val textData = hashMapOf(
-            "recognizedText" to recognizedText,
+            ?: return Result.failure(Exception("Nicht angemeldet"))
+
+        if (sourceText.isBlank()) return Result.failure(Exception("Text ist leer"))
+
+        val entry = hashMapOf(
+            "sourceText" to sourceText,
             "translatedText" to translatedText,
             "timestamp" to System.currentTimeMillis()
         )
+
         return try {
             firestore.collection("users")
                 .document(userId)
-                .collection("texts")
-                .add(textData)
+                .collection("history")
+                .add(entry)
                 .await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+    suspend fun getCloudHistory(): List<Map<String, Any>> {
+        val userId = firebaseAuth.currentUser?.uid ?: return emptyList()
+        return try {
+            val snapshot = firestore.collection("users")
+                .document(userId)
+                .collection("history")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { it.data }
+        } catch (e: Exception) {
+            emptyList()
         }
     }
 }

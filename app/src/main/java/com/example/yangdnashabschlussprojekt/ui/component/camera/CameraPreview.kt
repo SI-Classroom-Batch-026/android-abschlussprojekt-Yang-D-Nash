@@ -1,11 +1,9 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
-import androidx.camera.core.ImageProxy // WICHTIGER IMPORT
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -18,12 +16,12 @@ fun CameraPreview(
     arViewModel: ARViewModel,
     isTextMode: Boolean
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
-    // Typ explizit angeben: CameraXManager.FrameAnalyzer { imageProxy: ImageProxy -> ... }
-    val analyzer = remember(isTextMode) {
-        CameraXManager.FrameAnalyzer { imageProxy: ImageProxy ->
-            if (isTextMode) {
+    // Analyzer entscheidet basierend auf isTextMode, welches VM gerufen wird
+    val analyzer = remember {
+        ImageAnalysis.Analyzer { imageProxy ->
+            if (cameraManager.isTextMode) {
                 textViewModel.analyzeImageProxy(imageProxy)
             } else {
                 arViewModel.analyzeImageProxy(imageProxy)
@@ -31,26 +29,21 @@ fun CameraPreview(
         }
     }
 
-    DisposableEffect(lifecycleOwner) {
-        onDispose {
-            cameraManager.unbindAll() // Jetzt im Manager definiert
-        }
+    // Modus im Manager synchronisieren
+    LaunchedEffect(isTextMode) {
+        cameraManager.isTextMode = isTextMode
     }
 
-    AndroidView(
+    androidx.compose.ui.viewinterop.AndroidView(
         factory = { ctx ->
             PreviewView(ctx).apply {
                 implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                 scaleType = PreviewView.ScaleType.FILL_CENTER
+                // Startet Kamera nur EINMAL beim Erstellen
+                cameraManager.startCamera(this, lifecycleOwner, analyzer)
             }
         },
         modifier = modifier,
-        update = { previewView ->
-            cameraManager.startCamera(
-                previewView = previewView,
-                lifecycleOwner = lifecycleOwner,
-                analyzer = analyzer
-            )
-        }
+        update = { /* Keine Logik hier verhindert Ruckeln */ }
     )
 }
