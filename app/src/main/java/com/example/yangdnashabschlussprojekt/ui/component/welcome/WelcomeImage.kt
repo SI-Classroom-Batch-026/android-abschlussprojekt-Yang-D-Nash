@@ -1,10 +1,18 @@
 package com.example.yangdnashabschlussprojekt.ui.component.welcome
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -15,12 +23,21 @@ fun WelcomeImage(
     modifier: Modifier = Modifier,
     imageRes: Int = R.drawable.smartvisionmain
 ) {
-    Image(
-        painter = painterResource(id = imageRes),
-        contentDescription = "Willkommens Icon",
-        contentScale = ContentScale.Fit,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(200.dp)
-    )
+    Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
+        // Subtiler Glow Effekt hinter dem Bild
+        Surface(
+            modifier = Modifier.size(180.dp).blur(40.dp),
+            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+            shape = CircleShape
+        ) {}
+
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = "Willkommens Icon",
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .height(220.dp)
+                .padding(16.dp)
+        )
+    }
 }

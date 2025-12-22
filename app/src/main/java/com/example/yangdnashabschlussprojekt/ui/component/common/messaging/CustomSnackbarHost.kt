@@ -6,19 +6,35 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.*
+import androidx.compose.material.icons.filled.BlurOn
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun CustomSnackbarHost(
@@ -27,7 +43,8 @@ fun CustomSnackbarHost(
     isTextMode: Boolean = true
 ) {
     val context = LocalContext.current
-    val themeColor = if (isTextMode) Color.Magenta else Color.Cyan
+    // Neon-Farben für das System-Feedback
+    val themeColor = if (isTextMode) Color(0xFFFF00FF) else Color(0xFF00FFFF)
 
     LaunchedEffect(hostState.currentSnackbarData) {
         if (hostState.currentSnackbarData != null) {
@@ -37,35 +54,70 @@ fun CustomSnackbarHost(
 
     SnackbarHost(
         hostState = hostState,
-        modifier = modifier
+        modifier = modifier.navigationBarsPadding() // Wichtig: Über der Systemleiste
     ) { data ->
-        Surface(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color(0xFF121212),
-            border = BorderStroke(1.dp, themeColor.copy(alpha = 0.5f)),
-            shadowElevation = 10.dp
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            contentAlignment = Alignment.Center
         ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Info, contentDescription = null, tint = themeColor)
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = data.visuals.message,
-                    color = Color.White,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+            // Die Snackbar als schwebende "Glass-Capsule"
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 20.dp,
+                        spotColor = themeColor.copy(alpha = 0.5f),
+                        shape = RoundedCornerShape(24.dp)
+                    ),
+                shape = RoundedCornerShape(24.dp),
+                color = Color(0xFF1A1A1A).copy(alpha = 0.9f), // Glassmorphism Basis
+                border = BorderStroke(
+                    width = 1.dp,
+                    brush = Brush.horizontalGradient(
+                        listOf(themeColor.copy(alpha = 0.6f), Color.Transparent)
+                    )
                 )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Modernes pulsierendes Icon-Design
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(themeColor.copy(alpha = 0.1f), RoundedCornerShape(10.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BlurOn,
+                            contentDescription = null,
+                            tint = themeColor,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    Spacer(Modifier.width(16.dp))
+
+                    Text(
+                        text = data.visuals.message,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 0.2.sp
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }
 }
 
-private fun triggerVibration(context: Context) {
+fun triggerVibration(context: Context) {
     val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
         manager.defaultVibrator

@@ -181,4 +181,6 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.common.ktx)
+
+    implementation(libs.material)
 }

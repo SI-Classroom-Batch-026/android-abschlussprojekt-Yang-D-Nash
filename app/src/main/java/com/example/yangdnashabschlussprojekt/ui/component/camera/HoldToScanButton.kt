@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.text
+package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing

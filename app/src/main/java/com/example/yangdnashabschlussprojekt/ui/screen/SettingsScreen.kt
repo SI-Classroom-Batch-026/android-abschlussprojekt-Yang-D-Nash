@@ -1,29 +1,18 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.Manifest
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
@@ -40,7 +29,6 @@ import com.example.yangdnashabschlussprojekt.util.notification.openAppSettings
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
@@ -54,90 +42,103 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     val currentUser by settingsViewModel.currentUser.collectAsState()
     val authResult by settingsViewModel.authResult.collectAsState()
+
     var notificationsEnabled by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
     var locationGranted by remember { mutableStateOf(false) }
     var microphoneGranted by remember { mutableStateOf(false) }
+
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
     fun refreshSystemPermissions() {
         notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
         cameraGranted = isPermissionGranted(context, Manifest.permission.CAMERA)
         locationGranted = isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
         microphoneGranted = isPermissionGranted(context, Manifest.permission.RECORD_AUDIO)
     }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                refreshSystemPermissions()
-            }
+            if (event == Lifecycle.Event.ON_RESUME) refreshSystemPermissions()
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
     LaunchedEffect(Unit) { refreshSystemPermissions() }
+
     LaunchedEffect(authResult) {
-        authResult?.let { message ->
-            scope.launch {
-                snackbarHostState.showSnackbar(message)
-            }
-        }
+        authResult?.let { message -> scope.launch { snackbarHostState.showSnackbar(message) } }
     }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    Scaffold(
-        snackbarHost = {
-            CustomSnackbarHost(
-                hostState = snackbarHostState,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            ProfileImage()
-            Spacer(Modifier.height(16.dp))
-            UserInfo(currentUser?.displayName ?: "Gast")
-            Spacer(Modifier.height(16.dp))
-            if (currentUser != null) {
-                Button(onClick = onNavigateToHistory) {
-                    Text("Verlauf anzeigen")
-                }
-                Spacer(Modifier.height(16.dp))
-                Button(onClick = {
-                    settingsViewModel.logout()
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Erfolgreich ausgeloggt.")
+
+    Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))) {
+        Scaffold(
+            containerColor = Color.Transparent,
+            snackbarHost = { CustomSnackbarHost(hostState = snackbarHostState) }
+        ) { paddingValues ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(Modifier.height(40.dp))
+
+                // Profil Bereich
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(32.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
+                ) {
+                    Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        ProfileImage()
+                        Spacer(Modifier.height(16.dp))
+                        UserInfo(currentUser?.displayName ?: "Gast")
+
+                        if (currentUser != null) {
+                            Spacer(Modifier.height(24.dp))
+                            Button(
+                                onClick = onNavigateToHistory,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(16.dp)
+                            ) { Text("Scan-Verlauf") }
+
+                            TextButton(onClick = { settingsViewModel.logout() }) {
+                                Text("Ausloggen", color = Color.Red.copy(alpha = 0.7f))
+                            }
+                        }
                     }
-                }) {
-                    Text("Ausloggen")
                 }
-            }
-            else {
-                Button(onClick = onNavigateToRegister) { Text("Registrieren") }
-                Spacer(Modifier.height(16.dp))
-                LoginForm(
-                    email = email,
-                    onEmailChange = { email = it },
-                    password = password,
-                    onPasswordChange = { password = it },
-                    onLoginClick = {
-                        settingsViewModel.login(email.trim(), password.trim())
-                    }
+
+                Spacer(Modifier.height(24.dp))
+
+                if (currentUser == null) {
+                    LoginForm(
+                        email = email,
+                        onEmailChange = { email = it },
+                        password = password,
+                        onPasswordChange = { password = it },
+                        onLoginClick = { settingsViewModel.login(email.trim(), password.trim()) },
+                        onRegisterClick = onNavigateToRegister
+                    )
+                }
+
+                Spacer(Modifier.height(24.dp))
+
+                PermissionsCard(
+                    notificationsEnabled = notificationsEnabled,
+                    cameraGranted = cameraGranted,
+                    locationGranted = locationGranted,
+                    microphoneGranted = microphoneGranted,
+                    onOpenSettings = { openAppSettings(context) }
                 )
+
+                Spacer(Modifier.height(100.dp))
             }
-            Spacer(Modifier.height(32.dp))
-            PermissionsCard(
-                notificationsEnabled = notificationsEnabled,
-                cameraGranted = cameraGranted,
-                locationGranted = locationGranted,
-                microphoneGranted = microphoneGranted,
-                onOpenSettings = { openAppSettings(context) }
-            )
         }
     }
 }

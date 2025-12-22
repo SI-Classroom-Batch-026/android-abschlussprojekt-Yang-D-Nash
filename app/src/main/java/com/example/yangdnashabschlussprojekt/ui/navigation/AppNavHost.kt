@@ -1,120 +1,87 @@
 package com.example.yangdnashabschlussprojekt.ui.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.*
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
-import com.example.yangdnashabschlussprojekt.ui.screen.ARScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.HistoryScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.OnboardingScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
-import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
+import com.example.yangdnashabschlussprojekt.ui.screen.*
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.* // WICHTIG: Deine ViewModels importieren
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-@OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun AppNavHost(
     navController: NavHostController,
     settingsRepository: SettingsRepository = koinInject()
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentDestination = navBackStackEntry?.destination
 
-    var topBarTitle by remember { mutableStateOf("") }
-
-    val startDest = remember {
-        if (settingsRepository.isOnboardingComplete()) {
-            WelcomeRoute.route
-        } else {
-            OnboardingRoute.route
-        }
+    val startDest: Any = remember {
+        if (settingsRepository.isOnboardingComplete()) WelcomeRoute else OnboardingRoute
     }
+
     Scaffold(
-        topBar = {
-            if (topBarTitle.isNotEmpty()) {
-                TopAppBar(title = { Text(topBarTitle) })
-            }
-        },
+        containerColor = Color.Transparent,
         bottomBar = {
-            if (currentRoute != OnboardingRoute.route) {
+            if (currentDestination?.hasRoute<OnboardingRoute>() == false) {
                 BottomNavigationBar(navController)
             }
         }
     ) { innerPadding ->
         NavHost(
-            modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = startDest
+            startDestination = startDest,
+            modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())
         ) {
-            composable(WelcomeRoute.route) {
+            composable<WelcomeRoute> {
                 WelcomeScreen(
-                    viewModel = koinViewModel(),
-                    onOpenSettings = { navController.navigate(SettingsRoute.route) },
-                    onNavigateToOnboarding = { navController.navigate(OnboardingRoute.route) }
+                    viewModel = koinViewModel<AndroidWelcomeViewModel>(),
+                    onOpenSettings = { navController.navigate(SettingsRoute) },
+                    onNavigateToOnboarding = { navController.navigate(OnboardingRoute) }
                 )
             }
-            composable(OnboardingRoute.route) {
-                OnboardingScreen(
-                    onFinished = {
-                        settingsRepository.setOnboardingComplete(true)
-                        navController.navigate(WelcomeRoute.route) {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                )
+
+            composable<OnboardingRoute> {
+                OnboardingScreen {
+                    settingsRepository.setOnboardingComplete(true)
+                    navController.navigate(WelcomeRoute) { popUpTo<OnboardingRoute> { inclusive = true } }
+                }
             }
-            composable(ARScreenRoute.route) {
-                ARScreen()
-            }
-            composable(SettingsRoute.route) {
+
+            composable<ARScreenRoute> { ARScreen() }
+
+            composable<SettingsRoute> {
                 SettingsScreen(
-                    settingsViewModel = koinViewModel(),
-                    onNavigateToRegister = { navController.navigate(RegisterRoute.route) },
-                    onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
+                    settingsViewModel = koinViewModel<SettingsViewModel>(),
+                    onNavigateToRegister = { navController.navigate(RegisterRoute) },
+                    onNavigateToHistory = { navController.navigate(HistoryRoute) }
                 )
             }
-            composable(TextScreenRoute.route) {
-                TextScreen(
-                    onNavigateToHistory = { navController.navigate(HistoryRoute.route) }
-                )
+
+            composable<TextScreenRoute> {
+                TextScreen(onNavigateToHistory = { navController.navigate(HistoryRoute) })
             }
-            composable(RegisterRoute.route) {
+
+            composable<RegisterRoute> {
                 RegistrationScreen(
-                    viewModel = koinViewModel(),
+                    viewModel = koinViewModel<SettingsViewModel>(),
                     onBack = { navController.popBackStack() }
                 )
             }
-            composable(HistoryRoute.route) {
-                val textBackStackEntry = remember(it) {
-                    navController.getBackStackEntry(TextScreenRoute.route)
-                }
-                val sharedTextViewModel: TextViewModel = koinViewModel(viewModelStoreOwner = textBackStackEntry)
+
+            composable<HistoryRoute> {
                 HistoryScreen(
-                    viewModel = koinViewModel(),
+                    viewModel = koinViewModel<HistoryViewModel>(),
                     onBack = { navController.popBackStack() },
-                    onHistoryItemSelected = { item ->
-                        sharedTextViewModel.loadFromHistory(
-                            recognized = item.recognizedText,
-                            translated = item.translatedText
-                        )
-                        navController.popBackStack()
-                    }
+                    onHistoryItemSelected = { }
                 )
             }
         }

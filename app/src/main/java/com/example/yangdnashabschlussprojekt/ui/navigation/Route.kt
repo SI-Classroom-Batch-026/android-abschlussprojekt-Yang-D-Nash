@@ -2,42 +2,23 @@ package com.example.yangdnashabschlussprojekt.ui.navigation
 
 import kotlinx.serialization.Serializable
 
-interface NavRoute {
-    val route: String
-    val label: String
-}
 @Serializable
-object OnboardingRoute : NavRoute {
-    override val route = "onboarding"
-    override val label = "Info"
-}
+object WelcomeRoute
+
 @Serializable
-object WelcomeRoute: NavRoute {
-    override val route = "welcome"
-    override val label = "Home"
-}
+object OnboardingRoute
+
 @Serializable
-object SettingsRoute : NavRoute{
-    override val route = "settings"
-    override val label = "Settings"
-}
+object ARScreenRoute
+
 @Serializable
-object ARScreenRoute: NavRoute {
-    override val route = "arscreen"
-    override val label = "AR"
-}
+object SettingsRoute
+
 @Serializable
-object TextScreenRoute : NavRoute{
-    override val route = "textscreen"
-    override val label = "Text"
-}
+object TextScreenRoute
+
 @Serializable
-object RegisterRoute : NavRoute{
-    override val route = "register"
-    override val label = "Register"
-}
+object RegisterRoute
+
 @Serializable
-object HistoryRoute : NavRoute{
-    override val route = "history"
-    override val label = "Verlauf"
-}
+object HistoryRoute

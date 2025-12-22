@@ -6,6 +6,7 @@ kspVersion = "2.1.0-1.0.29"
 composeBom = "2025.12.00"
 activityCompose = "1.12.1"
 lifecycleRuntimeCompose = "2.10.0"
+material = "1.13.0"
 navigationCompose = "2.9.6"
 coreKtx = "1.17.0"
 lifecycleRuntimeKtx = "2.10.0"
@@ -57,6 +58,7 @@ stately = "2.1.0"
 kotlinxDatetime = "0.6.1"
 room = "2.7.0-alpha11"
 firebaseKmp = "1.13.0"
+googleMaterial = "1.12.0"
 
 [libraries]
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
@@ -85,9 +87,11 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
+material = { module = "com.google.android.material:material", version.ref = "material" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMaps" }
 google-maps-compose = { group = "com.google.maps.android", name = "maps-compose", version.ref = "mapsCompose" }
+google-material = { group = "com.google.android.material", name = "material", version.ref = "googleMaterial" }
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koinBom" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koinBom" }
@@ -173,3 +177,8 @@ jetbrains-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serializati
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 jetbrains-compose = { id = "org.jetbrains.compose", version.ref = "compose-plugin" }
+
+
+
+
+

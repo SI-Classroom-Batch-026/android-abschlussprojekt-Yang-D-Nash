@@ -1,26 +1,13 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import android.content.Context
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.ScanningLaserOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
@@ -54,10 +42,28 @@ fun TextScreen(
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
-    val snackbarHostState = remember { SnackbarHostState() }
     var showModal by remember { mutableStateOf(false) }
 
-    // Steuerung der Vibration und des Modals bei Cloud-Erfolg
+    // --- FIX 1: DIE PIPELINE AKTIVIEREN ---
+    LaunchedEffect(isAnalyzing) {
+        if (isAnalyzing) {
+            cameraManager.setAnalyzer { imageProxy ->
+                // Hier schicken wir die Frames an das TextViewModel
+                textViewModel.analyzeImageProxy(imageProxy)
+            }
+        } else {
+            // Wenn Analyse pausiert (z.B. während Cloud-Scan), Analyzer leeren
+            cameraManager.setAnalyzer { it.close() }
+        }
+    }
+
+    // Cleanup beim Verlassen des Screens
+    DisposableEffect(Unit) {
+        onDispose {
+            cameraManager.setAnalyzer { it.close() }
+        }
+    }
+
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
@@ -66,36 +72,59 @@ fun TextScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize().imePadding(),
-        snackbarHost = {
-            androidx.compose.material3.SnackbarHost(hostState = snackbarHostState)
-        }
+        containerColor = Color.Transparent,
+        modifier = Modifier.fillMaxSize().imePadding()
     ) { paddingValues ->
-        Box(Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(top = paddingValues.calculateTopPadding())
+        ) {
 
+            // --- KAMERA LAYER ---
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
                 textViewModel = textViewModel,
-                isObjectDetectionMode = false,
+                isObjectDetectionMode = false, // WICHTIG: Hier False für Text-Modus
                 detectedObjectLabel = ""
             )
 
+            // --- LOADING OVERLAY ---
             if (cloudState is CloudRecognitionState.Loading) {
-                ScanningLaserOverlay(laserColor = Color.Blue)
-                Box(Modifier.fillMaxSize().background(Color.Black.copy(0.4f)).zIndex(30f), Alignment.Center) {
-                    CircularProgressIndicator(color = Color.Magenta)
+                ScanningLaserOverlay(laserColor = Color(0xFFFF00FF))
+                Box(
+                    Modifier.fillMaxSize().background(Color.Black.copy(0.5f)).zIndex(30f),
+                    Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = Color(0xFFFF00FF), strokeWidth = 4.dp)
+                        Spacer(Modifier.height(16.dp))
+                        Text("DECRYPTING...", color = Color(0xFFFF00FF), style = MaterialTheme.typography.labelLarge)
+                    }
                 }
             }
 
+            // --- UI OVERLAYS ---
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal,
-                modifier = Modifier.align(Alignment.BottomStart).zIndex(10f)
+                enter = fadeIn(), exit = fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = 120.dp, start = 16.dp)
+                    .zIndex(10f)
             ) {
                 BottomTextCard(recognizedText)
             }
 
-            Box(Modifier.fillMaxSize().padding(16.dp).zIndex(20f), Alignment.BottomEnd) {
+            // --- FABs (STEUERUNG) ---
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 120.dp)
+                    .zIndex(20f),
+                Alignment.BottomEnd
+            ) {
                 TextScreenFABs(
                     onLiveToggle = {
                         textViewModel.toggleLiveDetection()
@@ -106,20 +135,19 @@ fun TextScreen(
                     isSaveButtonEnabled = isAuthenticated && translatedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
                     onCloudScanTriggered = {
+                        // Bei Cloud-Scan Live-Analyse stoppen
                         cameraManager.captureForCloudScan(
-                            onCaptured = {
-                                // Wichtig: Erst stoppen, dann scannen
+                            onCaptured = { base64 ->
                                 textViewModel.pauseAnalysis()
-                                textViewModel.recognizeTextViaCloud(it)
+                                textViewModel.recognizeTextViaCloud(base64)
                             },
-                            onError = {
-                                textViewModel.setCloudRecognitionState(CloudRecognitionState.Error(it.message ?: "Error"))
-                            }
+                            onError = { Log.e("TEXT_SCREEN", "Capture Error: $it") }
                         )
                     }
                 )
             }
 
+            // --- RESULT SHEET ---
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,
@@ -135,14 +163,4 @@ fun TextScreen(
             }
         }
     }
-}
-fun triggerVibration(context: Context) {
-    val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-        manager.defaultVibrator
-    } else {
-        @Suppress("DEPRECATION")
-        context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
-    }
-    vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
 }

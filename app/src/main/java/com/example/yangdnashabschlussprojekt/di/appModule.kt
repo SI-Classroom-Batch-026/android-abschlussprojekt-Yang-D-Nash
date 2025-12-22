@@ -23,11 +23,11 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executors
 
 private const val VISION_BASE = "https://vision.googleapis.com/"
-private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
+private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY" // Hinweis: Keys besser in local.properties!
 
 val appModule = module {
 
-    // 1. Firebase & Netzwerk (Basics)
+    // 1. Firebase & Netzwerk
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
     single { FirebaseStorage.getInstance() }
@@ -43,18 +43,15 @@ val appModule = module {
     // 2. Datenbank
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, "text_history_db")
-            .fallbackToDestructiveMigration()
+            .fallbackToDestructiveMigration(false) // Auf true/false prüfen je nach Entwicklungsstand
             .build()
     }
     single { get<AppDatabase>().textHistoryDao() }
 
-    // 3. Repositories (Wichtig: Reihenfolge!)
+    // 3. Repositories
     single { UserRepository(firebaseAuth = get()) }
     single { VisionRepository(apiKey = API_KEY, api = get()) }
-
-    // HistoryRepository braucht das Dao und die API/DataSource
     single { HistoryRepository(get(), get()) }
-
     single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
     single { SettingsRepository(androidContext()) }
 
@@ -62,9 +59,14 @@ val appModule = module {
     factory { GetHistoryUseCase(get()) }
     factory { ManageHistoryUseCase(get(), get()) }
 
-    // 5. Sonstiges
+    // 5. Kamera & Executor (WICHTIGER FIX HIER)
     single { Executors.newSingleThreadExecutor() }
+
+    // Wir registrieren den CameraXManager einmalig als Single
     single { CameraXManager(androidContext(), get()) }
+
+    // Wir sagen Koin: Wenn jemand nach "CameraManager" fragt, gib ihm den CameraXManager von oben
+    // Das verhindert, dass zwei Kamera-Instanzen erstellt werden.
     single<CameraManager> { get<CameraXManager>() }
 
     includes(viewModelModule)
