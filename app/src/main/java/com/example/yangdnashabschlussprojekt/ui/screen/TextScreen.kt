@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -59,26 +60,38 @@ fun TextScreen(
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     var showModal by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        textViewModel.uiEvent.collect { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
     LaunchedEffect(isAnalyzing) {
         if (isAnalyzing) {
             cameraManager.setAnalyzer { imageProxy ->
-                textViewModel.analyzeImageProxy(imageProxy)
+                try {
+                    textViewModel.analyzeImageProxy(imageProxy)
+                } catch (_: Exception) {
+                    imageProxy.close()
+                }
             }
         } else {
-            cameraManager.setAnalyzer { it.close() }
+            cameraManager.stopAnalysis()
         }
     }
     DisposableEffect(Unit) {
         onDispose {
-            cameraManager.setAnalyzer { it.close() }
+            cameraManager.stopAnalysis()
+            textViewModel.pauseAnalysis()
         }
     }
+
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
+
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.fillMaxSize().imePadding()
@@ -95,22 +108,34 @@ fun TextScreen(
                 isObjectDetectionMode = false,
                 detectedObjectLabel = ""
             )
+
+            // Cloud Loading Overlay
             if (cloudState is CloudRecognitionState.Loading) {
                 ScanningLaserOverlay(laserColor = Color(0xFFFF00FF))
                 Box(
-                    Modifier.fillMaxSize().background(Color.Black.copy(0.5f)).zIndex(30f),
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(0.5f))
+                        .zIndex(30f),
                     Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(color = Color(0xFFFF00FF), strokeWidth = 4.dp)
                         Spacer(Modifier.height(16.dp))
-                        Text("DECRYPTING...", color = Color(0xFFFF00FF), style = MaterialTheme.typography.labelLarge)
+                        Text(
+                            text = "DECRYPTING...",
+                            color = Color(0xFFFF00FF),
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
+
+            // Live-Text Vorschau unten links
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal,
-                enter = fadeIn(), exit = fadeOut(),
+                enter = fadeIn(),
+                exit = fadeOut(),
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(bottom = 120.dp, start = 16.dp)
@@ -118,6 +143,8 @@ fun TextScreen(
             ) {
                 BottomTextCard(recognizedText)
             }
+
+            // Steuerungs-Buttons (FABs)
             Box(
                 Modifier
                     .fillMaxSize()
@@ -137,14 +164,20 @@ fun TextScreen(
                     onCloudScanTriggered = {
                         cameraManager.captureForCloudScan(
                             onCaptured = { base64 ->
+                                // Analyse sofort pausieren, um Ressourcen für Cloud zu sparen
                                 textViewModel.pauseAnalysis()
                                 textViewModel.recognizeTextViaCloud(base64)
                             },
-                            onError = { Log.e("TEXT_SCREEN", "Capture Error: $it") }
+                            onError = { error ->
+                                Log.e("TEXT_SCREEN", "Capture Error: ${error.message}")
+                                Toast.makeText(context, "Kamera-Fehler", Toast.LENGTH_SHORT).show()
+                            }
                         )
                     }
                 )
             }
+
+            // Ergebnis-Dialog (ModalSheet)
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,

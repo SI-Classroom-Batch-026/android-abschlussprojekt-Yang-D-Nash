@@ -18,6 +18,8 @@ class HistoryViewModel(
     getHistoryUseCase: GetHistoryUseCase,
     private val manageHistoryUseCase: ManageHistoryUseCase
 ) : ViewModel() {
+
+    // Wandelt Domain-Modelle in UI-Modelle (HistoryItem) um
     val historyState: StateFlow<List<HistoryItem>> = getHistoryUseCase()
         .map { models ->
             models.map { model ->
@@ -34,17 +36,20 @@ class HistoryViewModel(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+
     fun clearAllHistory() {
         viewModelScope.launch {
             manageHistoryUseCase.clear()
         }
     }
+
     fun deleteHistoryItem(item: HistoryItem) {
         viewModelScope.launch {
+            // Lokal löschen
             item.id?.let { localId ->
                 manageHistoryUseCase.delete(localId)
             }
-            item.firestoreId?.let { cloudId ->
+            item.firestoreId?.let {
             }
         }
     }

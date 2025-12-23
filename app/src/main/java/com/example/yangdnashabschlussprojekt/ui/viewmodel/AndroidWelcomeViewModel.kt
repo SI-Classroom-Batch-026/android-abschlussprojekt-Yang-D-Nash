@@ -10,8 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
 
 class AndroidWelcomeViewModel(
-    private val userRepository: UserRepository,
-    private val cameraManager: CameraXManager,
+    userRepository: UserRepository,
     private val settingsRepository: SettingsRepository,
 ) : ViewModel() {
     val currentUser: StateFlow<AppUser?> = userRepository.currentUser
@@ -20,6 +19,7 @@ class AndroidWelcomeViewModel(
             started = SharingStarted.Eagerly,
             initialValue = null
         )
+
     fun startOnboardingAgain() {
         settingsRepository.setOnboardingComplete(false)
     }
