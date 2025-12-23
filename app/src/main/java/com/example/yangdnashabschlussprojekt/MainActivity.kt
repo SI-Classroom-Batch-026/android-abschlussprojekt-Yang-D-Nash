@@ -1,6 +1,5 @@
 package com.example.yangdnashabschlussprojekt
 
-import android.graphics.Color as AndroidColor
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -14,7 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.navigation.compose.rememberNavController
 import com.example.yangdnashabschlussprojekt.ui.navigation.AppNavHost
-import com.example.yangdnashabschlussprojekt.ui.theme.*
+import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceBlack
+import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceCyan
+import com.example.yangdnashabschlussprojekt.ui.theme.LightBgEnd
+import com.example.yangdnashabschlussprojekt.ui.theme.LightBgStart
+import com.example.yangdnashabschlussprojekt.ui.theme.SmartVisionTheme
+import android.graphics.Color as AndroidColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

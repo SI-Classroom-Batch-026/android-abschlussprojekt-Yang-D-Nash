@@ -1,7 +1,11 @@
 package com.example.yangdnashabschlussprojekt.data.remote.repository
 
 import com.example.yangdnashabschlussprojekt.data.remote.api.VisionApiService
-import com.example.yangdnashabschlussprojekt.data.remote.model.vision.*
+import com.example.yangdnashabschlussprojekt.data.remote.model.vision.AnnotateImageRequest
+import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
+import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Image
+import com.example.yangdnashabschlussprojekt.data.remote.model.vision.VisionApiRequest
+import com.example.yangdnashabschlussprojekt.data.remote.model.vision.VisionApiResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout

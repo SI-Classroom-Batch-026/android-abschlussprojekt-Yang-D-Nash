@@ -40,8 +40,8 @@ class ARViewModel(
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()
             .setDetectorMode(ObjectDetectorOptions.STREAM_MODE)
-            .enableClassification() // OHNE DAS GIBT ES KEINEN TEXT!
-            .enableMultipleObjects() // Optional: erkennt mehrere Dinge gleichzeitig
+            .enableClassification()
+            .enableMultipleObjects()
             .build()
     )
     fun analyzeWithCloudVision(base64Image: String) {
@@ -73,7 +73,6 @@ class ARViewModel(
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val ts = System.currentTimeMillis()
-        // Zeit-Check ZUERST, um CPU zu sparen
         if (ts - lastAnalyzedTimestamp < 150) {
             imageProxy.close()
             return

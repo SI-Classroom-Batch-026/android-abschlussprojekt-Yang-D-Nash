@@ -1,14 +1,32 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -32,9 +50,7 @@ fun WelcomeScreen(
     val displayName = currentUser?.displayName ?: "Gast"
     val isNotLoggedIn = displayName == "Gast"
     val visible = remember { mutableStateOf(false) }
-
     LaunchedEffect(Unit) { visible.value = true }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -44,35 +60,25 @@ fun WelcomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
-                // FIX: bottom padding auf 120.dp gesetzt, damit die Buttons ÜBER der Bar landen
                 .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 120.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(60.dp))
-
-            // Logo Animation
             AnimatedVisibility(
                 visible = visible.value,
                 enter = fadeIn(tween(1200)) + scaleIn(initialScale = 0.9f)
             ) {
                 WelcomeImage()
             }
-
             Spacer(modifier = Modifier.height(32.dp))
-
-            // Greeting Animation
             AnimatedVisibility(
                 visible = visible.value,
                 enter = slideInVertically { 40 } + fadeIn(tween(800, 300))
             ) {
                 WelcomeGreeting(displayName)
             }
-
-            // Dieser Spacer drückt alles Folgende nach unten
             Spacer(modifier = Modifier.weight(1f))
-
-            // Onboarding Button
             AnimatedVisibility(
                 visible = visible.value,
                 enter = slideInVertically { 60 } + fadeIn(tween(800, 500))
@@ -92,7 +98,6 @@ fun WelcomeScreen(
                     Text("Anleitung starten", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                 }
             }
-
             if (isNotLoggedIn) {
                 Spacer(modifier = Modifier.height(16.dp))
                 AnimatedVisibility(
@@ -102,7 +107,6 @@ fun WelcomeScreen(
                     SettingsButton(onClick = onOpenSettings)
                 }
             }
-
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

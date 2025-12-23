@@ -35,59 +35,42 @@ sealed class CloudRecognitionState {
     data class Success(val text: String) : CloudRecognitionState()
     data class Error(val message: String) : CloudRecognitionState()
 }
-
 class TextViewModel(
     private val visionRepository: VisionRepository,
     private val manageHistoryUseCase: ManageHistoryUseCase,
     private val userRepository: UserRepository
 ) : ViewModel() {
-
-    // --- STATES ---
     private val _uiEvent = Channel<String>()
     val uiEvent = _uiEvent.receiveAsFlow()
-
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
-
     private val _recognizedText = MutableStateFlow("")
     val recognizedText: StateFlow<String> = _recognizedText
-
     private val _translatedText = MutableStateFlow("")
     val translatedText: StateFlow<String> = _translatedText
-
     private val _cloudRecognitionState = MutableStateFlow<CloudRecognitionState>(CloudRecognitionState.Idle)
     val cloudRecognitionState: StateFlow<CloudRecognitionState> = _cloudRecognitionState.asStateFlow()
-
     private val _isAnalyzing = MutableStateFlow(true)
     val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
-
     private var lastAnalyzedTimestamp = 0L
     private var recognitionJob: Job? = null
-
-    // --- CLIENTS ---
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-
     private val translator by lazy {
         Translation.getClient(TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)
             .setTargetLanguage(TranslateLanguage.GERMAN)
             .build())
     }
-
-    // --- CLOUD SCAN ---
     fun recognizeTextViaCloud(base64Image: String) {
         if (_cloudRecognitionState.value is CloudRecognitionState.Loading) return
-
         pauseAnalysis()
         _boundingBoxes.value = emptyList()
-
         viewModelScope.launch {
             _cloudRecognitionState.value = CloudRecognitionState.Loading
             try {
                 val response = visionRepository.analyzeImage(base64Image, listOf(Feature(type = "DOCUMENT_TEXT_DETECTION")))
                 val cloudText = response.responses.firstOrNull()?.fullTextAnnotation?.text
                     ?: throw IllegalStateException("Kein Text gefunden")
-
                 _recognizedText.value = cloudText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
                 _uiEvent.send("Cloud-Scan erfolgreich!")
@@ -98,24 +81,18 @@ class TextViewModel(
             }
         }
     }
-
     fun setCloudRecognitionState(state: CloudRecognitionState) {
         _cloudRecognitionState.value = state
     }
-
-    // --- LIVE SCAN ---
     @OptIn(ExperimentalGetImage::class)
     fun analyzeImageProxy(imageProxy: ImageProxy) {
         val currentTimestamp = System.currentTimeMillis()
-
         if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < 400L) {
             imageProxy.close()
             return
         }
-
         val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
                 val detectedText = visionText.text.trim()
@@ -125,54 +102,40 @@ class TextViewModel(
             }
             .addOnCompleteListener { imageProxy.close() }
     }
-
     private fun processLiveDetection(text: String, blocks: List<Text.TextBlock>, w: Int, h: Int, ts: Long) {
         recognitionJob?.cancel()
         recognitionJob = viewModelScope.launch {
-            delay(300) // Stabilisierung
+            delay(300)
             _recognizedText.value = text
             lastAnalyzedTimestamp = ts
             translateTextSuspend(text)
             updateBoundingBoxes(blocks, w, h, ts)
         }
     }
-
-    // --- CONTROL FUNCTIONS ---
     fun toggleLiveDetection() {
         if (_isAnalyzing.value) pauseAnalysis() else continueAnalysis()
     }
-
     fun pauseAnalysis() {
         _isAnalyzing.value = false
         _boundingBoxes.value = emptyList()
     }
-
     fun continueAnalysis() {
         _isAnalyzing.value = true
         _cloudRecognitionState.value = CloudRecognitionState.Idle
         _boundingBoxes.value = emptyList()
     }
-
-    // Für manuelle Editierung im Modal
     fun recognizeText(newText: String) {
         pauseAnalysis()
         _recognizedText.value = newText
         translateTextAsync(newText)
     }
 
-    // --- HISTORY & LOADING ---
-
-    /**
-     * Lädt einen alten Eintrag aus der History zurück in den Scanner
-     */
     fun loadFromHistory(recognized: String, translated: String) {
-        pauseAnalysis() // Live-Kamera anhalten
+        pauseAnalysis()
         _recognizedText.value = recognized
         _translatedText.value = translated
         _cloudRecognitionState.value = CloudRecognitionState.Success(recognized)
-        // Wir setzen Success, damit die UI weiß: "Hier ist ein fertiges Ergebnis"
     }
-
     fun saveCurrentTextToHistory() {
         if (_recognizedText.value.isBlank()) return
         viewModelScope.launch {
@@ -182,7 +145,6 @@ class TextViewModel(
             _uiEvent.send("Lokal gespeichert.")
         }
     }
-
     fun onSaveToCloudClicked() {
         viewModelScope.launch {
             val source = _recognizedText.value
@@ -194,12 +156,9 @@ class TextViewModel(
             }
         }
     }
-
-    // --- TRANSLATION ---
     private fun translateTextAsync(text: String) {
         viewModelScope.launch { translateTextSuspend(text) }
     }
-
     private suspend fun translateTextSuspend(text: String) {
         if (text.isBlank()) return
         try {
@@ -209,8 +168,6 @@ class TextViewModel(
             _translatedText.value = "Übersetzungsfehler"
         }
     }
-
-    // --- UI HELPERS ---
     private fun updateBoundingBoxes(blocks: List<Text.TextBlock>, w: Int, h: Int, ts: Long) {
         _boundingBoxes.value = blocks
             .filter { it.text.length > 3 }
@@ -230,7 +187,6 @@ class TextViewModel(
                 )
             }
     }
-
     override fun onCleared() {
         super.onCleared()
         translator.close()

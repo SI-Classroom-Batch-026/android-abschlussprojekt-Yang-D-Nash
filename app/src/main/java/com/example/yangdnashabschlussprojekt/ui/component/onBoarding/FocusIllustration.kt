@@ -1,8 +1,16 @@
 package com.example.yangdnashabschlussprojekt.ui.component.onBoarding
 
-import androidx.compose.animation.core.*
+import androidx.compose.animation.core.EaseInOutQuart
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material3.Icon
@@ -36,16 +44,12 @@ fun FocusIllustration() {
             val l = 35.dp.toPx()
             val o = lineMove.dp.toPx()
 
-            // Oben Links
             drawLine(color, Offset(o, o), Offset(o + l, o), s, StrokeCap.Round)
             drawLine(color, Offset(o, o), Offset(o, o + l), s, StrokeCap.Round)
-            // Oben Rechts
             drawLine(color, Offset(size.width - o, o), Offset(size.width - o - l, o), s, StrokeCap.Round)
             drawLine(color, Offset(size.width - o, o), Offset(size.width - o, o + l), s, StrokeCap.Round)
-            // Unten Links
             drawLine(color, Offset(o, size.height - o), Offset(o + l, size.height - o), s, StrokeCap.Round)
             drawLine(color, Offset(o, size.height - o), Offset(o, size.height - o - l), s, StrokeCap.Round)
-            // Unten Rechts
             drawLine(color, Offset(size.width - o, size.height - o), Offset(size.width - o - l, size.height - o), s, StrokeCap.Round)
             drawLine(color, Offset(size.width - o, size.height - o), Offset(size.width - o, size.height - o - l), s, StrokeCap.Round)
         }

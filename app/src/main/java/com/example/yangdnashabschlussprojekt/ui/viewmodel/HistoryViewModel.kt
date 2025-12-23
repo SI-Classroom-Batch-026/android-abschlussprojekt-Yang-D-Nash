@@ -2,9 +2,9 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 import com.example.yangdnashabschlussprojekt.domain.usecase.GetHistoryUseCase
 import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
-import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -41,15 +41,10 @@ class HistoryViewModel(
     }
     fun deleteHistoryItem(item: HistoryItem) {
         viewModelScope.launch {
-            // Lösche lokal, wenn eine Room-ID da ist
             item.id?.let { localId ->
                 manageHistoryUseCase.delete(localId)
             }
-
-            // Lösche aus der Cloud, wenn eine Firestore-ID da ist
             item.firestoreId?.let { cloudId ->
-                // Falls du diese Methode noch nicht hast:
-                // repository.deleteFromCloud(cloudId)
             }
         }
     }

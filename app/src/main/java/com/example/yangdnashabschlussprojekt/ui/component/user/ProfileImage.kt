@@ -35,9 +35,7 @@ fun ProfileImage(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> uri?.let { onImageSelected(it) } }
-
     val painter = rememberAsyncImagePainter(model = profileImageUri)
-
     Box(
         modifier = Modifier
             .size(110.dp)

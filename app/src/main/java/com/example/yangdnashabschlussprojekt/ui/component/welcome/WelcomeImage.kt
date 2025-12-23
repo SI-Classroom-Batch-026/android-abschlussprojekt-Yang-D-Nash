@@ -24,7 +24,6 @@ fun WelcomeImage(
     imageRes: Int = R.drawable.smartvisionmain
 ) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.fillMaxWidth()) {
-        // Subtiler Glow Effekt hinter dem Bild
         Surface(
             modifier = Modifier.size(180.dp).blur(40.dp),
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),

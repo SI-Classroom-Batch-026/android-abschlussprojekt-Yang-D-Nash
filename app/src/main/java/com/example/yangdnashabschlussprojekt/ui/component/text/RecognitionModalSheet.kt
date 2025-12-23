@@ -49,8 +49,7 @@ fun RecognitionModalSheet(
     isLoggedIn: Boolean
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
-    val speak = rememberTextToSpeech() // TTS Hook initialisieren
-
+    val speak = rememberTextToSpeech()
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF121212),
@@ -58,8 +57,6 @@ fun RecognitionModalSheet(
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
     ) {
         Column(modifier = Modifier.padding(24.dp).fillMaxWidth().verticalScroll(rememberScrollState())) {
-
-            // Header mit Voice-Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -71,8 +68,6 @@ fun RecognitionModalSheet(
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.ExtraBold
                 )
-
-                // Sprech-Button (nur aktiv wenn Text da ist)
                 IconButton(
                     onClick = { speak(translatedText) },
                     enabled = translatedText.isNotBlank(),
@@ -85,9 +80,7 @@ fun RecognitionModalSheet(
                     )
                 }
             }
-
             Spacer(Modifier.height(8.dp))
-
             Surface(
                 color = Color.White.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(16.dp),
@@ -101,9 +94,7 @@ fun RecognitionModalSheet(
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
             Text("ORIGINALTEXT EDITIEREN", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
             OutlinedTextField(
                 value = editableText,
@@ -117,7 +108,6 @@ fun RecognitionModalSheet(
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
-
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
                     onClick = { onTextEdited(editableText) },
@@ -125,7 +115,6 @@ fun RecognitionModalSheet(
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, Color(0xFFFF00FF))
                 ) { Text("UPDATE", color = Color(0xFFFF00FF)) }
-
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier.weight(1f).height(50.dp),
@@ -133,9 +122,7 @@ fun RecognitionModalSheet(
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("FERTIG", fontWeight = FontWeight.Bold, color = Color.White) }
             }
-
             Spacer(modifier = Modifier.height(16.dp))
-
             Button(
                 onClick = onSaveToCloud,
                 enabled = isLoggedIn,
@@ -155,7 +142,3 @@ fun RecognitionModalSheet(
         }
     }
 }
-
-/**
- * Hilfsfunktion für die Sprachausgabe
- */

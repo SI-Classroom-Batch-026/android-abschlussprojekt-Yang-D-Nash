@@ -26,14 +26,12 @@ fun OnboardingContent(data: OnboardingData, index: Int) {
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        // Switch für die verschiedenen Animationen pro Seite
         when (index) {
-            0 -> LiveDetectionIllustration(data.icon) // Seite 1
-            1 -> FocusIllustration()                  // Seite 2
-            2 -> AnimatedScanIllustration()           // Seite 3
-            3 -> LiveDetectionIllustration(data.icon) // Seite 4 (Cloud)
+            0 -> LiveDetectionIllustration(data.icon)
+            1 -> FocusIllustration()
+            2 -> AnimatedScanIllustration()
+            3 -> LiveDetectionIllustration(data.icon)
         }
-
         Text(
             text = data.title,
             style = MaterialTheme.typography.headlineLarge.copy(
@@ -43,9 +41,7 @@ fun OnboardingContent(data: OnboardingData, index: Int) {
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center
         )
-
         Spacer(Modifier.height(16.dp))
-
         Text(
             text = data.desc,
             style = MaterialTheme.typography.bodyLarge,
@@ -53,10 +49,7 @@ fun OnboardingContent(data: OnboardingData, index: Int) {
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
-
         Spacer(Modifier.height(48.dp))
-
-        // Badge
         Surface(
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
             shape = RoundedCornerShape(12.dp),

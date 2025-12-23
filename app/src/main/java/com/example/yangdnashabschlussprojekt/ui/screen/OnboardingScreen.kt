@@ -3,7 +3,16 @@ package com.example.yangdnashabschlussprojekt.ui.screen
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -13,7 +22,11 @@ import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CloudUpload
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -24,7 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.data.local.onBoarding.OnboardingData
 import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.OnboardingContent
-import com.example.yangdnashabschlussprojekt.ui.theme.*
+import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceBlack
+import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceCyan
+import com.example.yangdnashabschlussprojekt.ui.theme.LightBgEnd
+import com.example.yangdnashabschlussprojekt.ui.theme.LightBgStart
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -36,16 +52,13 @@ fun OnboardingScreen(onFinished: () -> Unit) {
         OnboardingData("Präziser Scan", "Tippe den Button für Cloud-KI Übersetzungen.", "Scan & Translate", Icons.Default.CameraAlt),
         OnboardingData("Cloud-Power", "Maximale Präzision durch modernste Server.", "Online", Icons.Default.CloudUpload)
     )
-
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isDark = isSystemInDarkTheme()
-
     val bgGradient = Brush.verticalGradient(
         if (isDark) listOf(DeepSpaceCyan, DeepSpaceBlack)
         else listOf(LightBgStart, LightBgEnd)
     )
-
     Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
         if (pagerState.currentPage < pages.size - 1) {
             TextButton(
@@ -55,7 +68,6 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 Text("Überspringen", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
             }
         }
-
         Column(modifier = Modifier.fillMaxSize().systemBarsPadding().padding(24.dp)) {
             HorizontalPager(
                 state = pagerState,
@@ -63,7 +75,6 @@ fun OnboardingScreen(onFinished: () -> Unit) {
             ) { index ->
                 OnboardingContent(pages[index], index)
             }
-
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -83,7 +94,6 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                         )
                     }
                 }
-
                 Button(
                     onClick = {
                         if (pagerState.currentPage < pages.size - 1) {

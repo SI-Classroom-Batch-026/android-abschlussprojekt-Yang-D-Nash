@@ -5,9 +5,25 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,34 +59,26 @@ fun TextScreen(
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     var showModal by remember { mutableStateOf(false) }
-
-    // --- FIX 1: DIE PIPELINE AKTIVIEREN ---
     LaunchedEffect(isAnalyzing) {
         if (isAnalyzing) {
             cameraManager.setAnalyzer { imageProxy ->
-                // Hier schicken wir die Frames an das TextViewModel
                 textViewModel.analyzeImageProxy(imageProxy)
             }
         } else {
-            // Wenn Analyse pausiert (z.B. während Cloud-Scan), Analyzer leeren
             cameraManager.setAnalyzer { it.close() }
         }
     }
-
-    // Cleanup beim Verlassen des Screens
     DisposableEffect(Unit) {
         onDispose {
             cameraManager.setAnalyzer { it.close() }
         }
     }
-
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
-
     Scaffold(
         containerColor = Color.Transparent,
         modifier = Modifier.fillMaxSize().imePadding()
@@ -80,17 +88,13 @@ fun TextScreen(
                 .fillMaxSize()
                 .padding(top = paddingValues.calculateTopPadding())
         ) {
-
-            // --- KAMERA LAYER ---
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
                 textViewModel = textViewModel,
-                isObjectDetectionMode = false, // WICHTIG: Hier False für Text-Modus
+                isObjectDetectionMode = false,
                 detectedObjectLabel = ""
             )
-
-            // --- LOADING OVERLAY ---
             if (cloudState is CloudRecognitionState.Loading) {
                 ScanningLaserOverlay(laserColor = Color(0xFFFF00FF))
                 Box(
@@ -104,8 +108,6 @@ fun TextScreen(
                     }
                 }
             }
-
-            // --- UI OVERLAYS ---
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal,
                 enter = fadeIn(), exit = fadeOut(),
@@ -116,8 +118,6 @@ fun TextScreen(
             ) {
                 BottomTextCard(recognizedText)
             }
-
-            // --- FABs (STEUERUNG) ---
             Box(
                 Modifier
                     .fillMaxSize()
@@ -135,7 +135,6 @@ fun TextScreen(
                     isSaveButtonEnabled = isAuthenticated && translatedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
                     onCloudScanTriggered = {
-                        // Bei Cloud-Scan Live-Analyse stoppen
                         cameraManager.captureForCloudScan(
                             onCaptured = { base64 ->
                                 textViewModel.pauseAnalysis()
@@ -146,8 +145,6 @@ fun TextScreen(
                     }
                 )
             }
-
-            // --- RESULT SHEET ---
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,

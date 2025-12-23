@@ -4,10 +4,14 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,10 +19,10 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.FocusIllustration
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
-import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.FocusIllustration
 
 @Composable
 fun CameraPreview(
@@ -39,17 +43,14 @@ fun CameraPreview(
             }
         }
     }
-
     LaunchedEffect(isTextMode) {
         cameraManager.isTextMode = isTextMode
     }
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black) // Verhindert weißes Aufblitzen beim Start
+            .background(Color.Black)
     ) {
-        // 1. Die Kamera-Ebene (Abgerundet für modernen Look)
         @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
         AndroidView(
             factory = { ctx ->
@@ -61,11 +62,10 @@ fun CameraPreview(
             },
             modifier = Modifier
                 .fillMaxSize()
-                .padding(8.dp) // Erzeugt einen eleganten Rahmen zum Displayrand
-                .clip(RoundedCornerShape(28.dp)) // iOS/Android 15 High-Radius Style
+                .padding(8.dp)
+                .clip(RoundedCornerShape(28.dp))
         )
 
-        // 2. Die Vignette (Macht das Bild "cinematic" und sichert UI-Lesbarkeit)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,16 +74,14 @@ fun CameraPreview(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.4f), // Abdunkelung oben für Status-Icons
+                            Color.Black.copy(alpha = 0.4f),
                             Color.Transparent,
                             Color.Transparent,
-                            Color.Black.copy(alpha = 0.6f)  // Abdunkelung unten für Buttons
+                            Color.Black.copy(alpha = 0.6f)
                         )
                     )
                 )
         )
-
-        // 3. Der Interaktions-Rahmen (Nur im Text-Mode aktiv)
         if (isTextMode) {
             Box(
                 modifier = Modifier
@@ -91,10 +89,7 @@ fun CameraPreview(
                     .padding(48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Hier greifen wir direkt auf deine bestehende Illustration zu
                 FocusIllustration()
-
-                // Subtiler Rahmen-Indikator
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

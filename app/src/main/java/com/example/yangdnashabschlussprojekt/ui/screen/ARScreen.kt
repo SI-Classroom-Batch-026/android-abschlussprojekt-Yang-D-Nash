@@ -34,7 +34,6 @@ fun ARScreen(
 
     Scaffold(containerColor = Color.Transparent) { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
-
             CameraWithLiveObjects(
                 cameraManager = cameraManager,
                 arViewModel = arViewModel,
@@ -42,22 +41,18 @@ fun ARScreen(
                 detectedObjectLabel = detectedObjectLabel,
                 textViewModel = koinViewModel ()
             )
-
-            // LIVE FEEDBACK: Kleiner Text über dem Button
             if (detectedObjectLabel.isNotBlank() && !isCloudResult && !isCloudLoading) {
                 Text(
                     text = detectedObjectLabel.uppercase(),
                     color = Color.White,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
-                        .padding(bottom = 240.dp) // Über dem Lens Button
+                        .padding(bottom = 240.dp)
                         .background(Color.Cyan.copy(0.7f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
-
-            // Lens Scan Button
             if (!isCloudResult && !isCloudLoading) {
                 Box(Modifier.align(Alignment.BottomCenter).padding(bottom = 150.dp)) {
                     HoldToScanButton(onTrigger = {
@@ -68,8 +63,6 @@ fun ARScreen(
                     })
                 }
             }
-
-            // Cloud Overlay
             if (isCloudResult) {
                 ARResultOverlay(label = detectedObjectLabel, onReset = { arViewModel.resetCloudResult() })
             }

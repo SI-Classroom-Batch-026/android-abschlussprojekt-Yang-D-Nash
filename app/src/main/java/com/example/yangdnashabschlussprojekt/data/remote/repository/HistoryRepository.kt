@@ -1,7 +1,7 @@
 package com.example.yangdnashabschlussprojekt.data.remote.repository
 
-import com.example.yangdnashabschlussprojekt.domain.usecase.IHistoryDataSource
 import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
+import com.example.yangdnashabschlussprojekt.domain.usecase.IHistoryDataSource
 import kotlinx.coroutines.flow.Flow
 
 class HistoryRepository(

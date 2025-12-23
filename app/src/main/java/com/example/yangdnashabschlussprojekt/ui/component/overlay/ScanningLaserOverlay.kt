@@ -30,7 +30,6 @@ fun ScanningLaserOverlay(laserColor: Color) {
             repeatMode = RepeatMode.Restart
         ), label = "y"
     )
-
     Box(Modifier.fillMaxSize().zIndex(15f)) {
         Box(
             Modifier

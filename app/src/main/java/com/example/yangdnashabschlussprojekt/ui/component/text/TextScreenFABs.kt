@@ -36,24 +36,18 @@ fun TextScreenFABs(
     onCloudScanTriggered: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Steuert das Einfliegen der Buttons beim Start
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
-
     val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-
     Column(
         modifier = modifier.padding(FAB_SPACING),
         verticalArrangement = Arrangement.spacedBy(FAB_SPACING),
         horizontalAlignment = Alignment.End
     ) {
-        // 1. High-Precision Cloud Scan (Der große Button)
         AnimatedFab(isVisible = visible, delay = 0) {
             HoldToScanButton(onTrigger = onCloudScanTriggered)
         }
-
-        // 2. Live-Scanner Toggle (Der Anti-Abfuck Schalter)
         AnimatedFab(isVisible = visible, delay = 100) {
             val containerColor by animateColorAsState(
                 if (isLiveActive) MaterialTheme.colorScheme.primary else Color(0xFF424242),
@@ -70,8 +64,6 @@ fun TextScreenFABs(
                 )
             }
         }
-
-        // 3. Lokal Speichern
         AnimatedFab(isVisible = visible, delay = 200) {
             val containerColor by animateColorAsState(
                 if (isSaveButtonEnabled) MaterialTheme.colorScheme.secondary else disabledContainerColor,
@@ -89,8 +81,6 @@ fun TextScreenFABs(
                 )
             }
         }
-
-        // 4. Verlauf / Historie
         AnimatedFab(isVisible = visible, delay = 300) {
             FloatingActionButton(
                 onClick = onHistoryClick,

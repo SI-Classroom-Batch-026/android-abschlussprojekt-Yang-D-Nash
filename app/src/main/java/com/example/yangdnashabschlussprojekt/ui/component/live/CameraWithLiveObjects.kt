@@ -29,12 +29,10 @@ fun CameraWithLiveObjects(
     isObjectDetectionMode: Boolean,
     detectedObjectLabel: String,
 ) {
-    // Beobachte den Cloud-Status, um UI-Elemente auszublenden, wenn das Ergebnis da ist
     val isCloudResult by arViewModel.isCloudResult.collectAsState()
     val isCloudLoading by arViewModel.isCloudLoading.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // 1. Die Kamera-Ebene
         CameraPreview(
             cameraManager = cameraManager,
             textViewModel = textViewModel,
@@ -42,9 +40,6 @@ fun CameraWithLiveObjects(
             modifier = Modifier.fillMaxSize(),
             isTextMode = !isObjectDetectionMode
         )
-
-        // 2. Die Kästen-Ebene (BoxesOverlay zeichnet die Rechtecke)
-        // WICHTIG: Nur anzeigen, wenn wir nicht gerade ein Cloud-Ergebnis betrachten
         if (!isCloudResult) {
             BoxesOverlay(
                 arViewModel = arViewModel,
@@ -52,14 +47,11 @@ fun CameraWithLiveObjects(
                 isTextMode = !isObjectDetectionMode,
             )
         }
-
-        // 3. Live Label Badge (Cyber-Look)
-        // Erscheint nur, wenn ML Kit etwas findet und wir nicht im Cloud-Modus sind
         if (detectedObjectLabel.isNotBlank() && !isCloudResult && !isCloudLoading) {
             Surface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 260.dp), // Höher gesetzt, damit es nicht über dem Button liegt
+                    .padding(bottom = 260.dp),
                 color = Color.Black.copy(alpha = 0.7f),
                 shape = RoundedCornerShape(12.dp),
                 border = BorderStroke(1.dp, Color.Cyan.copy(alpha = 0.5f))

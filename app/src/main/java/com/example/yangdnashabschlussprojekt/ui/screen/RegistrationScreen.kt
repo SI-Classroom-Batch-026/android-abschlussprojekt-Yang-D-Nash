@@ -49,21 +49,18 @@ fun RegistrationScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
-
     LaunchedEffect(currentUser) {
         currentUser?.let {
             email = it.email ?: ""
             displayName = it.displayName
         }
     }
-
     LaunchedEffect(registrationResult) {
         if (registrationResult?.success == true) {
             onBack()
             viewModel.resetRegistrationResult()
         }
     }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -77,7 +74,6 @@ fun RegistrationScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Top Bar mit Zurück-Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -96,10 +92,7 @@ fun RegistrationScreen(
                     fontWeight = FontWeight.Bold
                 )
             }
-
             Spacer(modifier = Modifier.height(40.dp))
-
-            // Glassmorphism Card für das Formular
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
@@ -118,9 +111,7 @@ fun RegistrationScreen(
                             viewModel.registerUser(email, password, displayName)
                         }
                     )
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     RegistrationFeedback(result = registrationResult)
                 }
             }

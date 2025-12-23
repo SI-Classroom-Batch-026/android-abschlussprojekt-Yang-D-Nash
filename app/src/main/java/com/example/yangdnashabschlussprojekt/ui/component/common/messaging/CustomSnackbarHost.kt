@@ -43,18 +43,15 @@ fun CustomSnackbarHost(
     isTextMode: Boolean = true
 ) {
     val context = LocalContext.current
-    // Neon-Farben für das System-Feedback
     val themeColor = if (isTextMode) Color(0xFFFF00FF) else Color(0xFF00FFFF)
-
     LaunchedEffect(hostState.currentSnackbarData) {
         if (hostState.currentSnackbarData != null) {
             triggerVibration(context)
         }
     }
-
     SnackbarHost(
         hostState = hostState,
-        modifier = modifier.navigationBarsPadding() // Wichtig: Über der Systemleiste
+        modifier = modifier.navigationBarsPadding()
     ) { data ->
         Box(
             modifier = Modifier
@@ -62,7 +59,6 @@ fun CustomSnackbarHost(
                 .padding(horizontal = 20.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Die Snackbar als schwebende "Glass-Capsule"
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -72,7 +68,7 @@ fun CustomSnackbarHost(
                         shape = RoundedCornerShape(24.dp)
                     ),
                 shape = RoundedCornerShape(24.dp),
-                color = Color(0xFF1A1A1A).copy(alpha = 0.9f), // Glassmorphism Basis
+                color = Color(0xFF1A1A1A).copy(alpha = 0.9f),
                 border = BorderStroke(
                     width = 1.dp,
                     brush = Brush.horizontalGradient(
@@ -85,7 +81,6 @@ fun CustomSnackbarHost(
                         .padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Modernes pulsierendes Icon-Design
                     Box(
                         modifier = Modifier
                             .size(36.dp)
@@ -99,9 +94,7 @@ fun CustomSnackbarHost(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-
                     Spacer(Modifier.width(16.dp))
-
                     Text(
                         text = data.visuals.message,
                         color = Color.White,

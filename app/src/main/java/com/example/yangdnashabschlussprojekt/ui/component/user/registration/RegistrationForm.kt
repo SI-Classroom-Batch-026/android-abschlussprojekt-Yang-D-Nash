@@ -1,9 +1,17 @@
 package com.example.yangdnashabschlussprojekt.ui.component.user.registration
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,7 +31,6 @@ fun RegistrationForm(
     onRegisterClick: () -> Unit
 ) {
     val isRegistrationEnabled = email.isNotBlank() && password.isNotBlank() && displayName.isNotBlank()
-
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = MaterialTheme.colorScheme.primary,
         unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
@@ -32,7 +39,6 @@ fun RegistrationForm(
         focusedTextColor = Color.White,
         unfocusedTextColor = Color.White
     )
-
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = email,
@@ -44,7 +50,6 @@ fun RegistrationForm(
             colors = textFieldColors
         )
         Spacer(modifier = Modifier.height(12.dp))
-
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
@@ -56,7 +61,6 @@ fun RegistrationForm(
             colors = textFieldColors
         )
         Spacer(modifier = Modifier.height(12.dp))
-
         OutlinedTextField(
             value = displayName,
             onValueChange = onDisplayNameChange,
@@ -67,7 +71,6 @@ fun RegistrationForm(
             colors = textFieldColors
         )
         Spacer(modifier = Modifier.height(32.dp))
-
         Button(
             onClick = onRegisterClick,
             enabled = isRegistrationEnabled,
