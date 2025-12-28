@@ -46,15 +46,18 @@ fun ARScreen(
     val boxes by arViewModel.boundingBoxes.collectAsState()
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-        // Kamera Layer (Label leer lassen, um Doppel-Text zu vermeiden)
-        CameraWithLiveObjects(cameraManager, arViewModel, koinViewModel(), true)
+        CameraWithLiveObjects(
+            isObjectDetectionMode = true,
+            onAnalyze = {  },
+            onCameraReady = { previewView, lifecycleOwner, _ ->
+                cameraManager.startCamera(previewView, lifecycleOwner, arViewModel)
+            }
+        )
 
-        // AR HUD Ecken
         ARResultOverlay(boxes = boxes)
 
         if (isCloudLoading) ScanningLaserOverlay(Color(0xFF00FFCC))
 
-        // UI-Inhalt
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -63,7 +66,6 @@ fun ARScreen(
         ) {
             Spacer(modifier = Modifier.height(100.dp))
 
-            // Label oben - FIX: Benannte Parameter
             if (label.isNotEmpty()) {
                 Surface(color = Color.Black.copy(0.7f), shape = RoundedCornerShape(8.dp)) {
                     Text(
@@ -78,12 +80,14 @@ fun ARScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // Buttons - Jetzt deutlich höher platziert
             Box(modifier = Modifier.padding(bottom = 120.dp)) {
                 if (!isCloudResult && !isCloudLoading) {
                     HoldToScanButton(onTrigger = {
                         triggerVibration(context)
-                        cameraManager.captureForCloudScan({ arViewModel.analyzeWithCloudVision(it) }, {})
+                        cameraManager.captureForCloudScan(
+                            onCaptured = { arViewModel.analyzeWithCloudVision(it) },
+                            onError = { /* Fehlerhandling hier */ }
+                        )
                     })
                 } else if (isCloudResult) {
                     Button(

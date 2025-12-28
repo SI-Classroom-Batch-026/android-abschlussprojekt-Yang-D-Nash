@@ -18,13 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -37,13 +31,7 @@ import androidx.compose.ui.zIndex
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
-import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
-import com.example.yangdnashabschlussprojekt.ui.component.text.CloudProcessingUI
-import com.example.yangdnashabschlussprojekt.ui.component.text.CyberFocusFrame
-import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
-import com.example.yangdnashabschlussprojekt.ui.component.text.StatusPillUI
-import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
+import com.example.yangdnashabschlussprojekt.ui.component.text.*
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -53,7 +41,6 @@ import org.koin.compose.koinInject
 @Composable
 fun TextScreen(
     textViewModel: TextViewModel = koinViewModel(),
-    arViewModel: ARViewModel = koinViewModel(),
     userRepository: UserRepository = koinInject(),
     cameraManager: CameraXManager = koinInject(),
     onNavigateToHistory: () -> Unit
@@ -67,13 +54,14 @@ fun TextScreen(
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
     var showModal by remember { mutableStateOf(false) }
 
-    // Logic: Toasts & Vibration
+    // 1. UI Events (Toasts)
     LaunchedEffect(Unit) {
         textViewModel.uiEvent.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
 
+    // 2. Cloud Success -> Modal öffnen
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
@@ -81,13 +69,16 @@ fun TextScreen(
         }
     }
 
+    // 3. Analyse stoppen wenn pausiert
     LaunchedEffect(isAnalyzing) {
-        if (isAnalyzing) {
-            cameraManager.setAnalyzer { imageProxy ->
-                try { textViewModel.analyzeImageProxy(imageProxy) }
-                catch (_: Exception) { imageProxy.close() }
-            }
-        } else {
+        if (!isAnalyzing) {
+            cameraManager.stopAnalysis()
+        }
+    }
+
+    // 4. Cleanup beim Verlassen des Screens
+    DisposableEffect(Unit) {
+        onDispose {
             cameraManager.stopAnalysis()
         }
     }
@@ -98,43 +89,41 @@ fun TextScreen(
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
 
-            // 1. Kamera Layer
+            // Die Kamera nutzt jetzt direkt das textViewModel als Analyzer Interface
             CameraWithLiveObjects(
-                cameraManager = cameraManager,
-                arViewModel = arViewModel,
-                textViewModel = textViewModel,
                 isObjectDetectionMode = false,
+                onAnalyze = { /* Unbenutzt, da ViewModel direkt injiziert wird */ },
+                onCameraReady = { preview, owner, _ ->
+                    cameraManager.startCamera(preview, owner, textViewModel)
+                }
             )
 
-            // 2. Animierte Bounding Boxes (Neon Pulsierend)
+            // Overlays
             if (isAnalyzing && !showModal) {
                 AnimatedBoundingBoxes(boundingBoxes)
-            }
-
-            // 3. Zentraler Cyber-Sucher
-            if (isAnalyzing && !showModal) {
                 CyberFocusFrame()
             }
 
-            // 4. Status Pill oben
             StatusPillUI(isAnalyzing)
 
-            // 5. Cloud/Laser Overlay
             if (cloudState is CloudRecognitionState.Loading) {
                 CloudProcessingUI()
             }
 
-            // 6. Preview Card
+            // Erkannter Text Karte
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal && cloudState is CloudRecognitionState.Idle,
                 enter = fadeIn() + slideInVertically { it },
                 exit = fadeOut() + slideOutVertically { it },
-                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 190.dp, start = 20.dp).zIndex(10f)
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(bottom = 190.dp, start = 20.dp)
+                    .zIndex(10f)
             ) {
                 BottomTextCard(recognizedText)
             }
 
-            // 7. FABs mit BottomNav-Safe Margin
+            // FABs
             Box(
                 Modifier.fillMaxSize().padding(bottom = 110.dp, end = 16.dp).zIndex(20f),
                 Alignment.BottomEnd
@@ -160,7 +149,7 @@ fun TextScreen(
                 )
             }
 
-            // 8. Modal Dialog
+            // Resultat Modal
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,
@@ -189,6 +178,7 @@ fun AnimatedBoundingBoxes(boxes: List<com.example.yangdnashabschlussprojekt.data
 
     Canvas(modifier = Modifier.fillMaxSize()) {
         boxes.forEach { box ->
+            // Skalierung der Boxen auf die aktuelle Display-Größe
             val scaleX = size.width / box.frameWidth
             val scaleY = size.height / box.frameHeight
 
@@ -201,6 +191,3 @@ fun AnimatedBoundingBoxes(boxes: List<com.example.yangdnashabschlussprojekt.data
         }
     }
 }
-
-
-

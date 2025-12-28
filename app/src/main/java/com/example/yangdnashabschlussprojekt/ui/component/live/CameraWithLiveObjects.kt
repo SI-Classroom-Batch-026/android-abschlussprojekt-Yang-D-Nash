@@ -1,28 +1,28 @@
 package com.example.yangdnashabschlussprojekt.ui.component.live
 
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
+import androidx.camera.view.PreviewView
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.LifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 
 @Composable
 fun CameraWithLiveObjects(
-    cameraManager: CameraXManager,
-    arViewModel: ARViewModel,
-    textViewModel: TextViewModel,
     isObjectDetectionMode: Boolean,
+    onAnalyze: (ImageProxy) -> Unit,
+    onCameraReady: (PreviewView, LifecycleOwner, ImageAnalysis.Analyzer) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize()) {
         CameraPreview(
-            cameraManager = cameraManager,
-            textViewModel = textViewModel,
-            arViewModel = arViewModel,
-            modifier = Modifier.fillMaxSize(),
-            isTextMode = !isObjectDetectionMode
+            isTextMode = !isObjectDetectionMode,
+            onAnalyze = onAnalyze,
+            onCameraReady = onCameraReady,
+            modifier = Modifier.fillMaxSize()
         )
     }
 }

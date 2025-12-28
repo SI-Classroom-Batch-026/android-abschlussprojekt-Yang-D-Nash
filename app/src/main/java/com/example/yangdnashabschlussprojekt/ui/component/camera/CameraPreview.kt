@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.component.camera
 
 import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,32 +19,22 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.FocusIllustration
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
 
 @Composable
 fun CameraPreview(
-    cameraManager: CameraXManager,
-    modifier: Modifier = Modifier,
-    textViewModel: TextViewModel,
-    arViewModel: ARViewModel,
-    isTextMode: Boolean
+    isTextMode: Boolean,
+    onAnalyze: (ImageProxy) -> Unit,
+    onCameraReady: (PreviewView, LifecycleOwner, ImageAnalysis.Analyzer) -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
-
+    val lifecycleOwner = LocalLifecycleOwner.current
     val analyzer = remember {
         ImageAnalysis.Analyzer { imageProxy ->
-            if (cameraManager.isTextMode) {
-                textViewModel.analyzeImageProxy(imageProxy)
-            } else {
-                arViewModel.analyzeImageProxy(imageProxy)
-            }
+            onAnalyze(imageProxy)
         }
-    }
-    LaunchedEffect(isTextMode) {
-        cameraManager.isTextMode = isTextMode
     }
     Box(
         modifier = modifier
@@ -57,7 +47,7 @@ fun CameraPreview(
                 PreviewView(ctx).apply {
                     implementationMode = PreviewView.ImplementationMode.COMPATIBLE
                     scaleType = PreviewView.ScaleType.FILL_CENTER
-                    cameraManager.startCamera(this, lifecycleOwner, analyzer)
+                    onCameraReady(this, lifecycleOwner, analyzer)
                 }
             },
             modifier = Modifier
@@ -65,7 +55,6 @@ fun CameraPreview(
                 .padding(8.dp)
                 .clip(RoundedCornerShape(28.dp))
         )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
