@@ -35,9 +35,8 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     private val _detectedObjectLabel = MutableStateFlow("")
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
 
-    // FPS & Performance
     private var lastAnalyzedTimestamp = 0L
-    private val FPS_LIMIT = 50L // ~20 FPS
+    private val FPS_LIMIT = 50L
     private var currentFrameSize = Size(1080, 1920)
     private val smoothingFactor = 0.25f
 
@@ -51,7 +50,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             .enableClassification()
             .build()
     )
-
     override fun analyze(image: ImageProxy) {
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastAnalyzedTimestamp >= FPS_LIMIT) {
@@ -61,25 +59,21 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             image.close()
         }
     }
-
     @OptIn(ExperimentalGetImage::class)
     private fun analyzeImageProxy(imageProxy: ImageProxy) {
         if (_isCloudLoading.value || _isCloudResult.value) {
             imageProxy.close()
             return
         }
-
         val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
         val rotation = imageProxy.imageInfo.rotationDegrees
         currentFrameSize = if (rotation % 180 != 0) Size(imageProxy.height, imageProxy.width) else Size(imageProxy.width, imageProxy.height)
-
         objectDetector.process(InputImage.fromMediaImage(mediaImage, rotation))
             .addOnSuccessListener { detectedObjects ->
                 val filtered = detectedObjects.take(3)
                 val newBoxes = filtered.map { obj ->
                     val id = obj.trackingId ?: -1
                     val label = obj.labels.firstOrNull()?.text?.uppercase() ?: "OBJECT"
-
                     val prev = trackedObjectsMap[id]
                     val smoothed = if (prev != null) {
                         prev.copy(
@@ -102,7 +96,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             }
             .addOnCompleteListener { imageProxy.close() }
     }
-
     fun analyzeWithCloudVision(base64Image: String) {
         val lastPos = _boundingBoxes.value.firstOrNull()
         viewModelScope.launch {
@@ -117,7 +110,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             finally { _isCloudLoading.value = false }
         }
     }
-
     fun resetCloudResult() {
         _isCloudResult.value = false
         _isCloudLoading.value = false
@@ -125,7 +117,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
         _detectedObjectLabel.value = ""
         trackedObjectsMap.clear()
     }
-
     override fun onCleared() {
         super.onCleared()
         objectDetector.close()

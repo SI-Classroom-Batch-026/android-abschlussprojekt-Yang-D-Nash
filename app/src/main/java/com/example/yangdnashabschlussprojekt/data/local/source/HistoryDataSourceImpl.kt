@@ -1,7 +1,5 @@
 package com.example.yangdnashabschlussprojekt.data.local.source
 
-// Diese kommen aus dem Shared-Modul (das ist erlaubt)
-
 import com.example.yangdnashabschlussprojekt.data.local.database.dao.TextHistoryDao
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.toEntity
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.toKmpModel

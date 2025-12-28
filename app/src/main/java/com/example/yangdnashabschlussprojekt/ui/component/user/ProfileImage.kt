@@ -28,7 +28,6 @@ import coil3.compose.rememberAsyncImagePainter
 
 @Composable
 fun ProfileImage(
-    modifier: Modifier = Modifier,
     profileImageUri: Uri? = null,
     onImageSelected: (Uri) -> Unit = {},
 ) {

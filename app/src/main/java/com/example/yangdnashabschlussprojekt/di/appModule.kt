@@ -53,7 +53,7 @@ val appModule = module {
     single { SettingsRepository(androidContext()) }
 
     factory { GetHistoryUseCase(get()) }
-    factory { ManageHistoryUseCase(get(), get()) }
+    factory { ManageHistoryUseCase(get()) }
 
     single { Executors.newSingleThreadExecutor() }
 

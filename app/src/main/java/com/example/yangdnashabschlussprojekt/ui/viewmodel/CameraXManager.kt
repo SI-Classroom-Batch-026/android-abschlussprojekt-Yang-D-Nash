@@ -3,13 +3,16 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.ImageFormat
 import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.util.Base64
 import android.util.Log
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -28,20 +31,11 @@ class CameraXManager(
     private var imageAnalyzer: ImageAnalysis? = null
     private var cameraProvider: ProcessCameraProvider? = null
 
-    /**
-     * Stoppt die aktuelle Analyse komplett und gibt Ressourcen frei.
-     * Wichtig beim Wechsel zwischen Text- und AR-Screen.
-     */
     fun stopAnalysis() {
         imageAnalyzer?.clearAnalyzer()
         Log.d("CameraXManager", "Analysis stopped and cleared")
     }
 
-    /**
-     * Startet die Kamera.
-     * @param analyzer Der Analyzer (z.B. ARViewModel oder TextViewModel),
-     * der die Frames direkt verarbeitet.
-     */
     fun startCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,
@@ -51,19 +45,14 @@ class CameraXManager(
         providerFuture.addListener({
             try {
                 cameraProvider = providerFuture.get()
-
-                // 1. Preview Setup
                 @Suppress("DEPRECATION") val preview = Preview.Builder()
                     .setTargetAspectRatio(AspectRatio.RATIO_4_3)
                     .build()
                     .also { it.surfaceProvider = previewView.surfaceProvider }
-
-                // 2. Image Capture Setup (für Cloud Scans)
                 imageCapture = ImageCapture.Builder()
                     .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
                     .build()
 
-                // 3. Image Analysis Setup
                 imageAnalyzer = ImageAnalysis.Builder()
                     .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
@@ -74,7 +63,6 @@ class CameraXManager(
                         }
                     }
 
-                // 4. Bind to Lifecycle
                 cameraProvider?.unbindAll()
 
                 val useCases = mutableListOf(preview, imageCapture!!)
@@ -94,9 +82,6 @@ class CameraXManager(
         }, ContextCompat.getMainExecutor(context))
     }
 
-    /**
-     * Erstellt ein Foto für den Cloud Scan und wandelt es in Base64 um.
-     */
     fun captureForCloudScan(onCaptured: (String) -> Unit, onError: (Exception) -> Unit) {
         val capture = imageCapture ?: run {
             onError(Exception("Kamera nicht bereit"))
@@ -105,7 +90,6 @@ class CameraXManager(
 
         capture.takePicture(executor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
-                // .use schließt das ImageProxy automatisch am Ende des Blocks (wichtig für Buffer!)
                 image.use { proxy ->
                     try {
                         val base64 = imageProxyToBase64(proxy)
@@ -126,43 +110,54 @@ class CameraXManager(
         })
     }
 
-    /**
-     * Konvertiert ein ImageProxy effizient in einen Base64 String.
-     */
     private fun imageProxyToBase64(image: ImageProxy): String {
-        val planes = image.planes
-        val yBuffer = planes[0].buffer
-        val uBuffer = planes[1].buffer
-        val vBuffer = planes[2].buffer
+        return try {
+            val bitmap = if (image.format == android.graphics.ImageFormat.JPEG) {
+                val buffer = image.planes[0].buffer
+                val bytes = ByteArray(buffer.remaining())
+                buffer.get(bytes)
+                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            } else {
+                val yBuffer = image.planes[0].buffer
+                val uBuffer = image.planes[1].buffer
+                val vBuffer = image.planes[2].buffer
 
-        val ySize = yBuffer.remaining()
-        val uSize = uBuffer.remaining()
-        val vSize = vBuffer.remaining()
+                val ySize = yBuffer.remaining()
+                val uSize = uBuffer.remaining()
+                val vSize = vBuffer.remaining()
 
-        val nv21 = ByteArray(ySize + uSize + vSize)
-        yBuffer.get(nv21, 0, ySize)
-        vBuffer.get(nv21, ySize, vSize)
-        uBuffer.get(nv21, ySize + vSize, uSize)
+                val nv21 = ByteArray(ySize + uSize + vSize)
+                yBuffer.get(nv21, 0, ySize)
+                vBuffer.get(nv21, ySize, vSize)
+                uBuffer.get(nv21, ySize + vSize, uSize)
 
-        val yuvImage = YuvImage(nv21, ImageFormat.NV21, image.width, image.height, null)
-        val out = ByteArrayOutputStream()
-        yuvImage.compressToJpeg(Rect(0, 0, image.width, image.height), 70, out)
+                val yuvImage = android.graphics.YuvImage(
+                    nv21, android.graphics.ImageFormat.NV21,
+                    image.width, image.height, null
+                )
+                val out = ByteArrayOutputStream()
+                yuvImage.compressToJpeg(android.graphics.Rect(0, 0, image.width, image.height), 70, out)
+                val imageBytes = out.toByteArray()
+                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            }
 
-        val imageBytes = out.toByteArray()
-        var bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+            val matrix = Matrix().apply {
+                postRotate(image.imageInfo.rotationDegrees.toFloat())
+            }
+            val rotatedBitmap = Bitmap.createBitmap(
+                bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true
+            )
 
-        // Rotation korrigieren
-        if (image.imageInfo.rotationDegrees != 0) {
-            val matrix = Matrix().apply { postRotate(image.imageInfo.rotationDegrees.toFloat()) }
-            bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+            val finalOut = ByteArrayOutputStream()
+            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, finalOut)
+            Base64.encodeToString(finalOut.toByteArray(), Base64.NO_WRAP)
+
+        } catch (e: Exception) {
+            Log.e("CameraXManager", "Conversion failed", e)
+            ""
         }
-
-        val finalOut = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 70, finalOut)
-        return Base64.encodeToString(finalOut.toByteArray(), Base64.NO_WRAP)
     }
 
     override fun openCamera() {
-        // Implementierung falls über Interface nötig
     }
 }

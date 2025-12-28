@@ -50,6 +50,7 @@ fun RecognitionModalSheet(
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
     val speak = rememberTextToSpeech()
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = Color(0xFF121212),
@@ -104,28 +105,41 @@ fun RecognitionModalSheet(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
                     focusedBorderColor = Color(0xFFFF00FF),
+                    unfocusedBorderColor = Color.White.copy(0.2f),
                     cursorColor = Color(0xFFFF00FF)
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
                 OutlinedButton(
-                    onClick = { onTextEdited(editableText) },
+                    onClick = {
+                        onTextEdited(editableText)
+                    },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, Color(0xFFFF00FF))
-                ) { Text("UPDATE", color = Color(0xFFFF00FF)) }
+                ) {
+                    Text("UPDATE", color = Color(0xFFFF00FF))
+                }
                 Button(
-                    onClick = onDismiss,
+                    onClick = {
+                        onTextEdited(editableText)
+                        onDismiss()
+                    },
                     modifier = Modifier.weight(1f).height(50.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00FF)),
                     shape = RoundedCornerShape(12.dp)
-                ) { Text("FERTIG", fontWeight = FontWeight.Bold, color = Color.White) }
+                ) {
+                    Text("FERTIG", fontWeight = FontWeight.Bold, color = Color.White)
+                }
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = onSaveToCloud,
-                enabled = isLoggedIn,
+                onClick = {
+                    onSaveToCloud()
+                    onDismiss()
+                },
+                enabled = isLoggedIn && translatedText.isNotBlank(),
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White.copy(alpha = 0.1f),

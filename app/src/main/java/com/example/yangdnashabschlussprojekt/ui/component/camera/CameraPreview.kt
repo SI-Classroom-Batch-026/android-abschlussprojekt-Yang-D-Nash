@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.FocusIllustration
 
 @Composable
 fun CameraPreview(
@@ -78,7 +77,6 @@ fun CameraPreview(
                     .padding(48.dp),
                 contentAlignment = Alignment.Center
             ) {
-                FocusIllustration()
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

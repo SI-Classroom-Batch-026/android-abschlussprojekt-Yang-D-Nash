@@ -51,7 +51,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                             val ref = storage.reference.child("profileImages/${user.uid}/profile.jpg")
                             ref.putFile(uri).await()
                             ref.downloadUrl.await().toString()
-                        } catch (e: Exception) {
+                        } catch (_: Exception) {
                             null
                         }
                     }
@@ -129,7 +129,7 @@ class UserRepository(private val firebaseAuth: FirebaseAuth) {
                 .get()
                 .await()
             snapshot.documents.mapNotNull { it.data }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             emptyList()
         }
     }

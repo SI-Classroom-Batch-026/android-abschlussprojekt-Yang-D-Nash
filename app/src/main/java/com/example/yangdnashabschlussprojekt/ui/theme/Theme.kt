@@ -22,7 +22,7 @@ private val DarkColors = darkColorScheme(
     surface = SurfaceDark,
     onBackground = GlassWhite,
     onSurface = GlassWhite,
-    outline = Color(0xFF2C2C2E) // Für Ränder/Glow
+    outline = Color(0xFF2C2C2E)
 )
 
 private val LightColors = lightColorScheme(
@@ -45,7 +45,6 @@ fun SmartVisionTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Macht die Statusbar und Navigationbar komplett transparent
             @Suppress("DEPRECATION")
             window.statusBarColor = Color.Transparent.toArgb()
             window.navigationBarColor = Color.Transparent.toArgb()

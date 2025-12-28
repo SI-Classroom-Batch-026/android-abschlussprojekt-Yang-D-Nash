@@ -86,7 +86,7 @@ fun ARScreen(
                         triggerVibration(context)
                         cameraManager.captureForCloudScan(
                             onCaptured = { arViewModel.analyzeWithCloudVision(it) },
-                            onError = { /* Fehlerhandling hier */ }
+                            onError = {  }
                         )
                     })
                 } else if (isCloudResult) {

@@ -18,7 +18,7 @@ val AppTypography = Typography(
     headlineSmall = TextStyle(
         fontWeight = FontWeight.Bold,
         fontSize = 20.sp,
-        fontFamily = FontFamily.Monospace, // Tech-Look
+        fontFamily = FontFamily.Monospace,
         color = NeonCyan
     ),
     bodyLarge = TextStyle(
@@ -31,7 +31,7 @@ val AppTypography = Typography(
         fontWeight = FontWeight.ExtraBold,
         fontSize = 11.sp,
         fontFamily = FontFamily.Monospace,
-        letterSpacing = 1.5.sp, // Tracking für Sci-Fi Look
+        letterSpacing = 1.5.sp,
         color = CyberGray
     )
 )

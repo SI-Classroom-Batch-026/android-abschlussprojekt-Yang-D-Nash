@@ -7,6 +7,6 @@ import androidx.compose.ui.unit.dp
 val AppShapes = Shapes(
     small = RoundedCornerShape(8.dp),
     medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(32.dp), // Für ModalSheets und Haupt-Karten
-    extraLarge = RoundedCornerShape(40.dp) // Für Buttons
+    large = RoundedCornerShape(32.dp),
+    extraLarge = RoundedCornerShape(40.dp)
 )

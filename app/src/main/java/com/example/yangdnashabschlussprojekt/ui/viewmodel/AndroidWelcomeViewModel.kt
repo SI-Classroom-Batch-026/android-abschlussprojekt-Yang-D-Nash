@@ -19,7 +19,6 @@ class AndroidWelcomeViewModel(
             started = SharingStarted.Eagerly,
             initialValue = null
         )
-
     fun startOnboardingAgain() {
         settingsRepository.setOnboardingComplete(false)
     }
