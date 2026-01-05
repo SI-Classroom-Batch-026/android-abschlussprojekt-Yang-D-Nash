@@ -25,44 +25,65 @@ fun ARResultOverlay(boxes: List<TimedBoundingBox>) {
     )
 
     Canvas(modifier = Modifier.fillMaxSize()) {
-        boxes.forEach { box ->
-            val scaleX = size.width / box.frameWidth
-            val scaleY = size.height / box.frameHeight
+        val canvasWidth = size.width
+        val canvasHeight = size.height
 
-            val left = box.left * scaleX
-            val top = box.top * scaleY
-            val width = (box.right - box.left) * scaleX
-            val height = (box.bottom - box.top) * scaleY
+        boxes.forEach { box ->
+            // 1. Skalierung berechnen (Verhältnis Kamera-Frame zu UI-Canvas)
+            val scaleX = canvasWidth / box.frameWidth
+            val scaleY = canvasHeight / box.frameHeight
+
+            // Da CameraX meist 'CenterCrop' verwendet, müssen wir den größeren
+            // Skalierungsfaktor nehmen, damit das Seitenverhältnis stabil bleibt.
+            val scale = maxOf(scaleX, scaleY)
+
+            // 2. Offset berechnen (Gleicht aus, wenn das Kamerabild über den Rand ragt)
+            val offsetX = (canvasWidth - box.frameWidth * scale) / 2f
+            val offsetY = (canvasHeight - box.frameHeight * scale) / 2f
+
+            // 3. Finale UI-Koordinaten
+            val left = box.left * scale + offsetX
+            val top = box.top * scale + offsetY
+            val right = box.right * scale + offsetX
+            val bottom = box.bottom * scale + offsetY
 
             val hudColor = if (box.id == 999) Color(0xFF00FFCC) else Color(0xFF00E5FF)
             val strokePx = 2.5.dp.toPx()
             val bracketSize = 20.dp.toPx()
 
+            // HUD Ecken zeichnen
+            // Oben Links
             drawLine(hudColor, Offset(left, top), Offset(left + bracketSize, top), strokePx)
             drawLine(hudColor, Offset(left, top), Offset(left, top + bracketSize), strokePx)
-            drawLine(hudColor, Offset(left + width, top), Offset(left + width - bracketSize, top), strokePx)
-            drawLine(hudColor, Offset(left + width, top), Offset(left + width, top + bracketSize), strokePx)
-            drawLine(hudColor, Offset(left, top + height), Offset(left + bracketSize, top + height), strokePx)
-            drawLine(hudColor, Offset(left, top + height), Offset(left, top + height - bracketSize), strokePx)
-            drawLine(hudColor, Offset(left + width, top + height), Offset(left + width - bracketSize, top + height), strokePx)
-            drawLine(hudColor, Offset(left + width, top + height), Offset(left + width, top + height - bracketSize), strokePx)
+            // Oben Rechts
+            drawLine(hudColor, Offset(right, top), Offset(right - bracketSize, top), strokePx)
+            drawLine(hudColor, Offset(right, top), Offset(right, top + bracketSize), strokePx)
+            // Unten Links
+            drawLine(hudColor, Offset(left, bottom), Offset(left + bracketSize, bottom), strokePx)
+            drawLine(hudColor, Offset(left, bottom), Offset(left, bottom - bracketSize), strokePx)
+            // Unten Rechts
+            drawLine(hudColor, Offset(right, bottom), Offset(right - bracketSize, bottom), strokePx)
+            drawLine(hudColor, Offset(right, bottom), Offset(right, bottom - bracketSize), strokePx)
 
+            // Label zeichnen
             if (box.label.isNotBlank()) {
                 val textLayoutResult = textMeasurer.measure(box.label, labelStyle)
                 val textWidth = textLayoutResult.size.width.toFloat()
                 val textHeight = textLayoutResult.size.height.toFloat()
 
+                val padding = 8f
+
                 drawRect(
                     color = hudColor,
-                    topLeft = Offset(left, top - textHeight - 4.dp.toPx()),
-                    size = Size(textWidth + 8.dp.toPx(), textHeight + 4.dp.toPx())
+                    topLeft = Offset(left, top - textHeight - padding),
+                    size = Size(textWidth + (padding * 2), textHeight + padding)
                 )
 
                 drawText(
                     textMeasurer = textMeasurer,
                     text = box.label,
                     style = labelStyle,
-                    topLeft = Offset(left + 4.dp.toPx(), top - textHeight - 2.dp.toPx())
+                    topLeft = Offset(left + padding, top - textHeight - (padding / 2))
                 )
             }
         }
