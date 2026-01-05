@@ -1,106 +1,70 @@
-Link zum Figma Pitch
+📱 SmartVision
+Die Welt erkennen, verstehen und hören – jederzeit, überall, für jeden.
 
-https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
+SmartVision ist eine intelligente Assistenz-App, die das Smartphone in ein leistungsfähiges HUD (Head-Up Display) verwandelt. Das Projekt dient als Machbarkeitsstudie für die nächste Generation der Augmented Reality (AR). Ziel ist es, Technologien, die später Standard in Smart Glasses sein werden, schon heute auf mobilen Endgeräten intuitiv nutzbar zu machen.
 
-📱 SmartVision – Objekterkennung & Texterkennung für alle
-SmartVision bringt Zukunftstechnologie auf jedes Android-Smartphone.
-Die App erkennt Objekte und Texte in Echtzeit über die Kamera – und kann gefundene Texte sofort übersetzen.
-Damit wird schon heute erlebbar, was später in Smart Glasses und AR-Brillen Standard sein wird.
+🚀 Kernfunktionen
+🔍 Intelligente Objekterkennung (Live-AR)
 
-🌍 Für wen?
+Hybrid-Analyse: Schnelles On-Device Tracking (ML Kit) kombiniert mit hochpräzisen Cloud-Deep-Scans (Vision API) für komplexe Szenarien.
 
-Für alle.
+AR-Overlay: Ein mathematisch optimiertes Koordinaten-Mapping (Scale & Offset) simuliert die Informations-Einblendung einer AR-Brille direkt im Live-Bild.
 
-Weil jeder davon profitieren kann:
+📝 OCR, Translation & Audio (TTS)
 
-👁️ Alltag – Dinge und Texte schneller erfassen & verstehen
+Snapshot-Technologie: Stabiler Scan-on-Demand verhindert das "Zittern" der Boxen – essenziell für die Lesbarkeit in Wearables.
 
-📚 Lernen – neue Begriffe & Gegenstände entdecken, Sprachen leichter lernen
+Barrierefreiheit: Sofortige Übersetzung (z.B. EN -> DE) inklusive Text-to-Speech (TTS). Die App erkennt Texte und liest sie auf Knopfdruck vor.
 
-🏃 Unterwegs – Schilder, Etiketten, Wegweiser erkennen & übersetzen
+Cloud Document OCR: Spezial-Modus für komplexe Schriftsätze via Google Cloud Vision.
 
-🧰 Arbeit – Unterstützung in Lager, Technik, Service & Handwerk
+👓 Future-Ready: Wearable Vision
 
-🤝 Barrierefreiheit – Hilfe bei Seh- oder Sprachbarrieren
+HUD-Interface: Das Design folgt den Prinzipien für Smart Glasses: Fokus auf das Zentrum des Sichtfeldes, minimalistische Steuerung und haptisches Feedback.
 
-📱 Ohne Grenzen – nur Smartphone nötig, keine Spezialhardware
+Hands-Free Vorbereitung: Die Architektur ist darauf ausgelegt, später ohne klassische Touch-Eingabe (z.B. über Eye-Tracking oder Sprachbefehle) zu funktionieren.
 
-🚀 Was macht die App?
+🛠 Technologie-Stack
+Bereich	Technologie
+Sprache	Kotlin
+UI	Jetpack Compose (Modern & HUD-optimiert)
+AI (Local)	Google ML Kit (Object, Text, Translation)
+AI (Cloud)	Google Cloud Vision API
+Audio	Android Text-to-Speech (TTS) Engine
+DI / Architektur	Koin & MVVM
+⚙️ Setup & API-Sicherheit
+Um modernen Sicherheitsstandards gerecht zu werden, wurde der API-Key konsequent vom Quellcode entkoppelt (Separation of Concerns).
 
-✅ Objekterkennung in Echtzeit
+Secrets Management: Sensitive Daten werden ausschließlich lokal in der local.properties verwaltet (geschützt durch .gitignore).
 
-✅ Live-Texterkennung (OCR)
+Automated Build-Injection: Der Key wird während des Build-Vorgangs via Gradle in die BuildConfig injiziert.
 
-✅ Sofortige Übersetzung erkannter Texte
+[!IMPORTANT] Hinweis zum API-Key: Ein Test-API-Key ist aktuell für Demonstrationszwecke im Hintergrund hinterlegt, wird jedoch voraussichtlich in den nächsten 14 Tagen deaktiviert. Danach ist ein eigener Key zwingend erforderlich.
 
-✅ Live-Kameraansicht
+Eignen API-Key hinterlegen:
 
-✅ Visuelle & textbasierte Ausgabe
+Google Cloud: Projekt erstellen und Cloud Vision API aktivieren.
 
-✅ Zukunfts-ready für Smart Glasses
+Local.properties: Fügen Sie im Hauptverzeichnis folgende Zeile hinzu: VISION_API_KEY=dein_tatsächlicher_api_key_hier
 
-✅ Einfache Bedienung
+Build: Projekt synchronisieren. Der Key wird automatisch via BuildConfig.VISION_API_KEY eingebunden.
 
-🎯 Warum?
+🏗 Projektstatus & Roadmap
+[x] Snapshot-Scanning: Stabilisierte Texterkennung für Wearable-ähnliche Displays.
 
-Viele Technologien sind teuer oder nur für spezielle Geräte verfügbar.
+[x] Audio-Vision: Voll integrierte Text-to-Speech Unterstützung.
 
-SmartVision macht Erkennung und Übersetzung mobil, zugänglich und direkt nutzbar.
+[x] AR-Mapping: Korrektes Koordinaten-Mapping (Scale & Offset).
 
-Kurz gesagt:
+[ ] Wearable Integration: Prototyping für Head-Worn Displays.
 
-🔹 High-Tech nicht für wenige – sondern für alle.
-
-🧩 Technologie
-
-Android (Kotlin/Java)
-
-Kamera-Streaming
-
-ML / Object Detection (z. B. TensorFlow Lite / ML Kit)
-
-OCR / Texterkennung
-
-Übersetzungs-API (z. B. ML Kit / Cloud Translation / Offline-Modelle möglich)
-
-Architektur vorbereitet für Wearables / Smart Glasses
-
-✅ Features der ersten Version
-
-Erkennung von Alltagsobjekten
-
-Texterkennung über Kamera (OCR)
-
-Sofortübersetzung des erkannten Textes
-
-Anzeige von Objektname, Text & Position
-
-Minimalistisches UI
-
-Offline-Modelle möglich (je nach Setup)
-
-🔭 Zukunft
-
-Sprach-Ausgabe (Text-to-Speech)
-
-Brillen-Integration (HUD-Display)
-
-Kontext-Infos & Navigation
-
-Branchen-Optimierungen (Logistik, Reisen, Bildung)
-
-📄 Projektstatus
-
-Abschlussprojekt – Prototyp zur Demonstration der Technologie.
-
-Erweiterbar und skalierbar.
+[ ] Cloud-Sync: Optionales Backup der Scan-Historie via Firebase.
 
 👤 Kontakt
-
 Projekt von: Yang D. Nash
 
 E-Mail: nash.lioncorna@gmail.com
 
-⭐ Kernbotschaft
+Konzept: https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
 
-SmartVision erkennt die Welt – und macht sie für jeden verständlich.
+⭐ Kernbotschaft: SmartVision erkennt die Welt – und macht sie für jeden verständlich.

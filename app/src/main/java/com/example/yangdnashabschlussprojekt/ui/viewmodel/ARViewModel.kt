@@ -36,9 +36,9 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
 
     private var lastAnalyzedTimestamp = 0L
-    private val FPS_LIMIT = 30L // Erhöht für flüssigeres Tracking
+    private val FPS_LIMIT = 30L
     private var currentFrameSize = Size(1080, 1920)
-    private val smoothingFactor = 0.35f // Höherer Wert = direkteres Folgen, niedriger = weicher
+    private val smoothingFactor = 0.35f
 
     private val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 60)
     private val trackedObjectsMap = mutableMapOf<Int, TimedBoundingBox>()
@@ -71,7 +71,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
         val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
         val rotation = imageProxy.imageInfo.rotationDegrees
 
-        // MLKit braucht die korrekte Orientierung für das Mapping
         currentFrameSize = if (rotation == 90 || rotation == 270) {
             Size(imageProxy.height, imageProxy.width)
         } else {
@@ -89,7 +88,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
 
                     val prev = trackedObjectsMap[id]
                     val smoothed = if (prev != null) {
-                        // Lineare Interpolation (Lerp) für weichere Bewegungen
                         prev.copy(
                             left = prev.left + (rect.left - prev.left) * smoothingFactor,
                             top = prev.top + (rect.top - prev.top) * smoothingFactor,
@@ -130,7 +128,6 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
                 _detectedObjectLabel.value = res
                 _isCloudResult.value = true
 
-                // Cloud Result Box fixieren
                 _boundingBoxes.value = listOf(
                     lastPos?.copy(label = res, color = Color(0xFF00FFCC))
                         ?: TimedBoundingBox(999, res, 0.3f, 0.3f, 0.7f, 0.7f, System.currentTimeMillis(), Color(0xFF00FFCC), 1000, 1000)

@@ -53,11 +53,8 @@ fun ARScreen(
                 cameraManager.startCamera(previewView, lifecycleOwner, arViewModel)
             }
         )
-
         ARResultOverlay(boxes = boxes)
-
         if (isCloudLoading) ScanningLaserOverlay(Color(0xFF00FFCC))
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -65,7 +62,6 @@ fun ARScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(100.dp))
-
             if (label.isNotEmpty()) {
                 Surface(color = Color.Black.copy(0.7f), shape = RoundedCornerShape(8.dp)) {
                     Text(
@@ -77,9 +73,7 @@ fun ARScreen(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.weight(1f))
-
             Box(modifier = Modifier.padding(bottom = 120.dp)) {
                 if (!isCloudResult && !isCloudLoading) {
                     HoldToScanButton(onTrigger = {

@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.graphics.Rect
+import android.util.Size
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -20,10 +21,11 @@ import com.google.mlkit.nl.translate.TranslatorOptions
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -48,12 +50,8 @@ class TextViewModel(
     private val _cloudRecognitionState = MutableStateFlow<CloudRecognitionState>(CloudRecognitionState.Idle)
     val cloudRecognitionState: StateFlow<CloudRecognitionState> = _cloudRecognitionState.asStateFlow()
 
-    private val _isAnalyzing = MutableStateFlow(true)
+    private val _isAnalyzing = MutableStateFlow(false) // Startet auf false für Snapshot-Mode
     val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
-
-    private var lastAnalyzedTimestamp = 0L
-    private val TEXT_FPS_LIMIT = 150L
-    private var recognitionJob: Job? = null
 
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
 
@@ -64,12 +62,10 @@ class TextViewModel(
             .build())
     }
     override fun analyze(image: ImageProxy) {
-        val currentTimestamp = System.currentTimeMillis()
-        if (!_isAnalyzing.value || currentTimestamp - lastAnalyzedTimestamp < TEXT_FPS_LIMIT) {
+        if (!_isAnalyzing.value) {
             image.close()
             return
         }
-        lastAnalyzedTimestamp = currentTimestamp
         analyzeImageProxy(image)
     }
     @OptIn(ExperimentalGetImage::class)
@@ -81,31 +77,21 @@ class TextViewModel(
         val isPortrait = rotation == 90 || rotation == 270
         val frameWidth = if (isPortrait) imageProxy.height else imageProxy.width
         val frameHeight = if (isPortrait) imageProxy.width else imageProxy.height
+        val frameSize = Size(frameWidth, frameHeight)
 
         recognizer.process(image)
             .addOnSuccessListener { visionText ->
-                updateBoundingBoxes(visionText.textBlocks, frameWidth, frameHeight, System.currentTimeMillis())
-
-                val detectedText = visionText.text.trim()
-                if (detectedText.length > 3 && detectedText != _recognizedText.value) {
-                    triggerTextProcessing(detectedText)
-                }
+                processSnapshotResults(visionText, frameSize)
             }
-            .addOnCompleteListener { imageProxy.close() }
+            .addOnCompleteListener {
+                _isAnalyzing.value = false
+                imageProxy.close()
+            }
     }
-
-    private fun triggerTextProcessing(text: String) {
-        recognitionJob?.cancel()
-        recognitionJob = viewModelScope.launch {
-            delay(500)
-            _recognizedText.value = text
-            translateTextSuspend(text)
-        }
-    }
-
-    private fun updateBoundingBoxes(blocks: List<Text.TextBlock>, w: Int, h: Int, ts: Long) {
-        _boundingBoxes.value = blocks.filter { it.text.length > 2 }.map { block ->
-            val r = block.boundingBox ?: Rect(0,0,0,0)
+    private fun processSnapshotResults(visionText: Text, size: Size) {
+        val ts = System.currentTimeMillis()
+        _boundingBoxes.value = visionText.textBlocks.map { block ->
+            val r = block.boundingBox ?: Rect(0, 0, 0, 0)
             TimedBoundingBox(
                 id = block.text.hashCode(),
                 label = "",
@@ -115,52 +101,37 @@ class TextViewModel(
                 bottom = r.bottom.toFloat(),
                 timestamp = ts,
                 color = Color.Cyan,
-                frameWidth = w,
-                frameHeight = h
+                frameWidth = size.width,
+                frameHeight = size.height
             )
         }
-    }
-
-    fun saveCurrentTextToHistory() {
-        val original = _recognizedText.value
-        val translated = _translatedText.value
-        if (original.isBlank()) return
-
-        viewModelScope.launch {
-            try {
-                val historyEntry = TextHistory(
-                    id = null,
-                    sourceText = original,
-                    translatedText = translated,
-                    timestamp = System.currentTimeMillis()
-                )
-                manageHistoryUseCase.save(historyEntry)
-                _uiEvent.send("Lokal gespeichert!")
-            } catch (e: Exception) {
-                _uiEvent.send("Fehler: ${e.message}")
-            }
+        val detectedText = visionText.text.trim()
+        if (detectedText.isNotEmpty()) {
+            _recognizedText.value = detectedText
+            viewModelScope.launch { translateTextSuspend(detectedText) }
         }
     }
-
-    fun onSaveToCloudClicked() {
-        val original = _recognizedText.value
-        val translated = _translatedText.value
-
-        viewModelScope.launch {
-            userRepository.saveToFirestore(
-                sourceText = original, // Korrigiert
-                translatedText = translated
-            )
-                .onSuccess { _uiEvent.send("Cloud Backup OK! ☁️") }
-                .onFailure { _uiEvent.send("Cloud Fehler") }
+    fun toggleLiveDetection() {
+        if (_recognizedText.value.isNotEmpty()) {
+            continueAnalysis()
+        } else {
+            _isAnalyzing.value = true
         }
     }
-
+    fun pauseAnalysis() {
+        _isAnalyzing.value = false
+    }
+    fun continueAnalysis() {
+        _isAnalyzing.value = false
+        _boundingBoxes.value = emptyList()
+        _recognizedText.value = ""
+        _translatedText.value = ""
+        _cloudRecognitionState.value = CloudRecognitionState.Idle
+    }
     fun recognizeTextViaCloud(base64Image: String) {
-        if (_cloudRecognitionState.value is CloudRecognitionState.Loading) return
         pauseAnalysis()
+        _cloudRecognitionState.value = CloudRecognitionState.Loading
         viewModelScope.launch {
-            _cloudRecognitionState.value = CloudRecognitionState.Loading
             try {
                 val response = visionRepository.analyzeImage(base64Image, listOf(Feature(type = "DOCUMENT_TEXT_DETECTION")))
                 val cloudText = response.responses.firstOrNull()?.fullTextAnnotation?.text ?: ""
@@ -169,11 +140,9 @@ class TextViewModel(
                 translateTextSuspend(cloudText)
             } catch (e: Exception) {
                 _cloudRecognitionState.value = CloudRecognitionState.Error(e.message ?: "Cloud Error")
-                continueAnalysis()
             }
         }
     }
-
     private suspend fun translateTextSuspend(text: String) {
         if (text.isBlank()) return
         try {
@@ -183,26 +152,28 @@ class TextViewModel(
             _translatedText.value = "Übersetzung fehlgeschlagen"
         }
     }
-
-    fun toggleLiveDetection() {
-        if (_isAnalyzing.value) pauseAnalysis() else continueAnalysis()
+    fun saveCurrentTextToHistory() {
+        val original = _recognizedText.value
+        val translated = _translatedText.value
+        if (original.isBlank()) return
+        viewModelScope.launch {
+            try {
+                manageHistoryUseCase.save(TextHistory(null, original, translated, System.currentTimeMillis()))
+                _uiEvent.send("Lokal gespeichert!")
+            } catch (e: Exception) { _uiEvent.send("Fehler: ${e.message}") }
+        }
     }
-
-    fun pauseAnalysis() {
-        _isAnalyzing.value = false
-        _boundingBoxes.value = emptyList()
+    fun onSaveToCloudClicked() {
+        viewModelScope.launch {
+            userRepository.saveToFirestore(_recognizedText.value, _translatedText.value)
+                .onSuccess { _uiEvent.send("Cloud Backup OK! ☁️") }
+                .onFailure { _uiEvent.send("Cloud Fehler") }
+        }
     }
-
-    fun continueAnalysis() {
-        _isAnalyzing.value = true
-        _cloudRecognitionState.value = CloudRecognitionState.Idle
-    }
-
     fun recognizeText(newText: String) {
         _recognizedText.value = newText
         viewModelScope.launch { translateTextSuspend(newText) }
     }
-
     override fun onCleared() {
         super.onCleared()
         translator.close()

@@ -109,7 +109,6 @@ class CameraXManager(
             }
         })
     }
-
     private fun imageProxyToBase64(image: ImageProxy): String {
         return try {
             val bitmap = if (image.format == android.graphics.ImageFormat.JPEG) {
@@ -157,7 +156,6 @@ class CameraXManager(
             ""
         }
     }
-
     override fun openCamera() {
     }
 }

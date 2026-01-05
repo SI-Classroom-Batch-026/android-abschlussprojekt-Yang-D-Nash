@@ -19,9 +19,7 @@ class HistoryRepository(
             )
         }
     }
-    suspend fun saveToCloud(source: String, target: String) {
-        userRepository.saveToFirestore(source, target)
-    }
+
     suspend fun saveEntry(entry: TextHistory) = dataSource.saveEntry(entry)
     suspend fun deleteEntryById(id: Long) = dataSource.deleteEntryById(id)
     suspend fun clearHistory() = dataSource.clearHistory()
