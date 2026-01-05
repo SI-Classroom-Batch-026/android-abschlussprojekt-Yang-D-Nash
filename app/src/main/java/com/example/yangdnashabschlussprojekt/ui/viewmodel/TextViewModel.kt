@@ -22,10 +22,7 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
@@ -50,7 +47,7 @@ class TextViewModel(
     private val _cloudRecognitionState = MutableStateFlow<CloudRecognitionState>(CloudRecognitionState.Idle)
     val cloudRecognitionState: StateFlow<CloudRecognitionState> = _cloudRecognitionState.asStateFlow()
 
-    private val _isAnalyzing = MutableStateFlow(false) // Startet auf false für Snapshot-Mode
+    private val _isAnalyzing = MutableStateFlow(false)
     val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
 
     private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -94,7 +91,7 @@ class TextViewModel(
             val r = block.boundingBox ?: Rect(0, 0, 0, 0)
             TimedBoundingBox(
                 id = block.text.hashCode(),
-                label = "",
+                label = "LOCAL",
                 left = r.left.toFloat(),
                 top = r.top.toFloat(),
                 right = r.right.toFloat(),
@@ -118,9 +115,7 @@ class TextViewModel(
             _isAnalyzing.value = true
         }
     }
-    fun pauseAnalysis() {
-        _isAnalyzing.value = false
-    }
+    fun pauseAnalysis() { _isAnalyzing.value = false }
     fun continueAnalysis() {
         _isAnalyzing.value = false
         _boundingBoxes.value = emptyList()
@@ -134,7 +129,37 @@ class TextViewModel(
         viewModelScope.launch {
             try {
                 val response = visionRepository.analyzeImage(base64Image, listOf(Feature(type = "DOCUMENT_TEXT_DETECTION")))
-                val cloudText = response.responses.firstOrNull()?.fullTextAnnotation?.text ?: ""
+                val firstRes = response.responses.firstOrNull()
+                val fullAnnotation = firstRes?.fullTextAnnotation ?: return@launch
+
+                val cloudText = fullAnnotation.text
+                val ts = System.currentTimeMillis()
+                val firstPage = fullAnnotation.pages.firstOrNull()
+                val cloudWidth = firstPage?.width ?: 1
+                val cloudHeight = firstPage?.height ?: 1
+
+                val cloudBoxes = fullAnnotation.pages.flatMap { page ->
+                    page.blocks.map { block ->
+                        val vertices = block.boundingBox.vertices
+                        val left = vertices.getOrNull(0)?.x?.toFloat() ?: 0f
+                        val top = vertices.getOrNull(0)?.y?.toFloat() ?: 0f
+                        val right = vertices.getOrNull(2)?.x?.toFloat() ?: 0f
+                        val bottom = vertices.getOrNull(2)?.y?.toFloat() ?: 0f
+                        TimedBoundingBox(
+                            id = block.hashCode(),
+                            label = "CLOUD",
+                            left = left,
+                            top = top,
+                            right = right,
+                            bottom = bottom,
+                            timestamp = ts,
+                            color = Color(0xFF00FFCC),
+                            frameWidth = cloudWidth,
+                            frameHeight = cloudHeight
+                        )
+                    }
+                }
+                _boundingBoxes.value = cloudBoxes
                 _recognizedText.value = cloudText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
                 translateTextSuspend(cloudText)
