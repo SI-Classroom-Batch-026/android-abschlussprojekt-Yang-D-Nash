@@ -1,33 +1,13 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,11 +20,7 @@ import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.trigg
 import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.FullScreenScannerOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.overlay.TextBoundingBoxOverlay
-import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
-import com.example.yangdnashabschlussprojekt.ui.component.text.CloudProcessingUI
-import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
-import com.example.yangdnashabschlussprojekt.ui.component.text.StatusPillUI
-import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
+import com.example.yangdnashabschlussprojekt.ui.component.text.*
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -59,29 +35,33 @@ fun TextScreen(
     onNavigateToHistory: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // States aus dem ViewModel beobachten
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
     val isAnalyzing by textViewModel.isAnalyzing.collectAsState()
     val boundingBoxes by textViewModel.boundingBoxes.collectAsState()
+    val isSingleBlock by textViewModel.isSingleBlockMode.collectAsState()
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
+
     var showModal by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         textViewModel.uiEvent.collect { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
     }
-
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
-
     DisposableEffect(Unit) {
-        onDispose { cameraManager.stopAnalysis() }
+        onDispose {
+            cameraManager.stopAnalysis()
+            textViewModel.stopAudio()
+        }
     }
-
     Scaffold(
         modifier = Modifier.fillMaxSize().imePadding(),
         containerColor = Color.Black
@@ -90,30 +70,29 @@ fun TextScreen(
 
             CameraWithLiveObjects(
                 isObjectDetectionMode = false,
-                onAnalyze = { imageProxy ->
-                    textViewModel.analyze(imageProxy)
-                },
+                onAnalyze = { imageProxy -> textViewModel.analyze(imageProxy) },
                 onCameraReady = { preview, owner, _ ->
                     cameraManager.startCamera(preview, owner, textViewModel)
                 }
             )
-
             if (boundingBoxes.isNotEmpty()) {
-                TextBoundingBoxOverlay(boxes = boundingBoxes)
+                TextBoundingBoxOverlay(
+                    boxes = boundingBoxes,
+                    onBoxClicked = { box ->
+                        triggerVibration(context)
+                        textViewModel.onBoxClicked(box)
+                    }
+                )
             }
-
             if (isAnalyzing) {
                 FullScreenScannerOverlay()
             }
-
             Box(Modifier.padding(16.dp).align(Alignment.TopStart)) {
                 StatusPillUI(isAnalyzing)
             }
-
             if (cloudState is CloudRecognitionState.Loading) {
                 CloudProcessingUI()
             }
-
             if (recognizedText.isNotBlank() && !isAnalyzing) {
                 Button(
                     onClick = { textViewModel.continueAnalysis() },
@@ -137,8 +116,12 @@ fun TextScreen(
                     .padding(bottom = 180.dp)
                     .zIndex(10f)
             ) {
-                BottomTextCard(recognizedText)
+                BottomTextCard(
+                    recognizedText = recognizedText,
+                    isSingleBlock = isSingleBlock
+                )
             }
+
             Box(
                 Modifier.fillMaxSize().padding(bottom = 110.dp, end = 16.dp).zIndex(20f),
                 Alignment.BottomEnd
@@ -149,14 +132,12 @@ fun TextScreen(
                         textViewModel.toggleLiveDetection()
                     },
                     isLiveActive = isAnalyzing,
-                    onSaveClick = { textViewModel.saveCurrentTextToHistory() },
-                    isSaveButtonEnabled = isAuthenticated && translatedText.isNotBlank(),
+                    onSaveClick = { textViewModel.onSaveToCloudClicked() },
+                    isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
                     onCloudScanTriggered = {
                         cameraManager.captureForCloudScan(
-                            onCaptured = { base64 ->
-                                textViewModel.recognizeTextViaCloud(base64)
-                            },
+                            onCaptured = { base64 -> textViewModel.recognizeTextViaCloud(base64) },
                             onError = { textViewModel.continueAnalysis() }
                         )
                     }

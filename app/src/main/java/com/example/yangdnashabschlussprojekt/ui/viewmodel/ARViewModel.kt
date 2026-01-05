@@ -35,11 +35,8 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     private val _detectedObjectLabel = MutableStateFlow("")
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
 
-    private var lastAnalyzedTimestamp = 0L
-    private val FPS_LIMIT = 30L
     private var currentFrameSize = Size(1080, 1920)
     private val smoothingFactor = 0.35f
-
     private val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 60)
     private val trackedObjectsMap = mutableMapOf<Int, TimedBoundingBox>()
 
@@ -52,88 +49,97 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     )
 
     override fun analyze(image: ImageProxy) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastAnalyzedTimestamp >= FPS_LIMIT) {
-            lastAnalyzedTimestamp = currentTime
-            analyzeImageProxy(image)
-        } else {
+        if (_isCloudLoading.value || _isCloudResult.value) {
             image.close()
+            return
         }
+        analyzeImageProxy(image)
     }
 
     @OptIn(ExperimentalGetImage::class)
     private fun analyzeImageProxy(imageProxy: ImageProxy) {
-        if (_isCloudLoading.value || _isCloudResult.value) {
-            imageProxy.close()
-            return
-        }
-
         val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
         val rotation = imageProxy.imageInfo.rotationDegrees
-
-        currentFrameSize = if (rotation == 90 || rotation == 270) {
-            Size(imageProxy.height, imageProxy.width)
-        } else {
-            Size(imageProxy.width, imageProxy.height)
-        }
+        currentFrameSize = if (rotation == 90 || rotation == 270) Size(imageProxy.height, imageProxy.width) else Size(imageProxy.width, imageProxy.height)
 
         val inputImage = InputImage.fromMediaImage(mediaImage, rotation)
 
         objectDetector.process(inputImage)
             .addOnSuccessListener { detectedObjects ->
-                val newBoxes = detectedObjects.take(3).map { obj ->
+                val newBoxes = detectedObjects.map { obj ->
                     val id = obj.trackingId ?: -1
-                    val label = obj.labels.firstOrNull()?.text?.uppercase() ?: "OBJECT"
+                    val label = obj.labels.firstOrNull()?.text?.uppercase() ?: "SCANNING..."
                     val rect = obj.boundingBox
 
                     val prev = trackedObjectsMap[id]
-                    val smoothed = if (prev != null) {
+                    val box = if (prev != null) {
                         prev.copy(
                             left = prev.left + (rect.left - prev.left) * smoothingFactor,
                             top = prev.top + (rect.top - prev.top) * smoothingFactor,
                             right = prev.right + (rect.right - prev.right) * smoothingFactor,
                             bottom = prev.bottom + (rect.bottom - prev.bottom) * smoothingFactor,
-                            label = label,
-                            frameWidth = currentFrameSize.width,
-                            frameHeight = currentFrameSize.height
+                            label = label
                         )
                     } else {
                         if (id != -1) try { toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 80) } catch(_: Exception) {}
-                        TimedBoundingBox(
-                            id, label,
-                            rect.left.toFloat(), rect.top.toFloat(),
-                            rect.right.toFloat(), rect.bottom.toFloat(),
-                            System.currentTimeMillis(), Color(0xFF00E5FF),
-                            currentFrameSize.width, currentFrameSize.height
-                        )
+                        TimedBoundingBox(id, label, rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat(), System.currentTimeMillis(), Color(0xFF00E5FF), currentFrameSize.width, currentFrameSize.height)
                     }
-                    trackedObjectsMap[id] = smoothed
-                    smoothed
+                    trackedObjectsMap[id] = box
+                    box
                 }
-
                 trackedObjectsMap.keys.retainAll(newBoxes.map { it.id }.toSet())
                 _boundingBoxes.value = newBoxes
-                _detectedObjectLabel.value = newBoxes.firstOrNull()?.label ?: ""
             }
             .addOnCompleteListener { imageProxy.close() }
     }
 
+    // --- CLOUD SCAN MIT OBJEKT-LOKALISIERUNG ---
     fun analyzeWithCloudVision(base64Image: String) {
-        val lastPos = _boundingBoxes.value.firstOrNull()
         viewModelScope.launch {
             _isCloudLoading.value = true
             try {
-                val response = visionRepository.analyzeImage(base64Image, listOf(Feature("LABEL_DETECTION", 1)))
-                val res = response.responses.firstOrNull()?.labelAnnotations?.firstOrNull()?.description?.uppercase() ?: "OBJECT"
-                _detectedObjectLabel.value = res
+                // Wir fragen Labels UND Objekt-Positionen ab!
+                val response = visionRepository.analyzeImage(base64Image, listOf(
+                    Feature("LABEL_DETECTION", 5),
+                    Feature("OBJECT_LOCALIZATION", 5),
+                    Feature("LOGO_DETECTION", 2)
+                ))
+
+                val firstRes = response.responses.firstOrNull()
+
+                // 1. Priorität: Logos (z.B. Coca Cola, Apple)
+                // 2. Priorität: Lokalisierte Objekte (mit Boxen)
+                // 3. Priorität: Allgemeine Labels
+                val logoText = firstRes?.logoAnnotations?.firstOrNull()?.description
+                val cloudObjects = firstRes?.localizedObjectAnnotations
+                val labelText = firstRes?.labelAnnotations?.firstOrNull()?.description
+
+                val finalLabel = (logoText ?: cloudObjects?.firstOrNull()?.name ?: labelText ?: "OBJECT").uppercase()
+
+                _detectedObjectLabel.value = finalLabel
                 _isCloudResult.value = true
 
-                _boundingBoxes.value = listOf(
-                    lastPos?.copy(label = res, color = Color(0xFF00FFCC))
-                        ?: TimedBoundingBox(999, res, 0.3f, 0.3f, 0.7f, 0.7f, System.currentTimeMillis(), Color(0xFF00FFCC), 1000, 1000)
-                )
+                // Boxen aus der Cloud übernehmen, damit man sie sieht!
+                val cloudBoxes = cloudObjects?.map { obj ->
+                    val poly = obj.boundingPoly.normalizedVertices
+                    TimedBoundingBox(
+                        id = obj.hashCode(),
+                        label = obj.name.uppercase(),
+                        left = (poly.getOrNull(0)?.x ?: 0f) * currentFrameSize.width,
+                        top = (poly.getOrNull(0)?.y ?: 0f) * currentFrameSize.height,
+                        right = (poly.getOrNull(2)?.x ?: 0.5f) * currentFrameSize.width,
+                        bottom = (poly.getOrNull(2)?.y ?: 0.5f) * currentFrameSize.height,
+                        timestamp = System.currentTimeMillis(),
+                        color = Color(0xFF00FFCC),
+                        frameWidth = currentFrameSize.width,
+                        frameHeight = currentFrameSize.height
+                    )
+                } ?: emptyList()
+
+                _boundingBoxes.value = cloudBoxes.ifEmpty { _boundingBoxes.value }
+
             } catch (e: Exception) {
-                Log.e("ARVM", "${e.message}")
+                Log.e("ARVM", "Error: ${e.message}")
             } finally {
                 _isCloudLoading.value = false
             }
@@ -143,14 +149,8 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     fun resetCloudResult() {
         _isCloudResult.value = false
         _isCloudLoading.value = false
-        _boundingBoxes.value = emptyList()
         _detectedObjectLabel.value = ""
         trackedObjectsMap.clear()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        objectDetector.close()
-        toneGen.release()
+        _boundingBoxes.value = emptyList()
     }
 }

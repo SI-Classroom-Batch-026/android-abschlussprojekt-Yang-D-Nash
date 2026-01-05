@@ -1,9 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import android.graphics.Rect
-import android.util.Size
-import androidx.annotation.OptIn
-import androidx.camera.core.ExperimentalGetImage
+import android.content.Context
+import android.speech.tts.TextToSpeech
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
@@ -13,145 +11,84 @@ import com.example.yangdnashabschlussprojekt.data.local.database.model.box.Timed
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
-import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
-import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
-import com.google.mlkit.vision.common.InputImage
-import com.google.mlkit.vision.text.Text
-import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.util.Locale
 
 class TextViewModel(
     private val visionRepository: VisionRepository,
-    private val manageHistoryUseCase: ManageHistoryUseCase,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    context: Context
 ) : ViewModel(), ImageAnalysis.Analyzer {
 
-    private val _uiEvent = Channel<String>()
-    val uiEvent = _uiEvent.receiveAsFlow()
+    private val _uiEvent = MutableSharedFlow<String>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
-    val boundingBoxes: StateFlow<List<TimedBoundingBox>> = _boundingBoxes
+    val boundingBoxes = _boundingBoxes.asStateFlow()
 
     private val _recognizedText = MutableStateFlow("")
-    val recognizedText: StateFlow<String> = _recognizedText
+    val recognizedText = _recognizedText.asStateFlow()
 
     private val _translatedText = MutableStateFlow("")
-    val translatedText: StateFlow<String> = _translatedText
+    val translatedText = _translatedText.asStateFlow()
 
-    private val _cloudRecognitionState = MutableStateFlow<CloudRecognitionState>(CloudRecognitionState.Idle)
-    val cloudRecognitionState: StateFlow<CloudRecognitionState> = _cloudRecognitionState.asStateFlow()
+    private val _isSingleBlockMode = MutableStateFlow(false)
+    val isSingleBlockMode = _isSingleBlockMode.asStateFlow()
 
     private val _isAnalyzing = MutableStateFlow(false)
-    val isAnalyzing: StateFlow<Boolean> = _isAnalyzing.asStateFlow()
+    val isAnalyzing = _isAnalyzing.asStateFlow()
 
-    private val recognizer = com.google.mlkit.vision.text.TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    private val _cloudRecognitionState = MutableStateFlow<CloudRecognitionState>(CloudRecognitionState.Idle)
+    val cloudRecognitionState = _cloudRecognitionState.asStateFlow()
 
-    private val translator by lazy {
-        Translation.getClient(TranslatorOptions.Builder()
+    private var tts: TextToSpeech? = null
+    private val translator = Translation.getClient(
+        TranslatorOptions.Builder()
             .setSourceLanguage(TranslateLanguage.ENGLISH)
             .setTargetLanguage(TranslateLanguage.GERMAN)
-            .build())
-    }
-    override fun analyze(image: ImageProxy) {
-        if (!_isAnalyzing.value) {
-            image.close()
-            return
-        }
-        analyzeImageProxy(image)
-    }
-    @OptIn(ExperimentalGetImage::class)
-    private fun analyzeImageProxy(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image ?: run { imageProxy.close(); return }
-        val rotation = imageProxy.imageInfo.rotationDegrees
-        val image = InputImage.fromMediaImage(mediaImage, rotation)
-
-        val isPortrait = rotation == 90 || rotation == 270
-        val frameWidth = if (isPortrait) imageProxy.height else imageProxy.width
-        val frameHeight = if (isPortrait) imageProxy.width else imageProxy.height
-        val frameSize = Size(frameWidth, frameHeight)
-
-        recognizer.process(image)
-            .addOnSuccessListener { visionText ->
-                processSnapshotResults(visionText, frameSize)
-            }
-            .addOnCompleteListener {
-                _isAnalyzing.value = false
-                imageProxy.close()
-            }
-    }
-    private fun processSnapshotResults(visionText: Text, size: Size) {
-        val ts = System.currentTimeMillis()
-        _boundingBoxes.value = visionText.textBlocks.map { block ->
-            val r = block.boundingBox ?: Rect(0, 0, 0, 0)
-            TimedBoundingBox(
-                id = block.text.hashCode(),
-                label = "LOCAL",
-                left = r.left.toFloat(),
-                top = r.top.toFloat(),
-                right = r.right.toFloat(),
-                bottom = r.bottom.toFloat(),
-                timestamp = ts,
-                color = Color.Cyan,
-                frameWidth = size.width,
-                frameHeight = size.height
-            )
-        }
-        val detectedText = visionText.text.trim()
-        if (detectedText.isNotEmpty()) {
-            _recognizedText.value = detectedText
-            viewModelScope.launch { translateTextSuspend(detectedText) }
+            .build()
+    )
+    init {
+        tts = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) tts?.language = Locale.GERMAN
         }
     }
-    fun toggleLiveDetection() {
-        if (_recognizedText.value.isNotEmpty()) {
-            continueAnalysis()
-        } else {
-            _isAnalyzing.value = true
-        }
-    }
-    fun pauseAnalysis() { _isAnalyzing.value = false }
-    fun continueAnalysis() {
-        _isAnalyzing.value = false
-        _boundingBoxes.value = emptyList()
-        _recognizedText.value = ""
-        _translatedText.value = ""
-        _cloudRecognitionState.value = CloudRecognitionState.Idle
-    }
+    private fun formatText(text: String): String = text
+        .replace(Regex("(?<=\\w)\\n(?=\\w)"), " ")
+        .replace(Regex("\\n+"), "\n")
+        .trim()
     fun recognizeTextViaCloud(base64Image: String) {
-        pauseAnalysis()
+        _isAnalyzing.value = false
+        _isSingleBlockMode.value = false
         _cloudRecognitionState.value = CloudRecognitionState.Loading
         viewModelScope.launch {
             try {
                 val response = visionRepository.analyzeImage(base64Image, listOf(Feature(type = "DOCUMENT_TEXT_DETECTION")))
-                val firstRes = response.responses.firstOrNull()
-                val fullAnnotation = firstRes?.fullTextAnnotation ?: return@launch
+                val annotation = response.responses.firstOrNull()?.fullTextAnnotation ?: return@launch
 
-                val cloudText = fullAnnotation.text
                 val ts = System.currentTimeMillis()
-                val firstPage = fullAnnotation.pages.firstOrNull()
-                val cloudWidth = firstPage?.width ?: 1
-                val cloudHeight = firstPage?.height ?: 1
+                val page = annotation.pages.firstOrNull()
+                val cloudWidth = page?.width ?: 1
+                val cloudHeight = page?.height ?: 1
 
-                val cloudBoxes = fullAnnotation.pages.flatMap { page ->
-                    page.blocks.map { block ->
-                        val vertices = block.boundingBox.vertices
-                        val left = vertices.getOrNull(0)?.x?.toFloat() ?: 0f
-                        val top = vertices.getOrNull(0)?.y?.toFloat() ?: 0f
-                        val right = vertices.getOrNull(2)?.x?.toFloat() ?: 0f
-                        val bottom = vertices.getOrNull(2)?.y?.toFloat() ?: 0f
+                _boundingBoxes.value = annotation.pages.flatMap { p ->
+                    p.blocks.map { block ->
+                        val blockText = block.paragraphs.flatMap { para ->
+                            para.words.map { word -> word.symbols.joinToString("") { it.text } }
+                        }.joinToString(" ")
+                        val v = block.boundingBox.vertices
                         TimedBoundingBox(
                             id = block.hashCode(),
-                            label = "CLOUD",
-                            left = left,
-                            top = top,
-                            right = right,
-                            bottom = bottom,
+                            label = blockText,
+                            left = v.getOrNull(0)?.x?.toFloat() ?: 0f,
+                            top = v.getOrNull(0)?.y?.toFloat() ?: 0f,
+                            right = v.getOrNull(2)?.x?.toFloat() ?: 0f,
+                            bottom = v.getOrNull(2)?.y?.toFloat() ?: 0f,
                             timestamp = ts,
                             color = Color(0xFF00FFCC),
                             frameWidth = cloudWidth,
@@ -159,49 +96,69 @@ class TextViewModel(
                         )
                     }
                 }
-                _boundingBoxes.value = cloudBoxes
-                _recognizedText.value = cloudText
-                _cloudRecognitionState.value = CloudRecognitionState.Success(cloudText)
-                translateTextSuspend(cloudText)
+                val cleanText = formatText(annotation.text)
+                _recognizedText.value = cleanText
+                _cloudRecognitionState.value = CloudRecognitionState.Success(cleanText)
+                translateAndSpeak(cleanText)
+
             } catch (e: Exception) {
-                _cloudRecognitionState.value = CloudRecognitionState.Error(e.message ?: "Cloud Error")
+                _cloudRecognitionState.value = CloudRecognitionState.Error(e.message ?: "Fehler")
             }
         }
     }
-    private suspend fun translateTextSuspend(text: String) {
-        if (text.isBlank()) return
-        try {
-            translator.downloadModelIfNeeded().await()
-            _translatedText.value = translator.translate(text).await()
-        } catch (_: Exception) {
-            _translatedText.value = "Übersetzung fehlgeschlagen"
+    fun onBoxClicked(box: TimedBoundingBox) {
+        if (box.label.isNotBlank()) {
+            stopAudio()
+            val selectedText = formatText(box.label)
+            _recognizedText.value = selectedText
+            _isSingleBlockMode.value = true
+            translateAndSpeak(selectedText)
         }
     }
-    fun saveCurrentTextToHistory() {
-        val original = _recognizedText.value
-        val translated = _translatedText.value
-        if (original.isBlank()) return
+    private fun translateAndSpeak(text: String) {
         viewModelScope.launch {
             try {
-                manageHistoryUseCase.save(TextHistory(null, original, translated, System.currentTimeMillis()))
-                _uiEvent.send("Lokal gespeichert!")
-            } catch (e: Exception) { _uiEvent.send("Fehler: ${e.message}") }
+                translator.downloadModelIfNeeded().await()
+                val translation = translator.translate(text).await()
+                _translatedText.value = translation
+                tts?.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null)
+            } catch (_: Exception) {
+                _translatedText.value = "Fehler"
+            }
         }
+    }
+
+    fun stopAudio() { tts?.stop() }
+
+    fun continueAnalysis() {
+        stopAudio()
+        _isAnalyzing.value = false
+        _boundingBoxes.value = emptyList()
+        _recognizedText.value = ""
+        _translatedText.value = ""
+        _cloudRecognitionState.value = CloudRecognitionState.Idle
+        _isSingleBlockMode.value = false
     }
     fun onSaveToCloudClicked() {
         viewModelScope.launch {
             userRepository.saveToFirestore(_recognizedText.value, _translatedText.value)
-                .onSuccess { _uiEvent.send("Cloud Backup OK! ☁️") }
-                .onFailure { _uiEvent.send("Cloud Fehler") }
+                .onSuccess { _uiEvent.emit("Cloud Backup OK!") }
+                .onFailure { _uiEvent.emit("Fehler beim Backup") }
         }
     }
+    fun toggleLiveDetection() { _isAnalyzing.value = !_isAnalyzing.value }
     fun recognizeText(newText: String) {
-        _recognizedText.value = newText
-        viewModelScope.launch { translateTextSuspend(newText) }
+        if (newText.isNotBlank()) {
+            val cleanText = formatText(newText)
+            _recognizedText.value = cleanText
+            translateAndSpeak(cleanText)
+        }
     }
+    override fun analyze(image: ImageProxy) { image.close() }
+
     override fun onCleared() {
         super.onCleared()
+        tts?.shutdown()
         translator.close()
-        recognizer.close()
     }
 }
