@@ -26,9 +26,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.yangdnashabschlussprojekt.ui.component.camera.HoldToScanButton
 import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
-import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
-import com.example.yangdnashabschlussprojekt.ui.component.overlay.ARResultOverlay
-import com.example.yangdnashabschlussprojekt.ui.component.overlay.ScanningLaserOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.live.CameraWithLiveObjects
+import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.ARResultOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.ScanningLaserOverlay
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.ARViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import org.koin.androidx.compose.koinViewModel

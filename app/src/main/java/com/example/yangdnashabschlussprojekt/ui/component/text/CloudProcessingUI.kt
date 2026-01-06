@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
-import com.example.yangdnashabschlussprojekt.ui.component.overlay.ScanningLaserOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.ScanningLaserOverlay
 
 @Composable
 fun CloudProcessingUI() {

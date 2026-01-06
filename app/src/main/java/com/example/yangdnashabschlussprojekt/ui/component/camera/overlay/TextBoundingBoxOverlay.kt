@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.overlay
+package com.example.yangdnashabschlussprojekt.ui.component.camera.overlay
 
 import android.graphics.RectF
 import androidx.compose.animation.core.*

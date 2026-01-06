@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.live
+package com.example.yangdnashabschlussprojekt.ui.component.camera.live
 
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy

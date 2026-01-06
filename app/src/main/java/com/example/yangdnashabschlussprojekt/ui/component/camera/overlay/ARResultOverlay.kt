@@ -1,4 +1,4 @@
-package com.example.yangdnashabschlussprojekt.ui.component.overlay
+package com.example.yangdnashabschlussprojekt.ui.component.camera.overlay
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize

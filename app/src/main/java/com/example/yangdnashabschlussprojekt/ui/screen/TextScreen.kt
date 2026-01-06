@@ -36,9 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
-import com.example.yangdnashabschlussprojekt.ui.component.live.CameraWithLiveObjects
-import com.example.yangdnashabschlussprojekt.ui.component.overlay.FullScreenScannerOverlay
-import com.example.yangdnashabschlussprojekt.ui.component.overlay.TextBoundingBoxOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.live.CameraWithLiveObjects
+import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.FullScreenScannerOverlay
+import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.TextBoundingBoxOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
 import com.example.yangdnashabschlussprojekt.ui.component.text.CloudProcessingUI
 import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
