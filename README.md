@@ -1,90 +1,93 @@
 📱 SmartVision
-Die Welt erkennen, verstehen und hören – jederzeit, überall, für jeden.
+Die Welt erkennen, verstehen und hören – für jeden, jederzeit.
 
-SmartVision ist eine intelligente Assistenz-App, die das Smartphone in ein leistungsfähiges HUD (Head-Up Display) verwandelt. Das Projekt dient als Machbarkeitsstudie für die nächste Generation der Augmented Reality (AR). Ziel ist es, Technologien, die später Standard in Smart Glasses sein werden, schon heute auf mobilen Endgeräten intuitiv nutzbar zu machen.
+SmartVision ist ein intelligenter Assistent, der das Smartphone in ein leistungsfähiges „schlaues Auge“ (Head-Up Display) verwandelt. Die App hilft dabei, die Umgebung besser zu verstehen, indem sie Informationen direkt im Kamerabild einblendet, Texte vorliest oder durch Vibration Feedback gibt.
 
-🚀 Kernfunktionen
-🔍 Intelligente Objekterkennung (Live-AR)
+Das Projekt zeigt heute schon, wie wir in Zukunft mit Datenbrillen, Drohnen oder intelligenten Kameras interagieren werden.
 
-Hybrid-Analyse: Schnelles On-Device Tracking (ML Kit) kombiniert mit hochpräzisen Cloud-Deep-Scans (Vision API) für komplexe Szenarien.
+🌟 Hauptfunktionen (Was die App kann)
+🔍 Intelligente Objekterkennung: Erkennt Gegenstände sofort und blendet Infos direkt im Live-Bild ein.
 
-AR-Overlay: Ein mathematisch optimiertes Koordinaten-Mapping (Scale & Offset) simuliert die Informations-Einblendung einer AR-Brille direkt im Live-Bild.
+📝 Texte lesen & übersetzen: Erkennt Schilder oder Dokumente und übersetzt sie in Echtzeit.
 
-📝 OCR, Translation & Audio (TTS)
+🔊 Vorlesefunktion (Text-to-Speech): Liest erkannte Texte laut vor – ideal für Barrierefreiheit.
 
-Snapshot-Technologie: Stabiler Scan-on-Demand verhindert das "Zittern" der Boxen – essenziell für die Lesbarkeit in Wearables.
+📳 Spürbare Rückmeldung: Vibration bei erfolgreicher Erkennung von Objekten.
 
-Barrierefreiheit: Sofortige Übersetzung (z.B. EN -> DE) inklusive Text-to-Speech (TTS). Die App erkennt Texte und liest sie auf Knopfdruck vor.
+📸 Snapshot-Modus: Fixiert das Bild für wackelfreies Lesen und Analysieren.
 
-Cloud Document OCR: Spezial-Modus für komplexe Schriftsätze via Google Cloud Vision.
+🚀 Zukunftsvision: Mehr als nur eine App
+SmartVision ist so entwickelt, dass die Technologie flexibel eingesetzt werden kann:
 
-👓 Future-Ready: Wearable Vision
+Augmented Reality (AR): Fokus auf Smart Glasses und freihändige Bedienung.
 
-HUD-Interface: Das Design folgt den Prinzipien für Smart Glasses: Fokus auf das Zentrum des Sichtfeldes, minimalistische Steuerung und haptisches Feedback.
+Drohnen-Technologie: Intelligente Bildanalyse aus der Luft (Schilder lesen, Objekte finden).
 
-Hands-Free Vorbereitung: Die Architektur ist darauf ausgelegt, später ohne klassische Touch-Eingabe (z.B. über Eye-Tracking oder Sprachbefehle) zu funktionieren.
+Spezial-Kameras: Einsatz in Industrie oder Smart Homes für echtes Umgebungsverständnis.
 
-🛠 Technologie-Stack
-Bereich	Technologie
-Sprache	Kotlin
-UI	Jetpack Compose (Modern & HUD-optimiert)
-AI (Local)	Google ML Kit (Object, Text, Translation)
-AI (Cloud)	Google Cloud Vision API
-Audio	Android Text-to-Speech (TTS) Engine
-DI / Architektur	Koin & MVVM
 ⚙️ Setup & API-Sicherheit
-Um modernen Sicherheitsstandards gerecht zu werden, wurde der API-Key konsequent vom Quellcode entkoppelt (Separation of Concerns).
+Um modernen Sicherheitsstandards gerecht zu werden, wurde der API-Key konsequent vom Quellcode entkoppelt.
 
-Secrets Management: Sensitive Daten werden ausschließlich lokal in der local.properties verwaltet (geschützt durch .gitignore).
+Secrets Management: Sensitive Daten werden lokal in der local.properties verwaltet (geschützt durch .gitignore).
 
-Automated Build-Injection: Der Key wird während des Build-Vorgangs via Gradle in die BuildConfig injiziert.
+Automated Build-Injection: Der Key wird während des Build-Vorgangs via Gradle injiziert.
 
-[!IMPORTANT] Hinweis zum API-Key: Ein Test-API-Key ist aktuell für Demonstrationszwecke im Hintergrund hinterlegt, wird jedoch voraussichtlich in den nächsten 14 Tagen deaktiviert. Danach ist ein eigener Key zwingend erforderlich.
+[WICHTIG] Hinweis zum API-Key: Ein Test-Key ist aktuell hinterlegt, wird jedoch in Kürze deaktiviert. Danach ist ein eigener Key erforderlich.
 
-Eignen API-Key hinterlegen:
+Eigenen API-Key hinterlegen:
 
-Google Cloud: Projekt erstellen und Cloud Vision API aktivieren.
+Google Cloud: Projekt erstellen und "Cloud Vision API" aktivieren.
 
-Local.properties: Fügen Sie im Hauptverzeichnis folgende Zeile hinzu: VISION_API_KEY=dein_tatsächlicher_api_key_hier
+local.properties: Füge im Hauptverzeichnis folgende Zeile hinzu: VISION_API_KEY=dein_tatsächlicher_api_key_hier
 
 Build: Projekt synchronisieren. Der Key wird automatisch via BuildConfig.VISION_API_KEY eingebunden.
 
-🏗 Projektstatus & Roadmap
-[x] Snapshot-Scanning: Stabilisierte Texterkennung für Wearable-ähnliche Displays.
+🏗 Projektstatus
+[x] Texte & Objekte erkennen: Voll funktionsfähig.
 
-[x] Audio-Vision: Voll integrierte Text-to-Speech Unterstützung.
+[x] Audio & Vibration: Vorlesefunktion und haptisches Feedback integriert.
 
-[x] AR-Mapping: Korrektes Koordinaten-Mapping (Scale & Offset).
+[x] Snapshot-Scanning: Stabiles Lesen ohne Wackeln möglich.
 
-[ ] Wearable Integration: Prototyping für Head-Worn Displays.
+[ ] Nächster Schritt: Steuerung per Sprachbefehl (Hands-Free).
 
-[ ] Cloud-Sync: Optionales Backup der Scan-Historie via Firebase.
+[ ] Nächster Schritt: Anpassung für Drohnen-Kameras und AR-Brillen.
 
-👤 Kontakt
-Projekt von: Nguyen Phuong Ngoc Anh
+🛠 Technologie-Stack
+Sprache: Kotlin (Android)
+
+Oberfläche: Jetpack Compose (Modernes HUD-Design)
+
+KI (Lokal): Google ML Kit
+
+KI (Cloud): Google Cloud Vision API
+
+Architektur: MVVM & Koin
+
+👤 Kontakt & Konzept
+Entwickler: Nguyen Phuong Ngoc Anh
 
 E-Mail: nash.lioncorna@gmail.com
 
-Konzept: https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
+Konzept-Link: https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
 
-📚 Entwickler-Ressourcen
-
+📚 Entwickler-Ressourcen (Dokumentation)
 Google ML Kit (On-Device AI)
 
-Hauptdokumentation: [ML Kit für Entwickler](https://developers.google.com/ml-kit?hl=de)
+Hauptdokumentation: https://developers.google.com/ml-kit?hl=de
 
-Objekterkennung & Tracking: [Guide für Android](https://developers.google.com/ml-kit/vision/object-detection/android?hl=de)
+Objekterkennung & Tracking: https://developers.google.com/ml-kit/vision/object-detection/android?hl=de
 
-Texterkennung (OCR): [Text mit ML Kit erkennen](https://developers.google.com/ml-kit/vision/text-recognition/v2/android?hl=de)
-
-Übersetzung: [On-Device Translation Guide](https://developers.google.com/ml-kit/language/translation?hl=de)
+Texterkennung (OCR): https://developers.google.com/ml-kit/vision/text-recognition/v2/android?hl=de
 
 Google Cloud Vision (Cloud AI)
 
-Dokumentation Übersicht: [Cloud Vision API Dokumentation](https://cloud.google.com/vision/docs?hl=de)
+Dokumentation Übersicht: https://cloud.google.com/vision/docs?hl=de
 
-Cloud OCR (Dichte Texte): [Texterkennung in Dokumenten](https://docs.cloud.google.com/vision/docs/fulltext-annotations?hl=de)
+Cloud OCR: https://cloud.google.com/vision/docs/fulltext-annotations?hl=de
 
-Setup & Authentifizierung: [Cloud Vision API einrichten](https://cloud.google.com/vision/docs/setup?hl=de)
+Setup & Authentifizierung: https://cloud.google.com/vision/docs/setup?hl=de
 
-⭐ Kernbotschaft: SmartVision erkennt die Welt – und macht sie für jeden verständlich.
+⚡ Der Elevator Pitch
+
+"SmartVision macht das Unsichtbare sichtbar und das Geschriebene hörbar. Wir verwandeln das Smartphone in ein intelligentes Head-Up Display, das Menschen im Alltag unterstützt. Unsere Technologie ist die Basis für die intelligente Steuerung von AR-Brillen und Drohnen der nächsten Generation."
