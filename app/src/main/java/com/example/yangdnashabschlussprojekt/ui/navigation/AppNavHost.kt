@@ -38,7 +38,6 @@ fun AppNavHost(
     val startDest: Any = remember {
         if (settingsRepository.isOnboardingComplete()) WelcomeRoute else OnboardingRoute
     }
-
     Scaffold(
         containerColor = Color.Transparent,
         bottomBar = {
@@ -56,7 +55,7 @@ fun AppNavHost(
             startDestination = startDest,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
+                .padding(top = innerPadding.calculateTopPadding())
         ) {
             composable<WelcomeRoute> {
                 WelcomeScreen(
@@ -77,7 +76,7 @@ fun AppNavHost(
                     settingsViewModel = koinViewModel<SettingsViewModel>(),
                     onNavigateToRegister = { navController.navigate(RegisterRoute) },
                     onNavigateToHistory = { navController.navigate(HistoryRoute) },
-                    onBack = { navController.popBackStack() } // WICHTIG für Rückweg
+                    onBack = { navController.popBackStack() }
                 )
             }
             composable<RegisterRoute> {

@@ -2,7 +2,6 @@ package com.example.yangdnashabschlussprojekt
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -18,24 +17,24 @@ import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceCyan
 import com.example.yangdnashabschlussprojekt.ui.theme.LightBgEnd
 import com.example.yangdnashabschlussprojekt.ui.theme.LightBgStart
 import com.example.yangdnashabschlussprojekt.ui.theme.SmartVisionTheme
-import android.graphics.Color as AndroidColor
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(AndroidColor.TRANSPARENT)
-        )
+        enableEdgeToEdge()
+
         super.onCreate(savedInstanceState)
         setContent {
             SmartVisionTheme {
                 val isDark = isSystemInDarkTheme()
-                Box(modifier = Modifier.fillMaxSize().background(
-                    Brush.verticalGradient(
-                        if (isDark) listOf(DeepSpaceCyan, DeepSpaceBlack)
-                        else listOf(LightBgStart, LightBgEnd)
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            if (isDark) listOf(DeepSpaceCyan, DeepSpaceBlack)
+                            else listOf(LightBgStart, LightBgEnd)
+                        )
                     )
-                )) {
+                ) {
                     AppNavHost(navController = rememberNavController())
                 }
             }
