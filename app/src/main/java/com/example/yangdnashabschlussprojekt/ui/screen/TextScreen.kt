@@ -1,48 +1,27 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.animation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
-import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
 import com.example.yangdnashabschlussprojekt.ui.component.camera.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.FullScreenScannerOverlay
 import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.TextBoundingBoxOverlay
-import com.example.yangdnashabschlussprojekt.ui.component.text.BottomTextCard
-import com.example.yangdnashabschlussprojekt.ui.component.text.CloudProcessingUI
-import com.example.yangdnashabschlussprojekt.ui.component.text.RecognitionModalSheet
-import com.example.yangdnashabschlussprojekt.ui.component.text.TextScreenFABs
+import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.triggerVibration
+import com.example.yangdnashabschlussprojekt.ui.component.text.*
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CloudRecognitionState
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.TextViewModel
@@ -57,6 +36,7 @@ fun TextScreen(
     onNavigateToHistory: () -> Unit
 ) {
     val context = LocalContext.current
+
     val recognizedText by textViewModel.recognizedText.collectAsState()
     val translatedText by textViewModel.translatedText.collectAsState()
     val cloudState by textViewModel.cloudRecognitionState.collectAsState()
@@ -66,34 +46,41 @@ fun TextScreen(
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
 
     var showModal by remember { mutableStateOf(false) }
-    val uiEvent = textViewModel.uiEvent
 
     LaunchedEffect(Unit) {
-        uiEvent.collect { message ->
+        textViewModel.uiEvent.collect { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
+
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
             showModal = true
         }
     }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize().imePadding(),
+        modifier = Modifier.fillMaxSize(),
         containerColor = Color.Black
     ) { paddingValues ->
-        Box(Modifier.fillMaxSize().padding(paddingValues)) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
             CameraWithLiveObjects(
                 isTextMode = isAnalyzing,
-                onAnalyze = { imageProxy ->
-                    textViewModel.analyze(imageProxy)
-                },
-                onCameraReady = { previewView, lifecycleOwner, _ ->
-                    cameraManager.startCamera(previewView, lifecycleOwner, textViewModel)
+                onAnalyze = { textViewModel.analyze(it) },
+                onCameraReady = { preview, owner, _ ->
+                    cameraManager.startCamera(preview, owner, textViewModel)
                 }
             )
-            if (isAnalyzing) {
+            AnimatedVisibility(
+                visible = isAnalyzing,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 FullScreenScannerOverlay()
             }
             if (boundingBoxes.isNotEmpty()) {
@@ -108,27 +95,63 @@ fun TextScreen(
             if (cloudState is CloudRecognitionState.Loading) {
                 CloudProcessingUI()
             }
-            if ((recognizedText.isNotBlank() || boundingBoxes.isNotEmpty()) && !isAnalyzing) {
+            AnimatedVisibility(
+                visible = (recognizedText.isNotBlank() || boundingBoxes.isNotEmpty()) && !isAnalyzing,
+                enter = slideInVertically() + fadeIn(),
+                exit = slideOutVertically() + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 64.dp)
+                    .zIndex(50f)
+            ) {
                 Button(
-                    onClick = { textViewModel.continueAnalysis() },
-                    modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF).copy(alpha = 0.8f)),
-                    shape = RoundedCornerShape(24.dp)
+                    onClick = {
+                        triggerVibration(context)
+                        textViewModel.continueAnalysis()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.Black.copy(alpha = 0.6f),
+                        contentColor = Color.White
+                    ),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = null, tint = Color.Black)
+                    Icon(
+                        Icons.Rounded.Close,
+                        contentDescription = "Clear",
+                        modifier = Modifier.size(18.dp),
+                        tint = Color(0xFF00E5FF)
+                    )
                     Spacer(Modifier.width(8.dp))
-                    Text("CLEAR", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Text(
+                        "SCAN RESET",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF00E5FF)
+                    )
                 }
             }
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal,
-                enter = fadeIn() + slideInVertically { it },
-                exit = fadeOut() + slideOutVertically { it },
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 180.dp).zIndex(10f)
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 140.dp)
+                    .zIndex(10f)
             ) {
-                BottomTextCard(recognizedText = recognizedText, isSingleBlock = isSingleBlock)
+                BottomTextCard(
+                    recognizedText = recognizedText,
+                    isSingleBlock = isSingleBlock
+                )
             }
-            Box(Modifier.fillMaxSize().padding(bottom = 110.dp, end = 16.dp).zIndex(20f), Alignment.BottomEnd) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 110.dp, end = 16.dp)
+                    .zIndex(20f),
+                contentAlignment = Alignment.BottomEnd
+            ) {
                 TextScreenFABs(
                     onLiveToggle = {
                         triggerVibration(context)
@@ -139,8 +162,9 @@ fun TextScreen(
                     isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
                     onCloudScanTriggered = {
+                        triggerVibration(context)
                         cameraManager.captureForCloudScan(
-                            onCaptured = { base64 -> textViewModel.recognizeTextViaCloud(base64) },
+                            onCaptured = { textViewModel.recognizeTextViaCloud(it) },
                             onError = { textViewModel.continueAnalysis() }
                         )
                     }
