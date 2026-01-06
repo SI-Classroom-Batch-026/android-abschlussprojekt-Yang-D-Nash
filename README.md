@@ -61,13 +61,11 @@ Build: Projekt synchronisieren. Der Key wird automatisch via BuildConfig.VISION_
 [ ] Cloud-Sync: Optionales Backup der Scan-Historie via Firebase.
 
 👤 Kontakt
-Projekt von: Yang D. Nash
+Projekt von: Nguyen Phuong Ngoc Anh
 
 E-Mail: nash.lioncorna@gmail.com
 
 Konzept: https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
-
-Das ist eine hervorragende Ergänzung für die technische Dokumentation deines Projekts. Hier sind die wichtigsten offiziellen Ressourcen, strukturiert nach den von dir verwendeten Technologien:
 
 📚 Entwickler-Ressourcen
 
