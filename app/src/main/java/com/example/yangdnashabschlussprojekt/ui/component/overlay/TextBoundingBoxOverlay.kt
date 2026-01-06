@@ -1,5 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.component.overlay
 
+import android.graphics.RectF
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -23,7 +24,7 @@ fun TextBoundingBoxOverlay(
 ) {
     val transition = rememberInfiniteTransition(label = "Pulse")
     val alpha by transition.animateFloat(
-        initialValue = 0.3f,
+        initialValue = 0.4f,
         targetValue = 0.8f,
         animationSpec = infiniteRepeatable(
             animation = tween(1200, easing = LinearEasing),
@@ -31,25 +32,14 @@ fun TextBoundingBoxOverlay(
         ),
         label = "Alpha"
     )
-
     Canvas(
         modifier = Modifier
             .fillMaxSize()
             .pointerInput(boxes) {
-                detectTapGestures { offset ->
+                detectTapGestures { tapOffset ->
                     boxes.forEach { box ->
-                        val fW = if (box.frameWidth <= 0) 1 else box.frameWidth
-                        val fH = if (box.frameHeight <= 0) 1 else box.frameHeight
-                        val scale = maxOf(size.width / fW.toFloat(), size.height / fH.toFloat())
-                        val ox = (size.width - fW * scale) / 2f
-                        val oy = (size.height - fH * scale) / 2f
-
-                        val l = box.left * scale + ox
-                        val t = box.top * scale + oy
-                        val r = box.right * scale + ox
-                        val b = box.bottom * scale + oy
-
-                        if (offset.x in l..r && offset.y in t..b) {
+                        val rect = calculateTransformedRect(box, size.width.toFloat(), size.height.toFloat())
+                        if (rect.contains(tapOffset.x, tapOffset.y)) {
                             onBoxClicked(box)
                             return@detectTapGestures
                         }
@@ -58,34 +48,39 @@ fun TextBoundingBoxOverlay(
             }
     ) {
         boxes.forEach { box ->
-            val fW = if (box.frameWidth <= 0) 1 else box.frameWidth
-            val fH = if (box.frameHeight <= 0) 1 else box.frameHeight
-            val scale = maxOf(size.width / fW.toFloat(), size.height / fH.toFloat())
-            val ox = (size.width - fW * scale) / 2f
-            val oy = (size.height - fH * scale) / 2f
+            val rect = calculateTransformedRect(box, size.width, size.height)
 
-            val l = box.left * scale + ox
-            val t = box.top * scale + oy
-            val r = box.right * scale + ox
-            val b = box.bottom * scale + oy
-
-            val isCloud = box.label != "LOCAL"
-            val color = if (isCloud) Color(0xFF00FFCC) else Color(0xFF00E5FF)
-
+            val isCloud = box.color == Color(0xFF00FFCC)
+            val color = box.color
             drawRect(
-                color = color.copy(alpha = if (isCloud) alpha * 0.2f else 0.1f),
-                topLeft = Offset(l, t),
-                size = Size(r - l, b - t)
+                color = color.copy(alpha = if (isCloud) 0.2f else 0.1f),
+                topLeft = Offset(rect.left, rect.top),
+                size = Size(rect.width(), rect.height())
             )
             drawRect(
-                color = color.copy(alpha = if (isCloud) alpha else 1f),
-                topLeft = Offset(l, t),
-                size = Size(r - l, b - t),
+                color = color.copy(alpha = alpha),
+                topLeft = Offset(rect.left, rect.top),
+                size = Size(rect.width(), rect.height()),
                 style = Stroke(
-                    width = 2.dp.toPx(),
-                    pathEffect = if (isCloud) PathEffect.dashPathEffect(floatArrayOf(15f, 10f), 0f) else null
+                    width = if (isCloud) 3.dp.toPx() else 2.dp.toPx(),
+                    pathEffect = if (isCloud) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 )
             )
         }
     }
+}
+private fun calculateTransformedRect(box: TimedBoundingBox, canvasW: Float, canvasH: Float): RectF {
+    val imageW = if (box.frameWidth <= 0) 1f else box.frameWidth.toFloat()
+    val imageH = if (box.frameHeight <= 0) 1f else box.frameHeight.toFloat()
+
+    val scale = maxOf(canvasW / imageW, canvasH / imageH)
+    val offsetX = (canvasW - imageW * scale) / 2f
+    val offsetY = (canvasH - imageH * scale) / 2f
+
+    return RectF(
+        box.left * scale + offsetX,
+        box.top * scale + offsetY,
+        box.right * scale + offsetX,
+        box.bottom * scale + offsetY
+    )
 }
