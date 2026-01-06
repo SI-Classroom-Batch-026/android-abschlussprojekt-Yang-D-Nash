@@ -67,4 +67,26 @@ E-Mail: nash.lioncorna@gmail.com
 
 Konzept: https://www.figma.com/design/FIdhzq6VAZFTA7ljYtjmMB/Abschluss-Android?node-id=5-24&t=JVHdq4fn9pGgHNqH-1
 
+Das ist eine hervorragende Ergänzung für die technische Dokumentation deines Projekts. Hier sind die wichtigsten offiziellen Ressourcen, strukturiert nach den von dir verwendeten Technologien:
+
+📚 Entwickler-Ressourcen
+
+Google ML Kit (On-Device AI)
+
+Hauptdokumentation: [ML Kit für Entwickler](https://developers.google.com/ml-kit?hl=de)
+
+Objekterkennung & Tracking: [Guide für Android](https://developers.google.com/ml-kit/vision/object-detection/android?hl=de)
+
+Texterkennung (OCR): [Text mit ML Kit erkennen](https://developers.google.com/ml-kit/vision/text-recognition/v2/android?hl=de)
+
+Übersetzung: [On-Device Translation Guide](https://developers.google.com/ml-kit/language/translation?hl=de)
+
+Google Cloud Vision (Cloud AI)
+
+Dokumentation Übersicht: [Cloud Vision API Dokumentation](https://cloud.google.com/vision/docs?hl=de)
+
+Cloud OCR (Dichte Texte): [Texterkennung in Dokumenten](https://docs.cloud.google.com/vision/docs/fulltext-annotations?hl=de)
+
+Setup & Authentifizierung: [Cloud Vision API einrichten](https://cloud.google.com/vision/docs/setup?hl=de)
+
 ⭐ Kernbotschaft: SmartVision erkennt die Welt – und macht sie für jeden verständlich.
