@@ -41,7 +41,7 @@ val appModule = module {
 
     single {
         Room.databaseBuilder(androidContext(), AppDatabase::class.java, "text_history_db")
-            .fallbackToDestructiveMigration(false) // Auf true/false prüfen je nach Entwicklungsstand
+            .fallbackToDestructiveMigration(false)
             .build()
     }
     single { get<AppDatabase>().textHistoryDao() }

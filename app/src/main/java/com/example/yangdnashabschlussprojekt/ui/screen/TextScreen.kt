@@ -85,10 +85,12 @@ fun TextScreen(
     ) { paddingValues ->
         Box(Modifier.fillMaxSize().padding(paddingValues)) {
             CameraWithLiveObjects(
-                isObjectDetectionMode = false,
-                onAnalyze = { imageProxy -> textViewModel.analyze(imageProxy) },
-                onCameraReady = { preview, owner, _ ->
-                    cameraManager.startCamera(preview, owner, textViewModel)
+                isTextMode = isAnalyzing,
+                onAnalyze = { imageProxy ->
+                    textViewModel.analyze(imageProxy)
+                },
+                onCameraReady = { previewView, lifecycleOwner, _ ->
+                    cameraManager.startCamera(previewView, lifecycleOwner, textViewModel)
                 }
             )
             if (isAnalyzing) {

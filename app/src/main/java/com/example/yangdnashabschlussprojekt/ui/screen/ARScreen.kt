@@ -47,8 +47,8 @@ fun ARScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         CameraWithLiveObjects(
-            isObjectDetectionMode = true,
-            onAnalyze = {  },
+            isTextMode = false,
+            onAnalyze = { imageProxy -> arViewModel.analyze(imageProxy) },
             onCameraReady = { previewView, lifecycleOwner, _ ->
                 cameraManager.startCamera(previewView, lifecycleOwner, arViewModel)
             }

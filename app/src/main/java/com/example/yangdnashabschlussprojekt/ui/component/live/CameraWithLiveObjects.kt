@@ -9,17 +9,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.LifecycleOwner
 import com.example.yangdnashabschlussprojekt.ui.component.camera.CameraPreview
-
 @Composable
 fun CameraWithLiveObjects(
-    isObjectDetectionMode: Boolean,
+    isTextMode: Boolean,
     onAnalyze: (ImageProxy) -> Unit,
     onCameraReady: (PreviewView, LifecycleOwner, ImageAnalysis.Analyzer) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier.fillMaxSize()) {
         CameraPreview(
-            isTextMode = !isObjectDetectionMode,
+            isTextMode = isTextMode,
             onAnalyze = onAnalyze,
             onCameraReady = onCameraReady,
             modifier = Modifier.fillMaxSize()
