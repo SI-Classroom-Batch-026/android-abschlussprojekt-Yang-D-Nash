@@ -1,5 +1,8 @@
 package com.example.yangdnashabschlussprojekt.ui.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -52,23 +55,23 @@ fun OnboardingScreen(onFinished: () -> Unit) {
         OnboardingData("Präziser Scan", "Tippe den Button für Cloud-KI Übersetzungen.", "Scan & Translate", Icons.Default.CameraAlt),
         OnboardingData("Cloud-Power", "Maximale Präzision durch modernste Server.", "Online", Icons.Default.CloudUpload)
     )
+
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val scope = rememberCoroutineScope()
     val isDark = isSystemInDarkTheme()
+
     val bgGradient = Brush.verticalGradient(
         if (isDark) listOf(DeepSpaceCyan, DeepSpaceBlack)
         else listOf(LightBgStart, LightBgEnd)
     )
+
     Box(modifier = Modifier.fillMaxSize().background(bgGradient)) {
-        if (pagerState.currentPage < pages.size - 1) {
-            TextButton(
-                onClick = onFinished,
-                modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(12.dp)
-            ) {
-                Text("Überspringen", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f))
-            }
-        }
-        Column(modifier = Modifier.fillMaxSize().systemBarsPadding().padding(24.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .padding(24.dp)
+        ) {
             HorizontalPager(
                 state = pagerState,
                 modifier = Modifier.weight(1f)
@@ -76,7 +79,9 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                 OnboardingContent(pages[index], index)
             }
             Row(
-                modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -110,6 +115,23 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+        AnimatedVisibility(
+            visible = pagerState.currentPage < pages.size - 1,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .statusBarsPadding()
+                .padding(12.dp)
+        ) {
+            TextButton(onClick = onFinished) {
+                Text(
+                    text = "Überspringen",
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }

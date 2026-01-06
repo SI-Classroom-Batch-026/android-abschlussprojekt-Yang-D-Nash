@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
@@ -54,26 +56,35 @@ import org.koin.androidx.compose.koinViewModel
 fun SettingsScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToHistory: () -> Unit,
+    onBack: () -> Unit,
     settingsViewModel: SettingsViewModel = koinViewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    androidx.activity.compose.BackHandler {
+        onBack()
+    }
+
     val currentUser by settingsViewModel.currentUser.collectAsState()
     val authResult by settingsViewModel.authResult.collectAsState()
+
     var notificationsEnabled by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
     var locationGranted by remember { mutableStateOf(false) }
     var microphoneGranted by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+
     fun refreshSystemPermissions() {
         notificationsEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled()
         cameraGranted = isPermissionGranted(context, Manifest.permission.CAMERA)
         locationGranted = isPermissionGranted(context, Manifest.permission.ACCESS_FINE_LOCATION)
         microphoneGranted = isPermissionGranted(context, Manifest.permission.RECORD_AUDIO)
     }
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) refreshSystemPermissions()
@@ -81,14 +92,32 @@ fun SettingsScreen(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
+
     LaunchedEffect(Unit) { refreshSystemPermissions() }
+
     LaunchedEffect(authResult) {
         authResult?.let { message -> scope.launch { snackbarHostState.showSnackbar(message) } }
     }
+
     Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))) {
         Scaffold(
             containerColor = Color.Transparent,
-            snackbarHost = { CustomSnackbarHost(hostState = snackbarHostState) }
+            snackbarHost = { CustomSnackbarHost(hostState = snackbarHostState) },
+            topBar = {
+                androidx.compose.material3.TopAppBar(
+                    title = { Text("Einstellungen", color = Color.White) },
+                    colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
+                    navigationIcon = {
+                        androidx.compose.material3.IconButton(onClick = onBack) {
+                            androidx.compose.material3.Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Zurück",
+                                tint = Color.White
+                            )
+                        }
+                    }
+                )
+            }
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -98,9 +127,8 @@ fun SettingsScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(Modifier.height(40.dp))
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                     shape = RoundedCornerShape(32.dp),
                     color = Color.White.copy(alpha = 0.05f),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))

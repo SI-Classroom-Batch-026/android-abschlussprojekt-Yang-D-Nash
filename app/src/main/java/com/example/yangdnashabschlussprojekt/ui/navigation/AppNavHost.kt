@@ -34,13 +34,19 @@ fun AppNavHost(
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
     val startDest: Any = remember {
         if (settingsRepository.isOnboardingComplete()) WelcomeRoute else OnboardingRoute
     }
+
     Scaffold(
         containerColor = Color.Transparent,
         bottomBar = {
-            if (currentDestination?.hasRoute<OnboardingRoute>() == false) {
+            val showBottomBar = currentDestination?.let { dest ->
+                !dest.hasRoute<OnboardingRoute>() && !dest.hasRoute<RegisterRoute>()
+            } ?: true
+
+            if (showBottomBar) {
                 BottomNavigationBar(navController)
             }
         }
@@ -48,31 +54,31 @@ fun AppNavHost(
         NavHost(
             navController = navController,
             startDestination = startDest,
-            modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding())
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
             composable<WelcomeRoute> {
                 WelcomeScreen(
                     viewModel = koinViewModel<AndroidWelcomeViewModel>(),
-                    onOpenSettings = { navController.navigate(SettingsRoute) },
                     onNavigateToOnboarding = { navController.navigate(OnboardingRoute) }
                 )
             }
             composable<OnboardingRoute> {
                 OnboardingScreen {
                     settingsRepository.setOnboardingComplete(true)
-                    navController.navigate(WelcomeRoute) { popUpTo<OnboardingRoute> { inclusive = true } }
+                    navController.navigate(WelcomeRoute) {
+                        popUpTo<OnboardingRoute> { inclusive = true }
+                    }
                 }
             }
-            composable<ARScreenRoute> { ARScreen() }
             composable<SettingsRoute> {
                 SettingsScreen(
                     settingsViewModel = koinViewModel<SettingsViewModel>(),
                     onNavigateToRegister = { navController.navigate(RegisterRoute) },
-                    onNavigateToHistory = { navController.navigate(HistoryRoute) }
+                    onNavigateToHistory = { navController.navigate(HistoryRoute) },
+                    onBack = { navController.popBackStack() } // WICHTIG für Rückweg
                 )
-            }
-            composable<TextScreenRoute> {
-                TextScreen(onNavigateToHistory = { navController.navigate(HistoryRoute) })
             }
             composable<RegisterRoute> {
                 RegistrationScreen(
@@ -84,8 +90,12 @@ fun AppNavHost(
                 HistoryScreen(
                     viewModel = koinViewModel<HistoryViewModel>(),
                     onBack = { navController.popBackStack() },
-                    onHistoryItemSelected = { }
+                    onHistoryItemSelected = {  }
                 )
+            }
+            composable<ARScreenRoute> { ARScreen() }
+            composable<TextScreenRoute> {
+                TextScreen(onNavigateToHistory = { navController.navigate(HistoryRoute) })
             }
         }
     }
