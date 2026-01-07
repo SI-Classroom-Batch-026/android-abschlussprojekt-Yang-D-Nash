@@ -93,7 +93,7 @@ android {
 dependencies {
 
     implementation(project(":shared"))
-
+    implementation("com.google.mlkit:language-id:17.0.4")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(platform(libs.androidx.compose.bom))
@@ -125,6 +125,7 @@ dependencies {
     implementation(libs.genai.common)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.compose.runtime)
+    implementation(libs.language.id.common)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)

@@ -41,7 +41,6 @@ class ARViewModel(
     private val _detectedObjectLabel = MutableStateFlow("")
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
 
-    // NEU: Status für die Übersetzung (z.B. "Übersetze...")
     private val _translationStatus = MutableStateFlow("")
     val translationStatus = _translationStatus.asStateFlow()
 
@@ -50,7 +49,6 @@ class ARViewModel(
     private val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 60)
     private val trackedObjectsMap = mutableMapOf<Int, TimedBoundingBox>()
 
-    // Hilfsvariable um doppelte Übersetzungen zu vermeiden
     private var lastEnglishLabel = ""
 
     private val objectDetector = ObjectDetection.getClient(
@@ -83,7 +81,7 @@ class ARViewModel(
                     val id = obj.trackingId ?: -1
                     val rawLabel = obj.labels.firstOrNull()?.text ?: "SCANNING..."
 
-                    // Trigger Dynamische Übersetzung wenn es ein neues Objekt ist
+                    // Trigger Dynamische Übersetzung
                     if (rawLabel != "SCANNING..." && rawLabel != lastEnglishLabel) {
                         translateLiveResult(rawLabel)
                     }
@@ -96,7 +94,12 @@ class ARViewModel(
                             top = prev.top + (rect.top - prev.top) * smoothingFactor,
                             right = prev.right + (rect.right - prev.right) * smoothingFactor,
                             bottom = prev.bottom + (rect.bottom - prev.bottom) * smoothingFactor,
-                            label = _detectedObjectLabel.value.ifEmpty { rawLabel.uppercase() }
+                            // Nutze das übersetzte Label, falls vorhanden
+                            label = if (_detectedObjectLabel.value.isNotEmpty() && rawLabel == lastEnglishLabel) {
+                                _detectedObjectLabel.value
+                            } else {
+                                rawLabel.uppercase()
+                            }
                         )
                     } else {
                         if (id != -1) try { toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 80) } catch(_: Exception) {}
@@ -113,14 +116,25 @@ class ARViewModel(
 
     private fun translateLiveResult(englishText: String) {
         lastEnglishLabel = englishText
+        val deviceLang = Locale.getDefault().language
+
         TranslatorUtil.translateDynamic(
             context = getApplication(),
             sourceText = englishText,
-            targetLang = Locale.getDefault().language,
+            sourceLang = "en",
+            targetLang = deviceLang,
             onStatusUpdate = { status -> _translationStatus.value = status },
             onResult = { translated ->
-                _detectedObjectLabel.value = translated.uppercase()
+                val upperResult = translated.uppercase()
+                _detectedObjectLabel.value = upperResult
                 _translationStatus.value = ""
+
+                // Live-Update der aktuellen Boxen in der Liste
+                _boundingBoxes.value = _boundingBoxes.value.map { box ->
+                    if (box.label.equals(englishText, ignoreCase = true)) {
+                        box.copy(label = upperResult)
+                    } else box
+                }
             }
         )
     }
@@ -142,9 +156,7 @@ class ARViewModel(
 
                 val finalEnglishLabel = (logoText ?: cloudObjects?.firstOrNull()?.name ?: labelText ?: "OBJECT")
 
-                // Cloud Ergebnis sofort übersetzen
                 translateLiveResult(finalEnglishLabel)
-
                 _isCloudResult.value = true
 
                 val cloudBoxes = cloudObjects?.map { obj ->
@@ -172,7 +184,10 @@ class ARViewModel(
             }
         }
     }
-
+    override fun onCleared() {
+        super.onCleared()
+        objectDetector.close()
+    }
     fun resetCloudResult() {
         _isCloudResult.value = false
         _isCloudLoading.value = false

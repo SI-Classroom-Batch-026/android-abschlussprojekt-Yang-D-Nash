@@ -59,6 +59,7 @@ kotlinxDatetime = "0.6.1"
 room = "2.7.0-alpha11"
 firebaseKmp = "1.13.0"
 googleMaterial = "1.12.0"
+languageIdCommon = "16.1.0"
 
 [libraries]
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx" }
@@ -168,6 +169,7 @@ androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", 
 koin-compose = { module = "io.insert-koin:koin-compose", version = "1.1.0" }
 stately-common = { module = "co.touchlab:stately-common", version.ref = "stately" }
 kotlinx-coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version = "1.10.2" }
+language-id-common = { group = "com.google.mlkit", name = "language-id-common", version.ref = "languageIdCommon" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

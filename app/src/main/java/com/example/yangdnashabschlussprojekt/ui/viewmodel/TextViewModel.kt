@@ -42,7 +42,6 @@ class TextViewModel(
     private val _translatedText = MutableStateFlow("")
     val translatedText = _translatedText.asStateFlow()
 
-    // NEU: Status für die Anzeige (Lade Sprachpaket / KI übersetzt...)
     private val _translationStatus = MutableStateFlow("")
     val translationStatus = _translationStatus.asStateFlow()
 
@@ -61,7 +60,6 @@ class TextViewModel(
     init {
         tts = TextToSpeech(getApplication()) { status ->
             if (status == TextToSpeech.SUCCESS) {
-                // Setzt TTS Sprache auf die aktuelle Gerätesprache
                 tts?.language = Locale.getDefault()
             }
         }
@@ -133,6 +131,8 @@ class TextViewModel(
     fun recognizeTextViaCloud(base64Image: String) {
         _isAnalyzing.value = false
         _cloudRecognitionState.value = CloudRecognitionState.Loading
+        _translatedText.value = ""
+
         viewModelScope.launch {
             try {
                 val response = visionRepository.analyzeImage(base64Image, listOf(Feature(type = "DOCUMENT_TEXT_DETECTION")))
@@ -159,16 +159,52 @@ class TextViewModel(
                         )
                     }
                 }
-                val cleanText = formatText(annotation.text)
+                val cleanText = formatCloudText(annotation.text)
                 _recognizedText.value = cleanText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cleanText)
-                _uiEvent.emit("Cloud Scan erfolgreich!")
+                _uiEvent.emit("Text erfolgreich erkannt!")
+
                 translateAndSpeak(cleanText)
+
             } catch (e: Exception) {
                 _cloudRecognitionState.value = CloudRecognitionState.Error(e.message ?: "Fehler")
                 _uiEvent.emit("Cloud Fehler: ${e.message}")
             }
         }
+    }
+
+    private fun formatCloudText(text: String): String {
+        return text.split("\n")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(" ")
+            .replace(Regex("\\s+"), " ")
+            .replace(". ", ".\n")
+    }
+
+    fun translateAndSpeak(text: String) {
+        if (text.isBlank()) return
+
+        val languageIdentifier = com.google.mlkit.nl.languageid.LanguageIdentification.getClient()
+
+        languageIdentifier.identifyLanguage(text)
+            .addOnSuccessListener { languageCode ->
+                val detectedLang = if (languageCode == "und") "en" else languageCode
+                val deviceLang = Locale.getDefault().language
+
+                TranslatorUtil.translateDynamic(
+                    context = getApplication(),
+                    sourceText = text,
+                    sourceLang = detectedLang,
+                    targetLang = deviceLang,
+                    onStatusUpdate = { status -> _translationStatus.value = status },
+                    onResult = { translation ->
+                        _translatedText.value = translation
+                        _translationStatus.value = ""
+                        tts?.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null)
+                    }
+                )
+            }
     }
 
     fun onBoxClicked(box: TimedBoundingBox) {
@@ -179,29 +215,6 @@ class TextViewModel(
             _isSingleBlockMode.value = true
             translateAndSpeak(selectedText)
         }
-    }
-
-    fun translateAndSpeak(text: String) {
-        if (text.isBlank()) return
-
-        val deviceLang = Locale.getDefault().language
-
-        // Dynamische Übersetzung über Util
-        TranslatorUtil.translateDynamic(
-            context = getApplication(),
-            sourceText = text,
-            targetLang = deviceLang,
-            onStatusUpdate = { statusText ->
-                _translationStatus.value = statusText
-            },
-            onResult = { translation ->
-                _translatedText.value = translation
-                _translationStatus.value = "" // Status löschen wenn fertig
-
-                // Sprachausgabe
-                tts?.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null)
-            }
-        )
     }
 
     fun stopAudio() { tts?.stop() }
@@ -235,6 +248,7 @@ class TextViewModel(
 
     override fun onCleared() {
         super.onCleared()
+        tts?.stop()
         tts?.shutdown()
         localRecognizer.close()
     }

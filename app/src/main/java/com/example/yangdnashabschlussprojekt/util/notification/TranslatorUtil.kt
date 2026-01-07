@@ -1,20 +1,23 @@
-package com.example.yangdnashabschlussprojekt.util.notification // Dein Package-Pfad anpassen
+package com.example.yangdnashabschlussprojekt.util.notification
 
 import com.example.yangdnashabschlussprojekt.R
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.Translation
 import com.google.mlkit.nl.translate.TranslatorOptions
+
 object TranslatorUtil {
     fun translateDynamic(
         context: android.content.Context,
         sourceText: String,
+        sourceLang: String, // <--- DIESER PARAMETER MUSS HIER STEHEN!
         targetLang: String,
         onStatusUpdate: (String) -> Unit,
         onResult: (String) -> Unit
     ) {
         val options = TranslatorOptions.Builder()
-            .setSourceLanguage(TranslateLanguage.ENGLISH)
+            // Hier nutzen wir jetzt den neuen Parameter sourceLang:
+            .setSourceLanguage(TranslateLanguage.fromLanguageTag(sourceLang) ?: TranslateLanguage.ENGLISH)
             .setTargetLanguage(TranslateLanguage.fromLanguageTag(targetLang) ?: TranslateLanguage.GERMAN)
             .build()
 
