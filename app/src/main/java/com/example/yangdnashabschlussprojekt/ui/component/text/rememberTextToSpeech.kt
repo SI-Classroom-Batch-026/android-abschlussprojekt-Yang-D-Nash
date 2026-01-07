@@ -14,10 +14,17 @@ import java.util.Locale
 fun rememberTextToSpeech(): (String) -> Unit {
     val context = LocalContext.current
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    val currentLocale = Locale.getDefault()
+
     DisposableEffect(Unit) {
         val speechListener = TextToSpeech.OnInitListener { status ->
             if (status == TextToSpeech.SUCCESS) {
-                tts?.language = Locale.GERMAN
+                val result = tts?.setLanguage(currentLocale)
+
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts?.language = Locale.US
+                }
             }
         }
         tts = TextToSpeech(context, speechListener)
@@ -27,7 +34,10 @@ fun rememberTextToSpeech(): (String) -> Unit {
             tts?.shutdown()
         }
     }
+
     return { text ->
-        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        if (text.isNotBlank()) {
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
     }
 }
