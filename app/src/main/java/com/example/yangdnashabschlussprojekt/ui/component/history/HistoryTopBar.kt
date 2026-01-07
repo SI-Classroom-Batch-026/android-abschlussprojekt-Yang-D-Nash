@@ -15,8 +15,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +34,7 @@ fun HistoryTopBar(
             containerColor = Color.Transparent,
             titleContentColor = Color.White
         ),
-        title = { Text("Verlauf", fontWeight = FontWeight.Bold) },
+        title = { Text(stringResource(R.string.history_topbar_title), fontWeight = FontWeight.Bold) },
         navigationIcon = {
             IconButton(
                 onClick = onBack,
@@ -42,7 +44,7 @@ fun HistoryTopBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Zurück",
+                    contentDescription = stringResource(R.string.history_content_desc_back),
                     tint = Color.White
                 )
             }
@@ -50,7 +52,7 @@ fun HistoryTopBar(
         actions = {
             if (isClearAllEnabled) {
                 TextButton(onClick = onClearAll) {
-                    Text("Alles löschen", color = Color.Red.copy(alpha = 0.8f))
+                    Text(stringResource(R.string.history_btn_clear_all), color = Color.Red.copy(alpha = 0.8f))
                 }
             }
         }

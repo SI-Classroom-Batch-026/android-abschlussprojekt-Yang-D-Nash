@@ -1,0 +1,95 @@
+<resources>
+    <string name="app_name">Trang chủ</string>
+
+    <string name="welcome_hello">Xin chào,</string>
+    <string name="welcome_guest">Khách</string>
+    <string name="welcome_image_desc">Biểu tượng chào mừng</string>
+    <string name="btn_start_onboarding">Bắt đầu hướng dẫn</string>
+    <string name="settings_btn_text">Cài đặt</string>
+
+    <string name="onboarding_live_title">Nhận diện trực tiếp</string>
+    <string name="onboarding_live_desc">Các đối tượng được phát hiện trong thời gian thực.</string>
+    <string name="onboarding_focus_title">Giữ tiêu điểm</string>
+    <string name="onboarding_focus_desc">Giữ camera ổn định để quét văn bản chính xác.</string>
+    <string name="onboarding_scan_title">Quét chính xác</string>
+    <string name="onboarding_scan_desc">Nhấn nút để dịch bằng Cloud AI của Google.</string>
+    <string name="onboarding_cloud_title">Sức mạnh Cloud</string>
+    <string name="onboarding_cloud_desc">Độ chính xác tối đa thông qua máy chủ hiện đại.</string>
+    <string name="btn_next">Tiếp theo</string>
+    <string name="btn_start">Bắt đầu</string>
+    <string name="btn_skip">Bỏ qua</string>
+
+    <string name="login_header">Đăng nhập</string>
+    <string name="reg_title">Tạo tài khoản</string>
+    <string name="label_email">Email</string>
+    <string name="label_password">Mật khẩu</string>
+    <string name="label_display_name">Tên hiển thị</string>
+    <string name="btn_login">Đăng nhập</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="btn_no_account">Chưa có tài khoản? Đăng ký</string>
+    <string name="reg_back_content_desc">Quay lại</string>
+    <string name="reg_success">Đăng ký thành công!</string>
+    <string name="reg_error_unknown">Đã xảy ra lỗi</string>
+    <string name="user_logged_in_as">Đã đăng nhập với tên</string>
+
+    <string name="settings_title">Cài đặt</string>
+    <string name="btn_back">Quay lại</string>
+    <string name="btn_logout">Đăng xuất</string>
+    <string name="profile_image_desc">Ảnh đại diện</string>
+    <string name="perm_card_title">Quyền truy cập</string>
+    <string name="perm_notifications">Thông báo</string>
+    <string name="perm_camera">Máy ảnh</string>
+    <string name="perm_location">Vị trí</string>
+    <string name="perm_microphone">Micro</string>
+    <string name="perm_status_enabled">Đã bật</string>
+    <string name="perm_status_disabled">Đã tắt</string>
+
+    <string name="btn_scan_reset">ĐẶT LẠI QUÉT</string>
+    <string name="btn_system_reset">ĐẶT LẠI HỆ THỐNG</string>
+    <string name="content_desc_clear">Xóa</string>
+    <string name="target_acquired">ĐÃ XÁC ĐỊNH MỤC TIÊU</string>
+    <string name="full_scan_results">KẾT QUẢ QUÉT</string>
+    <string name="extracting_data">ĐANG TRÍCH XUẤT DỮ LIỆU…</string>
+    <string name="status_scanning">ĐANG QUÉT</string>
+    <string name="status_paused">ĐÃ TẠM DỪNG</string>
+    <string name="label_scanning">Đang quét…</string>
+
+    <string name="engine_mlkit_label">ML KIT (CỤC BỘ)</string>
+    <string name="engine_vision_label">GOOGLE VISION API (ĐÁM MÂY)</string>
+    <string name="engine_confidence">Độ tin cậy: %1$d%%</string>
+    <string name="toast_error_cloud">Nhận diện đám mây thất bại</string>
+
+    <string name="label_translation">BẢN DỊCH</string>
+    <string name="label_edit_original">CHỈNH SỬA VĂN BẢN GỐC</string>
+    <string name="placeholder_translating">Đang dịch…</string>
+    <string name="btn_update">CẬP NHẬT</string>
+    <string name="btn_done">XONG</string>
+    <string name="btn_cloud_save">☁️ Lưu vào đám mây</string>
+    <string name="btn_cloud_login_required">Cần đăng nhập để lưu trữ</string>
+    <string name="content_desc_speak">Đọc văn bản</string>
+
+    <string name="fab_live_scan">Quét trực tiếp</string>
+    <string name="fab_fixed">Cố định</string>
+    <string name="fab_save">Lưu</string>
+    <string name="fab_history">Lịch sử</string>
+
+    <string name="history_title">Lịch sử quét</string>
+    <string name="history_topbar_title">Lịch sử</string>
+    <string name="history_empty_title">Không có lịch sử</string>
+    <string name="history_empty_desc">Quét văn bản để lưu tại đây.</string>
+    <string name="history_btn_clear_all">Xóa tất cả</string>
+    <string name="history_content_desc_delete">Xóa</string>
+    <string name="history_content_desc_back">Quay lại</string>
+    <string name="history_details_title">Chi tiết quét</string>
+    <string name="history_label_original">VĂN BẢN GỐC</string>
+    <string name="history_label_translation">BẢN DỊCH</string>
+    <string name="history_btn_open">Mở trong máy quét</string>
+
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_settings">Cài đặt</string>
+    <string name="nav_ar">Máy quét</string>
+    <string name="nav_text">Văn bản</string>
+    <string name="msg_translating">AI đang dịch…</string>
+    <string name="msg_downloading_language">Đang tải gói ngôn ngữ (AI)…</string>
+    <string name="err_translation_unavailable">Bản dịch không có sẵn cục bộ</string>
+</resources>

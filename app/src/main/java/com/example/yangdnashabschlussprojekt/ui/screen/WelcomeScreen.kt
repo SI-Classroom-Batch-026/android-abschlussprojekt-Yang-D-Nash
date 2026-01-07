@@ -34,9 +34,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeGreeting
 import com.example.yangdnashabschlussprojekt.ui.component.welcome.WelcomeImage
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.AndroidWelcomeViewModel
@@ -44,17 +46,16 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun WelcomeScreen(
-    contentPadding: PaddingValues = PaddingValues(0.dp), // Padding vom NavHost empfangen
+    contentPadding: PaddingValues = PaddingValues(0.dp), 
     viewModel: AndroidWelcomeViewModel = koinViewModel(),
     onNavigateToOnboarding: () -> Unit
 ) {
     val currentUser by viewModel.currentUser.collectAsState(initial = null)
-    val displayName = currentUser?.displayName ?: "Gast"
+    val displayName = currentUser?.displayName ?: stringResource(R.string.welcome_guest)
     val visible = remember { mutableStateOf(false) }
     val layoutDirection = LocalLayoutDirection.current
 
     LaunchedEffect(Unit) { visible.value = true }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -63,7 +64,6 @@ fun WelcomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                // Hier nutzen wir das Padding vom Scaffold, damit der Inhalt über der Bar stoppt
                 .padding(
                     start = 24.dp + contentPadding.calculateStartPadding(layoutDirection),
                     end = 24.dp + contentPadding.calculateEndPadding(layoutDirection),
@@ -74,26 +74,20 @@ fun WelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(60.dp))
-
             AnimatedVisibility(
                 visible = visible.value,
                 enter = fadeIn(tween(1200)) + scaleIn(initialScale = 0.9f)
             ) {
                 WelcomeImage()
             }
-
             Spacer(modifier = Modifier.height(32.dp))
-
             AnimatedVisibility(
                 visible = visible.value,
                 enter = slideInVertically { 40 } + fadeIn(tween(800, 300))
             ) {
                 WelcomeGreeting(displayName)
             }
-
-            // Da wir scrollen, nutzen wir einen festen Spacer statt weight(1f)
             Spacer(modifier = Modifier.height(64.dp))
-
             AnimatedVisibility(
                 visible = visible.value,
                 enter = slideInVertically { 60 } + fadeIn(tween(800, 500))
@@ -112,10 +106,13 @@ fun WelcomeScreen(
                     ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                 ) {
-                    Text("Anleitung starten", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                    Text(
+                        text = stringResource(R.string.btn_start_onboarding),
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 18.sp
+                    )
                 }
             }
-
             Spacer(modifier = Modifier.height(40.dp))
         }
     }

@@ -23,8 +23,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import coil3.compose.rememberAsyncImagePainter
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun ProfileImage(
@@ -34,22 +36,44 @@ fun ProfileImage(
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? -> uri?.let { onImageSelected(it) } }
+
     val painter = rememberAsyncImagePainter(model = profileImageUri)
+    val accessibilityDesc = stringResource(R.string.profile_image_desc)
+
     Box(
         modifier = Modifier
             .size(110.dp)
-            .border(BorderStroke(2.dp, Brush.linearGradient(listOf(Color.Cyan, Color.Magenta))), CircleShape)
+            .border(
+                BorderStroke(2.dp, Brush.linearGradient(listOf(Color.Cyan, Color.Magenta))),
+                CircleShape
+            )
             .padding(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        val imgMod = Modifier.fillMaxSize().clip(CircleShape).clickable { launcher.launch("image/*") }
+        val imgMod = Modifier
+            .fillMaxSize()
+            .clip(CircleShape)
+            .clickable { launcher.launch("image/*") }
 
         if (profileImageUri == null) {
-            Box(modifier = imgMod.background(Color.White.copy(alpha = 0.1f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Default.Person, contentDescription = null, tint = Color.White, modifier = Modifier.size(50.dp))
+            Box(
+                modifier = imgMod.background(Color.White.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = accessibilityDesc,
+                    tint = Color.White,
+                    modifier = Modifier.size(50.dp)
+                )
             }
         } else {
-            Image(painter = painter, contentDescription = null, contentScale = ContentScale.Crop, modifier = imgMod)
+            Image(
+                painter = painter,
+                contentDescription = accessibilityDesc,
+                contentScale = ContentScale.Crop,
+                modifier = imgMod
+            )
         }
     }
 }

@@ -21,7 +21,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.ui.component.camera.HoldToScanButton
 
 private val FAB_SPACING = 16.dp
@@ -38,16 +40,21 @@ fun TextScreenFABs(
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { visible = true }
+
     val disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     val disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+
     Column(
         modifier = modifier.padding(FAB_SPACING),
         verticalArrangement = Arrangement.spacedBy(FAB_SPACING),
         horizontalAlignment = Alignment.End
     ) {
+        // Cloud Scan Button (Hat meist interne Texte im HoldToScanButton)
         AnimatedFab(isVisible = visible, delay = 0) {
             HoldToScanButton(onTrigger = onCloudScanTriggered)
         }
+
+        // Live Toggle Button
         AnimatedFab(isVisible = visible, delay = 100) {
             val containerColor by animateColorAsState(
                 if (isLiveActive) MaterialTheme.colorScheme.primary else Color(0xFF424242),
@@ -59,11 +66,17 @@ fun TextScreenFABs(
             ) {
                 FabContent(
                     icon = if (isLiveActive) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                    label = if (isLiveActive) "Live Scan" else "Fixiert",
+                    label = if (isLiveActive) {
+                        stringResource(R.string.fab_live_scan)
+                    } else {
+                        stringResource(R.string.fab_fixed)
+                    },
                     tint = Color.White
                 )
             }
         }
+
+        // Save Button
         AnimatedFab(isVisible = visible, delay = 200) {
             val containerColor by animateColorAsState(
                 if (isSaveButtonEnabled) MaterialTheme.colorScheme.secondary else disabledContainerColor,
@@ -76,11 +89,13 @@ fun TextScreenFABs(
             ) {
                 FabContent(
                     icon = Icons.Default.Save,
-                    label = "Save",
+                    label = stringResource(R.string.fab_save),
                     tint = if (isSaveButtonEnabled) Color.White else disabledContentColor
                 )
             }
         }
+
+        // History Button
         AnimatedFab(isVisible = visible, delay = 300) {
             FloatingActionButton(
                 onClick = onHistoryClick,
@@ -88,7 +103,7 @@ fun TextScreenFABs(
             ) {
                 FabContent(
                     icon = Icons.AutoMirrored.Filled.List,
-                    label = "Verlauf",
+                    label = stringResource(R.string.fab_history),
                     tint = Color.White
                 )
             }

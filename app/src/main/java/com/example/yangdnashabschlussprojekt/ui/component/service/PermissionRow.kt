@@ -18,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
+
 @Composable
 fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
     Row(
@@ -29,7 +32,11 @@ fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
         Column {
             Text(title, style = MaterialTheme.typography.bodyLarge, color = Color.White)
             Text(
-                text = if (enabled) "Aktiviert" else "Deaktiviert",
+                // Nutzt perm_status_enabled / perm_status_disabled
+                text = if (enabled)
+                    stringResource(R.string.perm_status_enabled)
+                else
+                    stringResource(R.string.perm_status_disabled),
                 style = MaterialTheme.typography.bodySmall,
                 color = if (enabled) Color(0xFF00FFD1) else Color(0xFFFF4B4B)
             )
@@ -38,7 +45,12 @@ fun PermissionRow(title: String, enabled: Boolean, onClick: () -> Unit) {
             onClick = onClick,
             modifier = Modifier.size(40.dp).background(Color.White.copy(alpha = 0.1f), CircleShape)
         ) {
-            Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = stringResource(R.string.settings_title),
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }

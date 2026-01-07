@@ -35,8 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,6 +51,7 @@ fun RecognitionModalSheet(
     isLoggedIn: Boolean
 ) {
     var editableText by remember { mutableStateOf(recognizedText) }
+    // Angenommen, diese Funktion existiert in deinem Projekt:
     val speak = rememberTextToSpeech()
 
     ModalBottomSheet(
@@ -57,14 +60,20 @@ fun RecognitionModalSheet(
         scrimColor = Color.Black.copy(alpha = 0.7f),
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp)
     ) {
-        Column(modifier = Modifier.padding(24.dp).fillMaxWidth().verticalScroll(rememberScrollState())) {
+        Column(
+            modifier = Modifier
+                .padding(24.dp)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+        ) {
+            // Header: Übersetzung & Vorlese-Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "ÜBERSETZUNG",
+                    text = stringResource(R.string.label_translation),
                     color = Color(0xFFFF00FF),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.ExtraBold
@@ -76,12 +85,15 @@ fun RecognitionModalSheet(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = "Vorlesen",
+                        contentDescription = stringResource(R.string.content_desc_speak),
                         tint = if (translatedText.isNotBlank()) Color(0xFFFF00FF) else Color.Gray
                     )
                 }
             }
+
             Spacer(Modifier.height(8.dp))
+
+            // Anzeige des übersetzten Textes
             Surface(
                 color = Color.White.copy(alpha = 0.05f),
                 shape = RoundedCornerShape(16.dp),
@@ -89,18 +101,27 @@ fun RecognitionModalSheet(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = translatedText.ifBlank { "Übersetzung läuft..." },
+                    text = translatedText.ifBlank { stringResource(R.string.placeholder_translating) },
                     color = Color.White,
                     modifier = Modifier.padding(16.dp),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
+
             Spacer(modifier = Modifier.height(24.dp))
-            Text("ORIGINALTEXT EDITIEREN", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+
+            // Edit-Bereich
+            Text(
+                text = stringResource(R.string.label_edit_original),
+                color = Color.Gray,
+                style = MaterialTheme.typography.labelSmall
+            )
             OutlinedTextField(
                 value = editableText,
                 onValueChange = { editableText = it },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 12.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -110,16 +131,19 @@ fun RecognitionModalSheet(
                 ),
                 shape = RoundedCornerShape(16.dp)
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp), modifier = Modifier.fillMaxWidth()) {
+
+            // Buttons: Update & Fertig
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 OutlinedButton(
-                    onClick = {
-                        onTextEdited(editableText)
-                    },
+                    onClick = { onTextEdited(editableText) },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, Color(0xFFFF00FF))
                 ) {
-                    Text("UPDATE", color = Color(0xFFFF00FF))
+                    Text(text = stringResource(R.string.btn_update), color = Color(0xFFFF00FF))
                 }
                 Button(
                     onClick = {
@@ -130,10 +154,17 @@ fun RecognitionModalSheet(
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00FF)),
                     shape = RoundedCornerShape(12.dp)
                 ) {
-                    Text("FERTIG", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(
+                        text = stringResource(R.string.btn_done),
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            // Cloud Save Button mit Login-Check
             Button(
                 onClick = {
                     onSaveToCloud()
@@ -148,7 +179,10 @@ fun RecognitionModalSheet(
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Text(
-                    if (isLoggedIn) "☁️ In Cloud sichern" else "Login für Cloud-Backup nötig",
+                    text = if (isLoggedIn)
+                        stringResource(R.string.btn_cloud_save)
+                    else
+                        stringResource(R.string.btn_cloud_login_required),
                     color = if (isLoggedIn) Color.White else Color.Gray
                 )
             }

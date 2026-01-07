@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun EmptyHistoryMessage() {
@@ -31,7 +33,15 @@ fun EmptyHistoryMessage() {
             tint = Color.White.copy(alpha = 0.2f)
         )
         Spacer(Modifier.height(16.dp))
-        Text("Kein Verlauf vorhanden", color = Color.White, style = MaterialTheme.typography.titleMedium)
-        Text("Scanne Texte, um sie hier zu speichern.", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+        Text(
+            text = stringResource(R.string.history_empty_title),
+            color = Color.White,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Text(
+            text = stringResource(R.string.history_empty_desc),
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodySmall
+        )
     }
 }

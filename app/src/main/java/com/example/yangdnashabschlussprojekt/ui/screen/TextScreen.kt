@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.*
@@ -12,10 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.ui.component.camera.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.FullScreenScannerOverlay
@@ -45,6 +48,9 @@ fun TextScreen(
     val isSingleBlock by textViewModel.isSingleBlockMode.collectAsState()
     val isAuthenticated by userRepository.isAuthenticated.collectAsState()
 
+    // NEU: Beobachtet den Übersetzungsstatus (z.B. "KI übersetzt...")
+    val translationStatus by textViewModel.translationStatus.collectAsState()
+
     var showModal by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -52,7 +58,6 @@ fun TextScreen(
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
         }
     }
-
     LaunchedEffect(cloudState) {
         if (cloudState is CloudRecognitionState.Success) {
             triggerVibration(context)
@@ -76,6 +81,43 @@ fun TextScreen(
                     cameraManager.startCamera(preview, owner, textViewModel)
                 }
             )
+
+            // --- NEU: DYNAMISCHER ÜBERSETZUNGS-STATUS OVERLAY ---
+            AnimatedVisibility(
+                visible = translationStatus.isNotEmpty(),
+                enter = fadeIn() + slideInVertically { -it },
+                exit = fadeOut() + slideOutVertically { -it },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 16.dp)
+                    .zIndex(100f)
+            ) {
+                Surface(
+                    color = Color(0xFFFFEB3B).copy(alpha = 0.9f), // Gelb für Aufmerksamkeit
+                    shape = RoundedCornerShape(24.dp),
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.Black,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text(
+                            text = translationStatus.uppercase(),
+                            color = Color.Black,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 1.sp
+                        )
+                    }
+                }
+            }
+
             AnimatedVisibility(
                 visible = isAnalyzing,
                 enter = fadeIn(),
@@ -83,6 +125,7 @@ fun TextScreen(
             ) {
                 FullScreenScannerOverlay()
             }
+
             if (boundingBoxes.isNotEmpty()) {
                 TextBoundingBoxOverlay(
                     boxes = boundingBoxes,
@@ -92,13 +135,16 @@ fun TextScreen(
                     }
                 )
             }
+
             if (cloudState is CloudRecognitionState.Loading) {
                 CloudProcessingUI()
             }
+
+            // RESET BUTTON
             AnimatedVisibility(
                 visible = (recognizedText.isNotBlank() || boundingBoxes.isNotEmpty()) && !isAnalyzing,
-                enter = slideInVertically() + fadeIn(),
-                exit = slideOutVertically() + fadeOut(),
+                enter = slideInVertically(),
+                exit = slideOutVertically(),
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 64.dp)
@@ -118,19 +164,21 @@ fun TextScreen(
                 ) {
                     Icon(
                         Icons.Rounded.Close,
-                        contentDescription = "Clear",
+                        contentDescription = stringResource(R.string.content_desc_clear),
                         modifier = Modifier.size(18.dp),
                         tint = Color(0xFF00E5FF)
                     )
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        "SCAN RESET",
+                        text = stringResource(R.string.btn_scan_reset),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF00E5FF)
                     )
                 }
             }
+
+            // BOTTOM CARD (Ergebnis-Vorschau)
             AnimatedVisibility(
                 visible = recognizedText.isNotBlank() && !showModal,
                 enter = slideInVertically { it } + fadeIn(),
@@ -145,6 +193,8 @@ fun TextScreen(
                     isSingleBlock = isSingleBlock
                 )
             }
+
+            // FABs (Steuerung)
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -170,6 +220,7 @@ fun TextScreen(
                     }
                 )
             }
+
             if (showModal) {
                 RecognitionModalSheet(
                     recognizedText = recognizedText,

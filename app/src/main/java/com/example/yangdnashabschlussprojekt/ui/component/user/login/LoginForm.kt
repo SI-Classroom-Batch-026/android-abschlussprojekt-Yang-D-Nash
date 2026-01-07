@@ -18,10 +18,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun LoginForm(
@@ -41,13 +43,20 @@ fun LoginForm(
             .background(Color.White.copy(alpha = 0.05f))
             .padding(24.dp)
     ) {
-        Text("Anmelden", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold)
+        // "Anmelden" aus strings.xml
+        Text(
+            text = stringResource(R.string.login_header),
+            style = MaterialTheme.typography.headlineSmall,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = { Text("Email") },
+            // "Email" Label
+            label = { Text(stringResource(R.string.label_email)) },
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -55,21 +64,26 @@ fun LoginForm(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
                 focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = Color.Gray
+                unfocusedLabelColor = Color.Gray,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             )
         )
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = { Text("Passwort") },
+            // "Passwort" Label
+            label = { Text(stringResource(R.string.label_password)) },
             visualTransformation = PasswordVisualTransformation(),
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = Color.White.copy(alpha = 0.2f)
+                unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White
             )
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -79,10 +93,18 @@ fun LoginForm(
             modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(16.dp)
         ) {
-            Text("Einloggen", fontWeight = FontWeight.Bold)
+            // "Einloggen" Button-Text
+            Text(
+                text = stringResource(R.string.btn_login),
+                fontWeight = FontWeight.Bold
+            )
         }
         TextButton(onClick = onRegisterClick, modifier = Modifier.fillMaxWidth()) {
-            Text("Noch kein Konto? Registrieren", color = Color.White.copy(alpha = 0.6f))
+            // "Noch kein Konto? Registrieren" Text-Button
+            Text(
+                text = stringResource(R.string.btn_no_account),
+                color = Color.White.copy(alpha = 0.6f)
+            )
         }
     }
 }

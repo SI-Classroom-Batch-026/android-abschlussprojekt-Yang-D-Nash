@@ -34,9 +34,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 import com.example.yangdnashabschlussprojekt.ui.component.history.EmptyHistoryMessage
 import com.example.yangdnashabschlussprojekt.ui.component.history.HistoryList
@@ -80,6 +82,7 @@ fun HistoryScreen(
                 }
             }
         }
+
         selectedItemForDetail?.let { item ->
             Dialog(onDismissRequest = { selectedItemForDetail = null }) {
                 Surface(
@@ -93,19 +96,36 @@ fun HistoryScreen(
                     Column(modifier = Modifier.padding(24.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Scan Details",
+                                text = stringResource(R.string.history_details_title),
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
                             )
                             if (item.isFromCloud) {
                                 Spacer(Modifier.width(8.dp))
-                                Icon(Icons.Default.Cloud, contentDescription = null, tint = Color.Cyan, modifier = Modifier.size(18.dp))
+                                Icon(
+                                    Icons.Default.Cloud,
+                                    contentDescription = null,
+                                    tint = Color.Cyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
                             }
                         }
-                        Text(text = item.timestampFormatted, style = MaterialTheme.typography.labelMedium, color = Color.Gray)
+
+                        Text(
+                            text = item.timestampFormatted,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Gray
+                        )
+
                         Spacer(Modifier.height(24.dp))
-                        Text(text = "ORIGINAL", style = MaterialTheme.typography.labelSmall, color = Color.Cyan, fontWeight = FontWeight.ExtraBold)
+
+                        Text(
+                            text = stringResource(R.string.history_label_original),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.Cyan,
+                            fontWeight = FontWeight.ExtraBold
+                        )
                         Text(
                             text = item.recognizedText,
                             color = Color.White,
@@ -113,8 +133,15 @@ fun HistoryScreen(
                                 .heightIn(max = 120.dp)
                                 .verticalScroll(rememberScrollState())
                         )
+
                         Spacer(Modifier.height(16.dp))
-                        Text(text = "ÜBERSETZUNG", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFF00FF), fontWeight = FontWeight.ExtraBold)
+
+                        Text(
+                            text = stringResource(R.string.history_label_translation),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFFFF00FF),
+                            fontWeight = FontWeight.ExtraBold
+                        )
                         Text(
                             text = item.translatedText,
                             color = Color.White,
@@ -122,7 +149,9 @@ fun HistoryScreen(
                                 .heightIn(max = 120.dp)
                                 .verticalScroll(rememberScrollState())
                         )
+
                         Spacer(Modifier.height(32.dp))
+
                         Button(
                             onClick = {
                                 onHistoryItemSelected(item)
@@ -134,7 +163,11 @@ fun HistoryScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color.Cyan),
                             shape = RoundedCornerShape(16.dp)
                         ) {
-                            Text("Im Scanner öffnen", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.history_btn_open),
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }

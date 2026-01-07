@@ -1,5 +1,6 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
+import android.app.Application
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.util.Log
@@ -9,19 +10,24 @@ import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
 import com.google.mlkit.vision.objects.defaults.ObjectDetectorOptions
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.Locale
 
-class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(), ImageAnalysis.Analyzer {
+class ARViewModel(
+    private val visionRepository: VisionRepository,
+    application: Application
+) : AndroidViewModel(application), ImageAnalysis.Analyzer {
 
     private val _boundingBoxes = MutableStateFlow<List<TimedBoundingBox>>(emptyList())
     val boundingBoxes = _boundingBoxes.asStateFlow()
@@ -35,10 +41,17 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
     private val _detectedObjectLabel = MutableStateFlow("")
     val detectedObjectLabel = _detectedObjectLabel.asStateFlow()
 
+    // NEU: Status für die Übersetzung (z.B. "Übersetze...")
+    private val _translationStatus = MutableStateFlow("")
+    val translationStatus = _translationStatus.asStateFlow()
+
     private var currentFrameSize = Size(1080, 1920)
     private val smoothingFactor = 0.35f
     private val toneGen = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 60)
     private val trackedObjectsMap = mutableMapOf<Int, TimedBoundingBox>()
+
+    // Hilfsvariable um doppelte Übersetzungen zu vermeiden
+    private var lastEnglishLabel = ""
 
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()
@@ -68,9 +81,14 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             .addOnSuccessListener { detectedObjects ->
                 val newBoxes = detectedObjects.map { obj ->
                     val id = obj.trackingId ?: -1
-                    val label = obj.labels.firstOrNull()?.text?.uppercase() ?: "SCANNING..."
-                    val rect = obj.boundingBox
+                    val rawLabel = obj.labels.firstOrNull()?.text ?: "SCANNING..."
 
+                    // Trigger Dynamische Übersetzung wenn es ein neues Objekt ist
+                    if (rawLabel != "SCANNING..." && rawLabel != lastEnglishLabel) {
+                        translateLiveResult(rawLabel)
+                    }
+
+                    val rect = obj.boundingBox
                     val prev = trackedObjectsMap[id]
                     val box = if (prev != null) {
                         prev.copy(
@@ -78,11 +96,11 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
                             top = prev.top + (rect.top - prev.top) * smoothingFactor,
                             right = prev.right + (rect.right - prev.right) * smoothingFactor,
                             bottom = prev.bottom + (rect.bottom - prev.bottom) * smoothingFactor,
-                            label = label
+                            label = _detectedObjectLabel.value.ifEmpty { rawLabel.uppercase() }
                         )
                     } else {
                         if (id != -1) try { toneGen.startTone(ToneGenerator.TONE_PROP_BEEP, 80) } catch(_: Exception) {}
-                        TimedBoundingBox(id, label, rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat(), System.currentTimeMillis(), Color(0xFF00E5FF), currentFrameSize.width, currentFrameSize.height)
+                        TimedBoundingBox(id, rawLabel.uppercase(), rect.left.toFloat(), rect.top.toFloat(), rect.right.toFloat(), rect.bottom.toFloat(), System.currentTimeMillis(), Color(0xFF00E5FF), currentFrameSize.width, currentFrameSize.height)
                     }
                     trackedObjectsMap[id] = box
                     box
@@ -93,12 +111,24 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
             .addOnCompleteListener { imageProxy.close() }
     }
 
-    // --- CLOUD SCAN MIT OBJEKT-LOKALISIERUNG ---
+    private fun translateLiveResult(englishText: String) {
+        lastEnglishLabel = englishText
+        TranslatorUtil.translateDynamic(
+            context = getApplication(),
+            sourceText = englishText,
+            targetLang = Locale.getDefault().language,
+            onStatusUpdate = { status -> _translationStatus.value = status },
+            onResult = { translated ->
+                _detectedObjectLabel.value = translated.uppercase()
+                _translationStatus.value = ""
+            }
+        )
+    }
+
     fun analyzeWithCloudVision(base64Image: String) {
         viewModelScope.launch {
             _isCloudLoading.value = true
             try {
-                // Wir fragen Labels UND Objekt-Positionen ab!
                 val response = visionRepository.analyzeImage(base64Image, listOf(
                     Feature("LABEL_DETECTION", 5),
                     Feature("OBJECT_LOCALIZATION", 5),
@@ -106,20 +136,17 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
                 ))
 
                 val firstRes = response.responses.firstOrNull()
-
-                // 1. Priorität: Logos (z.B. Coca Cola, Apple)
-                // 2. Priorität: Lokalisierte Objekte (mit Boxen)
-                // 3. Priorität: Allgemeine Labels
                 val logoText = firstRes?.logoAnnotations?.firstOrNull()?.description
                 val cloudObjects = firstRes?.localizedObjectAnnotations
                 val labelText = firstRes?.labelAnnotations?.firstOrNull()?.description
 
-                val finalLabel = (logoText ?: cloudObjects?.firstOrNull()?.name ?: labelText ?: "OBJECT").uppercase()
+                val finalEnglishLabel = (logoText ?: cloudObjects?.firstOrNull()?.name ?: labelText ?: "OBJECT")
 
-                _detectedObjectLabel.value = finalLabel
+                // Cloud Ergebnis sofort übersetzen
+                translateLiveResult(finalEnglishLabel)
+
                 _isCloudResult.value = true
 
-                // Boxen aus der Cloud übernehmen, damit man sie sieht!
                 val cloudBoxes = cloudObjects?.map { obj ->
                     val poly = obj.boundingPoly.normalizedVertices
                     TimedBoundingBox(
@@ -150,6 +177,8 @@ class ARViewModel(private val visionRepository: VisionRepository) : ViewModel(),
         _isCloudResult.value = false
         _isCloudLoading.value = false
         _detectedObjectLabel.value = ""
+        _translationStatus.value = ""
+        lastEnglishLabel = ""
         trackedObjectsMap.clear()
         _boundingBoxes.value = emptyList()
     }

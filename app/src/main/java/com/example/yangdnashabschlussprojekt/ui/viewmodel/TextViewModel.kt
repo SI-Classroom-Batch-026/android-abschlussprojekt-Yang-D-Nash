@@ -1,34 +1,34 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
-import android.content.Context
+import android.app.Application
 import android.speech.tts.TextToSpeech
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
-import com.google.mlkit.nl.translate.TranslateLanguage
-import com.google.mlkit.nl.translate.Translation
-import com.google.mlkit.nl.translate.TranslatorOptions
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Locale
 
 class TextViewModel(
     private val visionRepository: VisionRepository,
     private val userRepository: UserRepository,
-    context: Context
-) : ViewModel(), ImageAnalysis.Analyzer {
+    application: Application
+) : AndroidViewModel(application), ImageAnalysis.Analyzer {
 
     private val _uiEvent = MutableSharedFlow<String>()
     val uiEvent = _uiEvent.asSharedFlow()
@@ -42,6 +42,10 @@ class TextViewModel(
     private val _translatedText = MutableStateFlow("")
     val translatedText = _translatedText.asStateFlow()
 
+    // NEU: Status für die Anzeige (Lade Sprachpaket / KI übersetzt...)
+    private val _translationStatus = MutableStateFlow("")
+    val translationStatus = _translationStatus.asStateFlow()
+
     private val _isSingleBlockMode = MutableStateFlow(false)
     val isSingleBlockMode = _isSingleBlockMode.asStateFlow()
 
@@ -53,22 +57,21 @@ class TextViewModel(
 
     private var tts: TextToSpeech? = null
     private val localRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-    private val translator = Translation.getClient(
-        TranslatorOptions.Builder()
-            .setSourceLanguage(TranslateLanguage.ENGLISH)
-            .setTargetLanguage(TranslateLanguage.GERMAN)
-            .build()
-    )
 
     init {
-        tts = TextToSpeech(context) { status ->
-            if (status == TextToSpeech.SUCCESS) tts?.language = Locale.GERMAN
+        tts = TextToSpeech(getApplication()) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                // Setzt TTS Sprache auf die aktuelle Gerätesprache
+                tts?.language = Locale.getDefault()
+            }
         }
     }
+
     private fun formatText(text: String): String = text
         .replace(Regex("(?<=\\w)\\n(?=\\w)"), " ")
         .replace(Regex("\\n+"), "\n")
         .trim()
+
     @OptIn(ExperimentalGetImage::class)
     override fun analyze(image: ImageProxy) {
         if (!_isAnalyzing.value) {
@@ -84,6 +87,7 @@ class TextViewModel(
                     val isRotated = rotation == 90 || rotation == 270
                     val frameW = if (isRotated) image.height else image.width
                     val frameH = if (isRotated) image.width else image.height
+
                     _boundingBoxes.value = visionText.textBlocks.map { block ->
                         TimedBoundingBox(
                             id = block.hashCode(),
@@ -99,8 +103,10 @@ class TextViewModel(
                         )
                     }
                     if (visionText.text.isNotBlank()) {
-                        _recognizedText.value = formatText(visionText.text)
+                        val cleanText = formatText(visionText.text)
+                        _recognizedText.value = cleanText
                         viewModelScope.launch { _uiEvent.emit("Text gefunden!") }
+                        translateAndSpeak(cleanText)
                     } else {
                         viewModelScope.launch { _uiEvent.emit("Kein Text erkannt") }
                     }
@@ -115,11 +121,15 @@ class TextViewModel(
             image.close()
         }
     }
+
     fun triggerLocalScan() {
         _boundingBoxes.value = emptyList()
         _recognizedText.value = ""
+        _translatedText.value = ""
+        _translationStatus.value = ""
         _isAnalyzing.value = true
     }
+
     fun recognizeTextViaCloud(base64Image: String) {
         _isAnalyzing.value = false
         _cloudRecognitionState.value = CloudRecognitionState.Loading
@@ -160,6 +170,7 @@ class TextViewModel(
             }
         }
     }
+
     fun onBoxClicked(box: TimedBoundingBox) {
         if (box.label.isNotBlank()) {
             stopAudio()
@@ -169,28 +180,43 @@ class TextViewModel(
             translateAndSpeak(selectedText)
         }
     }
-    private fun translateAndSpeak(text: String) {
-        viewModelScope.launch {
-            try {
-                translator.downloadModelIfNeeded().await()
-                val translation = translator.translate(text).await()
+
+    fun translateAndSpeak(text: String) {
+        if (text.isBlank()) return
+
+        val deviceLang = Locale.getDefault().language
+
+        // Dynamische Übersetzung über Util
+        TranslatorUtil.translateDynamic(
+            context = getApplication(),
+            sourceText = text,
+            targetLang = deviceLang,
+            onStatusUpdate = { statusText ->
+                _translationStatus.value = statusText
+            },
+            onResult = { translation ->
                 _translatedText.value = translation
+                _translationStatus.value = "" // Status löschen wenn fertig
+
+                // Sprachausgabe
                 tts?.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null)
-            } catch (_: Exception) {
-                _translatedText.value = "Fehler"
             }
-        }
+        )
     }
+
     fun stopAudio() { tts?.stop() }
+
     fun continueAnalysis() {
         stopAudio()
         _isAnalyzing.value = false
         _boundingBoxes.value = emptyList()
         _recognizedText.value = ""
         _translatedText.value = ""
+        _translationStatus.value = ""
         _cloudRecognitionState.value = CloudRecognitionState.Idle
         _isSingleBlockMode.value = false
     }
+
     fun onSaveToCloudClicked() {
         viewModelScope.launch {
             userRepository.saveToFirestore(_recognizedText.value, _translatedText.value)
@@ -198,6 +224,7 @@ class TextViewModel(
                 .onFailure { _uiEvent.emit("Fehler beim Cloud Backup") }
         }
     }
+
     fun recognizeText(newText: String) {
         if (newText.isNotBlank()) {
             val cleanText = formatText(newText)
@@ -205,10 +232,10 @@ class TextViewModel(
             translateAndSpeak(cleanText)
         }
     }
+
     override fun onCleared() {
         super.onCleared()
         tts?.shutdown()
-        translator.close()
         localRecognizer.close()
     }
 }

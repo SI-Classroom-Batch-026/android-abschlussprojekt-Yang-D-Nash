@@ -36,10 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.ui.component.common.messaging.CustomSnackbarHost
 import com.example.yangdnashabschlussprojekt.ui.component.service.PermissionsCard
 import com.example.yangdnashabschlussprojekt.ui.component.user.ProfileImage
@@ -105,13 +107,13 @@ fun SettingsScreen(
             snackbarHost = { CustomSnackbarHost(hostState = snackbarHostState) },
             topBar = {
                 androidx.compose.material3.TopAppBar(
-                    title = { Text("Einstellungen", color = Color.White) },
+                    title = { Text(stringResource(R.string.settings_title), color = Color.White) },
                     colors = androidx.compose.material3.TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     navigationIcon = {
                         androidx.compose.material3.IconButton(onClick = onBack) {
                             androidx.compose.material3.Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Zurück",
+                                contentDescription = stringResource(R.string.btn_back),
                                 tint = Color.White
                             )
                         }
@@ -136,16 +138,16 @@ fun SettingsScreen(
                     Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         ProfileImage()
                         Spacer(Modifier.height(16.dp))
-                        UserInfo(currentUser?.displayName ?: "Gast")
+                        UserInfo(currentUser?.displayName ?: stringResource(R.string.welcome_guest))
                         if (currentUser != null) {
                             Spacer(Modifier.height(24.dp))
                             Button(
                                 onClick = onNavigateToHistory,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(16.dp)
-                            ) { Text("Scan-Verlauf") }
+                            ) { Text(stringResource(R.string.history_title)) }
                             TextButton(onClick = { settingsViewModel.logout() }) {
-                                Text("Ausloggen", color = Color.Red.copy(alpha = 0.7f))
+                                Text(stringResource(R.string.btn_logout), color = Color.Red.copy(alpha = 0.7f))
                             }
                         }
                     }

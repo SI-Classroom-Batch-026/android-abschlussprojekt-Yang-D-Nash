@@ -22,8 +22,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.HistoryItem
 
 @Composable
@@ -70,7 +72,7 @@ fun HistoryCard(
             ) {
                 Icon(
                     imageVector = Icons.Default.Delete,
-                    contentDescription = "Löschen",
+                    contentDescription = stringResource(R.string.history_content_desc_delete),
                     tint = Color.Red.copy(alpha = 0.7f),
                     modifier = Modifier.size(20.dp)
                 )

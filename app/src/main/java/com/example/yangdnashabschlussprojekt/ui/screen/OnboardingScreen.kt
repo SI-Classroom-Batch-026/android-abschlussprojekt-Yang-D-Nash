@@ -36,8 +36,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.data.local.onBoarding.OnboardingData
 import com.example.yangdnashabschlussprojekt.ui.component.onBoarding.OnboardingContent
 import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceBlack
@@ -45,15 +47,34 @@ import com.example.yangdnashabschlussprojekt.ui.theme.DeepSpaceCyan
 import com.example.yangdnashabschlussprojekt.ui.theme.LightBgEnd
 import com.example.yangdnashabschlussprojekt.ui.theme.LightBgStart
 import kotlinx.coroutines.launch
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun OnboardingScreen(onFinished: () -> Unit) {
     val pages = listOf(
-        OnboardingData("Live-Erkennung", "Objekte werden in Echtzeit erkannt.", "Live-Modus", Icons.Default.AutoAwesome),
-        OnboardingData("Fokus halten", "Halte die Kamera für Text-Scans absolut ruhig.", "Nicht wackeln!", Icons.AutoMirrored.Filled.TextSnippet),
-        OnboardingData("Präziser Scan", "Tippe den Button für Cloud-KI Übersetzungen.", "Scan & Translate", Icons.Default.CameraAlt),
-        OnboardingData("Cloud-Power", "Maximale Präzision durch modernste Server.", "Online", Icons.Default.CloudUpload)
+        OnboardingData(
+            title = stringResource(R.string.onboarding_live_title),
+            desc = stringResource(R.string.onboarding_live_desc),
+            hint = "Live-Modus",
+            icon = Icons.Default.AutoAwesome
+        ),
+        OnboardingData(
+            title = stringResource(R.string.onboarding_focus_title),
+            desc = stringResource(R.string.onboarding_focus_desc),
+            hint = "Nicht wackeln!",
+            icon = Icons.AutoMirrored.Filled.TextSnippet
+        ),
+        OnboardingData(
+            title = stringResource(R.string.onboarding_scan_title),
+            desc = stringResource(R.string.onboarding_scan_desc),
+            hint = "Scan & Translate",
+            icon = Icons.Default.CameraAlt
+        ),
+        OnboardingData(
+            title = stringResource(R.string.onboarding_cloud_title),
+            desc = stringResource(R.string.onboarding_cloud_desc),
+            hint = "Online",
+            icon = Icons.Default.CloudUpload
+        )
     )
 
     val pagerState = rememberPagerState(pageCount = { pages.size })
@@ -111,7 +132,10 @@ fun OnboardingScreen(onFinished: () -> Unit) {
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(
-                        text = if (pagerState.currentPage == pages.size - 1) "Starten" else "Weiter",
+                        text = if (pagerState.currentPage == pages.size - 1)
+                            stringResource(R.string.btn_start)
+                        else
+                            stringResource(R.string.btn_next),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -128,7 +152,7 @@ fun OnboardingScreen(onFinished: () -> Unit) {
         ) {
             TextButton(onClick = onFinished) {
                 Text(
-                    text = "Überspringen",
+                    text = stringResource(R.string.btn_skip),
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontWeight = FontWeight.Medium
                 )

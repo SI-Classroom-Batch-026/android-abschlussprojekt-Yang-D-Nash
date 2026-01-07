@@ -32,8 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationFeedback
 import com.example.yangdnashabschlussprojekt.ui.component.user.registration.RegistrationForm
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
@@ -49,18 +51,21 @@ fun RegistrationScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
+
     LaunchedEffect(currentUser) {
         currentUser?.let {
             email = it.email ?: ""
             displayName = it.displayName
         }
     }
+
     LaunchedEffect(registrationResult) {
         if (registrationResult?.success == true) {
             onBack()
             viewModel.resetRegistrationResult()
         }
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -82,11 +87,15 @@ fun RegistrationScreen(
                     onClick = onBack,
                     modifier = Modifier.background(Color.White.copy(alpha = 0.1f), CircleShape)
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück", tint = Color.White)
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.reg_back_content_desc),
+                        tint = Color.White
+                    )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = "Konto erstellen",
+                    text = stringResource(R.string.reg_title),
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color.White,
                     fontWeight = FontWeight.Bold

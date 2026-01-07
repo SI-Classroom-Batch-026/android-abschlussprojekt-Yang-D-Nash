@@ -23,20 +23,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
+    // Hier nutzen wir jetzt stringResource für die Labels
     val items = listOf(
-        BottomNavItem(WelcomeRoute, Icons.Default.Home, "Home"),
-        BottomNavItem(SettingsRoute, Icons.Default.Settings, "Settings"),
-        BottomNavItem(ARScreenRoute, Icons.Default.Info, "AR"),
-        BottomNavItem(TextScreenRoute, Icons.Default.AccessibilityNew, "Text")
+        BottomNavItem(WelcomeRoute, Icons.Default.Home, stringResource(R.string.app_name).take(4)), // Oder ein kurzes "Home"
+        BottomNavItem(SettingsRoute, Icons.Default.Settings, stringResource(R.string.settings_title)),
+        BottomNavItem(ARScreenRoute, Icons.Default.Info, "AR"), // "AR" bleibt meistens gleich
+        BottomNavItem(TextScreenRoute, Icons.Default.AccessibilityNew, "Text") // "Text" ist oft auch im Deutschen passend
     )
+
     Surface(
         modifier = Modifier
             .padding(horizontal = 24.dp, vertical = 20.dp)
@@ -53,6 +57,7 @@ fun BottomNavigationBar(navController: NavController) {
         ) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
+
             items.forEach { item ->
                 val isSelected = currentDestination?.hasRoute(item.route::class) ?: false
                 NavigationBarItem(

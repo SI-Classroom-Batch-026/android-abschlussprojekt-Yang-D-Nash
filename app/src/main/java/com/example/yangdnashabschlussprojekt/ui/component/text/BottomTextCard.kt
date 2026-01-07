@@ -15,10 +15,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun BottomTextCard(
@@ -35,18 +38,28 @@ fun BottomTextCard(
                 .fillMaxWidth()
                 .heightIn(max = 200.dp),
             colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.8f)),
-            border = BorderStroke(1.dp, if(isSingleBlock) Color(0xFF00FFCC) else Color.White.copy(alpha = 0.2f))
+            border = BorderStroke(
+                width = 1.dp,
+                color = if (isSingleBlock) Color(0xFF00FFCC) else Color.White.copy(alpha = 0.2f)
+            )
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (isSingleBlock) "TARGET ACQUIRED" else "FULL SCAN RESULTS",
+                        // Nutzt nun die Strings aus der XML
+                        text = if (isSingleBlock) {
+                            stringResource(R.string.target_acquired)
+                        } else {
+                            stringResource(R.string.full_scan_results)
+                        },
                         color = if (isSingleBlock) Color(0xFF00FFCC) else Color.Cyan,
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold
                     )
                 }
+
                 Spacer(modifier = Modifier.height(8.dp))
+
                 val scrollState = rememberScrollState()
                 Column(modifier = Modifier.verticalScroll(scrollState)) {
                     Text(

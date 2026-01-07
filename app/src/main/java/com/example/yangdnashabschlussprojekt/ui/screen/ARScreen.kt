@@ -30,9 +30,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.yangdnashabschlussprojekt.R
 import com.example.yangdnashabschlussprojekt.ui.component.camera.HoldToScanButton
 import com.example.yangdnashabschlussprojekt.ui.component.camera.live.CameraWithLiveObjects
 import com.example.yangdnashabschlussprojekt.ui.component.camera.overlay.ARResultOverlay
@@ -54,6 +56,9 @@ fun ARScreen(
     val label by arViewModel.detectedObjectLabel.collectAsState()
     val boxes by arViewModel.boundingBoxes.collectAsState()
 
+    // NEU: Den Translations-Status beobachten
+    val translationStatus by arViewModel.translationStatus.collectAsState()
+
     LaunchedEffect(isCloudResult) {
         if (isCloudResult) triggerVibration(context)
     }
@@ -67,6 +72,7 @@ fun ARScreen(
             }
         )
         ARResultOverlay(boxes = boxes)
+
         AnimatedVisibility(
             visible = isCloudLoading,
             enter = fadeIn(),
@@ -74,6 +80,7 @@ fun ARScreen(
         ) {
             ScanningLaserOverlay(Color(0xFF00FFCC))
         }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -84,6 +91,7 @@ fun ARScreen(
                     )
                 )
         )
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -92,8 +100,10 @@ fun ARScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(100.dp))
+
+            // ANGEPASST: Sichtbar wenn Label ODER Translation-Status vorhanden
             AnimatedVisibility(
-                visible = label.isNotEmpty() && !isCloudResult,
+                visible = (label.isNotEmpty() || translationStatus.isNotEmpty()) && !isCloudResult,
                 enter = slideInVertically { -it } + fadeIn(),
                 exit = slideOutVertically { -it } + fadeOut()
             ) {
@@ -103,17 +113,21 @@ fun ARScreen(
                     border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(0.3f)),
                     modifier = Modifier.padding(16.dp)
                 ) {
+                    // ANGEPASST: Text-Logik für dynamische Anzeige
                     Text(
-                        text = label.uppercase(),
+                        text = if (translationStatus.isNotEmpty()) translationStatus.uppercase() else label.uppercase(),
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
-                        color = Color(0xFF00FFCC),
+                        // Gelb während der Übersetzung, Türkis wenn fertig
+                        color = if (translationStatus.isNotEmpty()) Color(0xFFFFEB3B) else Color(0xFF00FFCC),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.5.sp
                     )
                 }
             }
+
             Spacer(modifier = Modifier.weight(1f))
+
             Box(
                 modifier = Modifier
                     .padding(bottom = 80.dp)
@@ -135,7 +149,11 @@ fun ARScreen(
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFCC)),
                             elevation = ButtonDefaults.buttonElevation(8.dp)
                         ) {
-                            Text("SYSTEM RESET", color = Color.Black, fontWeight = FontWeight.Black)
+                            Text(
+                                text = stringResource(R.string.btn_system_reset),
+                                color = Color.Black,
+                                fontWeight = FontWeight.Black
+                            )
                         }
                     } else if (!isCloudLoading) {
                         HoldToScanButton(onTrigger = {

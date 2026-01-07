@@ -31,11 +31,6 @@ class CameraXManager(
     private var imageAnalyzer: ImageAnalysis? = null
     private var cameraProvider: ProcessCameraProvider? = null
 
-    fun stopAnalysis() {
-        imageAnalyzer?.clearAnalyzer()
-        Log.d("CameraXManager", "Analysis stopped and cleared")
-    }
-
     fun startCamera(
         previewView: PreviewView,
         lifecycleOwner: LifecycleOwner,

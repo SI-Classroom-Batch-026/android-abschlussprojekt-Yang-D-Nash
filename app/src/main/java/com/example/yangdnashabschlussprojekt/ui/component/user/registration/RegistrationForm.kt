@@ -15,10 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.yangdnashabschlussprojekt.R
 
 @Composable
 fun RegistrationForm(
@@ -39,11 +41,12 @@ fun RegistrationForm(
         focusedTextColor = Color.White,
         unfocusedTextColor = Color.White
     )
+
     Column(modifier = Modifier.fillMaxWidth()) {
         OutlinedTextField(
             value = email,
             onValueChange = onEmailChange,
-            label = { Text("Email") },
+            label = { Text(stringResource(R.string.label_email)) },
             shape = RoundedCornerShape(16.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             modifier = Modifier.fillMaxWidth(),
@@ -53,7 +56,7 @@ fun RegistrationForm(
         OutlinedTextField(
             value = password,
             onValueChange = onPasswordChange,
-            label = { Text("Passwort") },
+            label = { Text(stringResource(R.string.label_password)) },
             shape = RoundedCornerShape(16.dp),
             visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
@@ -64,7 +67,7 @@ fun RegistrationForm(
         OutlinedTextField(
             value = displayName,
             onValueChange = onDisplayNameChange,
-            label = { Text("Anzeigename") },
+            label = { Text(stringResource(R.string.label_display_name)) },
             shape = RoundedCornerShape(16.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
             modifier = Modifier.fillMaxWidth(),
@@ -83,7 +86,10 @@ fun RegistrationForm(
                 disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
             )
         ) {
-            Text("Registrieren", fontWeight = FontWeight.Bold)
+            Text(
+                text = stringResource(R.string.btn_register),
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }
