@@ -10,6 +10,7 @@ import com.google.firebase.firestore.Query
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,10 +19,12 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-class UserRepository(private val firebaseAuth: FirebaseAuth) {
-    private val firestore = FirebaseFirestore.getInstance()
-    private val storage = FirebaseStorage.getInstance()
-    private val scope = CoroutineScope(Dispatchers.IO)
+class UserRepository(
+    private val firebaseAuth: FirebaseAuth,
+    private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage
+) {
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
     private val _currentUser = MutableStateFlow(firebaseAuth.currentUser?.let { firebaseToLocalUser(it) })
     val currentUser = _currentUser.asStateFlow()

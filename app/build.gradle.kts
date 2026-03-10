@@ -25,6 +25,9 @@ android {
         buildConfig = true
     }
 
+    val cloudVisionApiKey: String = props.getProperty("CLOUD_VISION_API_KEY", "")
+    val cloudTranslateApiKey: String = props.getProperty("CLOUD_TRANSLATE_API_KEY", "")
+
     defaultConfig {
         applicationId = "com.example.yangdnashabschlussprojekt"
         minSdk = 26
@@ -37,18 +40,19 @@ android {
         buildConfigField(
             "String",
             "CLOUD_VISION_API_KEY",
-            "\"AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY\""
+            "\"$cloudVisionApiKey\""
         )
         buildConfigField(
             "String",
             "CLOUD_TRANSLATE_API_KEY",
-            "\"AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY\""
+            "\"$cloudTranslateApiKey\""
         )
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -135,7 +139,6 @@ dependencies {
     implementation(libs.mlkit.text)
     implementation(libs.mlkit.translate)
     implementation(libs.arcore)
-    implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
 
     // ❌ libs.kotlinx.serialization WIRD HIER ENTFERNT (Wandert ins shared/commonMain)
@@ -172,11 +175,8 @@ dependencies {
     implementation(libs.mlkit.custom)
     implementation(libs.mlkit.objectDetection)
     implementation(libs.mlkit.objectDetection.common)
-    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.camerax.core)
     implementation(libs.androidx.lifecycle.runtime.compose)
-    implementation(platform(libs.firebase.bom))
-    implementation(platform(libs.firebase.bom))
 
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.auth.ktx)

@@ -36,6 +36,7 @@ fun TextScreenFABs(
     isSaveButtonEnabled: Boolean,
     onHistoryClick: () -> Unit,
     onCloudScanTriggered: () -> Unit,
+    isCloudScanEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -51,7 +52,10 @@ fun TextScreenFABs(
     ) {
         // Cloud Scan Button (Hat meist interne Texte im HoldToScanButton)
         AnimatedFab(isVisible = visible, delay = 0) {
-            HoldToScanButton(onTrigger = onCloudScanTriggered)
+            HoldToScanButton(
+                onTrigger = onCloudScanTriggered,
+                enabled = isCloudScanEnabled
+            )
         }
 
         // Live Toggle Button

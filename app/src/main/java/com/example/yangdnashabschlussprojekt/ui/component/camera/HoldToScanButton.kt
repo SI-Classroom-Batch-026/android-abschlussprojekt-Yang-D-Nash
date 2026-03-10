@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HoldToScanButton(
     onTrigger: () -> Unit,
+    enabled: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val progress = remember { Animatable(0f) }
@@ -47,11 +48,15 @@ fun HoldToScanButton(
     val ringBgColor = Color.LightGray.copy(alpha = 0.2f)
     val myRipple = ripple(bounded = false, radius = 42.dp, color = primaryColor)
     val buttonScale by animateFloatAsState(
-        targetValue = if (isPressed) 0.92f else 1f,
+        targetValue = if (isPressed && enabled) 0.92f else 1f,
         animationSpec = tween(150),
         label = "scale"
     )
-    LaunchedEffect(isPressed) {
+    LaunchedEffect(isPressed, enabled) {
+        if (!enabled) {
+            progress.snapTo(0f)
+            return@LaunchedEffect
+        }
         if (isPressed) {
             progress.animateTo(
                 targetValue = 1f,
@@ -79,31 +84,48 @@ fun HoldToScanButton(
                 color = ringBgColor,
                 style = Stroke(width = strokeWidth)
             )
-            drawArc(
-                color = if (progress.value >= 1f) Color.Green else primaryColor,
-                startAngle = -90f,
-                sweepAngle = 360f * progress.value,
-                useCenter = false,
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-            )
+            if (enabled) {
+                drawArc(
+                    color = if (progress.value >= 1f) Color.Green else primaryColor,
+                    startAngle = -90f,
+                    sweepAngle = 360f * progress.value,
+                    useCenter = false,
+                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                )
+            }
         }
         Surface(
-            onClick = {  },
+            onClick = { },
+            enabled = enabled,
             interactionSource = interactionSource,
             shape = CircleShape,
-            color = if (isPressed) primaryColor else secondaryContainerColor,
-            shadowElevation = if (isPressed) 0.dp else 6.dp,
+            color = when {
+                !enabled -> secondaryContainerColor.copy(alpha = 0.4f)
+                isPressed -> primaryColor
+                else -> secondaryContainerColor
+            },
+            shadowElevation = if (isPressed && enabled) 0.dp else 6.dp,
             modifier = Modifier
                 .size(80.dp)
                 .scale(buttonScale)
-                .indication(interactionSource, myRipple)
+                .then(
+                    if (enabled) {
+                        Modifier.indication(interactionSource, myRipple)
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
                     imageVector = Icons.Default.CameraAlt,
                     contentDescription = null,
                     modifier = Modifier.size(32.dp),
-                    tint = if (isPressed) Color.White else onSecondaryContainerColor
+                    tint = when {
+                        !enabled -> onSecondaryContainerColor.copy(alpha = 0.5f)
+                        isPressed -> Color.White
+                        else -> onSecondaryContainerColor
+                    }
                 )
             }
         }

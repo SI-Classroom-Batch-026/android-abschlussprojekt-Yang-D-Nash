@@ -9,14 +9,11 @@ import kotlinx.coroutines.flow.flow
 class GetHistoryUseCase(private val repository: HistoryRepository) {
     operator fun invoke(): Flow<List<TextHistory>> {
         val localFlow = repository.getAllHistory()
+        val cloudFlow = flow { emit(repository.getCloudHistory()) }
 
-        val cloudFlow = flow {
-            val cloudData = repository.getCloudHistory()
-            emit(cloudData)
-        }
         return localFlow.combine(cloudFlow) { local, cloud ->
             (local + cloud)
-                .distinctBy { it.sourceText + it.timestamp }
+                .distinctBy { it.sourceText to it.timestamp }
                 .sortedByDescending { it.timestamp }
         }
     }

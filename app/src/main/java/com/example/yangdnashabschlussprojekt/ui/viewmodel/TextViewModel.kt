@@ -14,6 +14,7 @@ import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
+import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -56,6 +57,7 @@ class TextViewModel(
 
     private var tts: TextToSpeech? = null
     private val localRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+    private val languageIdentifier = LanguageIdentification.getClient()
 
     init {
         tts = TextToSpeech(getApplication()) { status ->
@@ -129,6 +131,7 @@ class TextViewModel(
     }
 
     fun recognizeTextViaCloud(base64Image: String) {
+        if (_cloudRecognitionState.value is CloudRecognitionState.Loading) return
         _isAnalyzing.value = false
         _cloudRecognitionState.value = CloudRecognitionState.Loading
         _translatedText.value = ""
@@ -184,8 +187,6 @@ class TextViewModel(
 
     fun translateAndSpeak(text: String) {
         if (text.isBlank()) return
-
-        val languageIdentifier = com.google.mlkit.nl.languageid.LanguageIdentification.getClient()
 
         languageIdentifier.identifyLanguage(text)
             .addOnSuccessListener { languageCode ->
@@ -251,5 +252,6 @@ class TextViewModel(
         tts?.stop()
         tts?.shutdown()
         localRecognizer.close()
+        languageIdentifier.close()
     }
 }

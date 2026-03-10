@@ -211,6 +211,7 @@ fun TextScreen(
                     onSaveClick = { textViewModel.onSaveToCloudClicked() },
                     isSaveButtonEnabled = isAuthenticated && recognizedText.isNotBlank(),
                     onHistoryClick = onNavigateToHistory,
+                    isCloudScanEnabled = cloudState !is CloudRecognitionState.Loading,
                     onCloudScanTriggered = {
                         triggerVibration(context)
                         cameraManager.captureForCloudScan(

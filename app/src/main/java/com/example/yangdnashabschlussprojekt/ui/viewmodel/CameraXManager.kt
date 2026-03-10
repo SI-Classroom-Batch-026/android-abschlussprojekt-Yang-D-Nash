@@ -99,7 +99,7 @@ class CameraXManager(
             }
 
             override fun onError(exception: ImageCaptureException) {
-                Log.e("CameraXManager", "Capture failed: ${exception.message}")
+                Log.e("CameraXManager", "Capture failed", exception)
                 ContextCompat.getMainExecutor(context).execute { onError(exception) }
             }
         })
@@ -151,6 +151,8 @@ class CameraXManager(
             ""
         }
     }
+
     override fun openCamera() {
+        Log.d("CameraXManager", "openCamera() called but is not wired to a UI PreviewView. Use startCamera() in your Activity/Fragment.")
     }
 }

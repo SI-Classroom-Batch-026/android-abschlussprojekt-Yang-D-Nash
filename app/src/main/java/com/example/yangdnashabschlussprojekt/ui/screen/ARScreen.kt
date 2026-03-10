@@ -155,14 +155,17 @@ fun ARScreen(
                                 fontWeight = FontWeight.Black
                             )
                         }
-                    } else if (!isCloudLoading) {
-                        HoldToScanButton(onTrigger = {
-                            triggerVibration(context)
-                            cameraManager.captureForCloudScan(
-                                onCaptured = { arViewModel.analyzeWithCloudVision(it) },
-                                onError = { }
-                            )
-                        })
+                    } else {
+                        HoldToScanButton(
+                            onTrigger = {
+                                triggerVibration(context)
+                                cameraManager.captureForCloudScan(
+                                    onCaptured = { arViewModel.analyzeWithCloudVision(it) },
+                                    onError = { }
+                                )
+                            },
+                            enabled = !isCloudLoading
+                        )
                     }
                 }
             }

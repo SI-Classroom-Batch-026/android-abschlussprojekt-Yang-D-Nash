@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import androidx.room.Room
+import com.example.yangdnashabschlussprojekt.BuildConfig
 import com.example.yangdnashabschlussprojekt.data.local.AppDatabase
 import com.example.yangdnashabschlussprojekt.data.local.repository.SettingsRepository
 import com.example.yangdnashabschlussprojekt.data.local.source.HistoryDataSourceImpl
@@ -23,7 +24,6 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.Executors
 
 private const val VISION_BASE = "https://vision.googleapis.com/"
-private const val API_KEY = "AIzaSyCeptnqf5FVyWnYkMzb4tRaXI8L8RY9ZcY"
 
 val appModule = module {
 
@@ -46,8 +46,8 @@ val appModule = module {
     }
     single { get<AppDatabase>().textHistoryDao() }
 
-    single { UserRepository(firebaseAuth = get()) }
-    single { VisionRepository(apiKey = API_KEY, api = get()) }
+    single { UserRepository(firebaseAuth = get(), firestore = get(), storage = get()) }
+    single { VisionRepository(apiKey = BuildConfig.CLOUD_VISION_API_KEY, api = get()) }
     single { HistoryRepository(get(), get()) }
     single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
     single { SettingsRepository(androidContext()) }

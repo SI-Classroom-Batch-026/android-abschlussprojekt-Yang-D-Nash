@@ -18,6 +18,8 @@ class HistoryViewModel(
     getHistoryUseCase: GetHistoryUseCase,
     private val manageHistoryUseCase: ManageHistoryUseCase
 ) : ViewModel() {
+
+    private val dateFormatter = SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault())
     val historyState: StateFlow<List<HistoryItem>> = getHistoryUseCase()
         .map { models ->
             models.map { model ->
@@ -44,12 +46,10 @@ class HistoryViewModel(
             item.id?.let { localId ->
                 manageHistoryUseCase.delete(localId)
             }
-            item.firestoreId?.let {
-            }
         }
     }
     private fun formatTimestamp(timestamp: Long): String {
         val date = Date(timestamp)
-        return SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault()).format(date)
+        return dateFormatter.format(date)
     }
 }
