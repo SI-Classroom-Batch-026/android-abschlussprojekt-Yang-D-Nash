@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3D41A18A310B100100A1F001 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18B310B100100A1F001 /* FirebaseCore */; };
+		3D41A18C310B100100A1F001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18D310B100100A1F001 /* FirebaseAuth */; };
+		3D41A18E310B100100A1F001 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18F310B100100A1F001 /* FirebaseFirestore */; };
+		3D41A190310B100100A1F001 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A191310B100100A1F001 /* FirebaseStorage */; };
 		907F1B2A2EF48367003215D2 /* shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 907F1B292EF48367003215D2 /* shared.framework */; };
 		907F1B2C2EF485FE003215D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907F1B2B2EF485FE003215D2 /* ContentView.swift */; };
 		A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93A953A29CC810C00F8E227 /* iosApp.swift */; };
@@ -24,6 +28,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3D41A18C310B100100A1F001 /* FirebaseAuth in Frameworks */,
+				3D41A18A310B100100A1F001 /* FirebaseCore in Frameworks */,
+				3D41A18E310B100100A1F001 /* FirebaseFirestore in Frameworks */,
+				3D41A190310B100100A1F001 /* FirebaseStorage in Frameworks */,
 				907F1B2A2EF48367003215D2 /* shared.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -81,6 +89,12 @@
 			dependencies = (
 			);
 			name = iosApp;
+			packageProductDependencies = (
+				3D41A18D310B100100A1F001 /* FirebaseAuth */,
+				3D41A18B310B100100A1F001 /* FirebaseCore */,
+				3D41A18F310B100100A1F001 /* FirebaseFirestore */,
+				3D41A191310B100100A1F001 /* FirebaseStorage */,
+			);
 			productName = iosApp;
 			productReference = A93A953729CC810C00F8E227 /* Multiplatform App.app */;
 			productType = "com.apple.product-type.application";
@@ -112,6 +126,9 @@
 			productRefGroup = A93A953829CC810C00F8E227 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
+			packageReferences = (
+				3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			targets = (
 				A93A953629CC810C00F8E227 /* iosApp */,
 			);
@@ -150,6 +167,40 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3D41A18B310B100100A1F001 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		3D41A18D310B100100A1F001 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		3D41A18F310B100100A1F001 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		3D41A191310B100100A1F001 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A93A954329CC810D00F8E227 /* Debug */ = {
@@ -203,7 +254,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -259,7 +310,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -281,6 +332,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -305,6 +357,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
