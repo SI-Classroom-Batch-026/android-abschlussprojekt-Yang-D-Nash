@@ -1,15 +1,28 @@
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# Gradle and build outputs
+.gradle/
+build/
+**/build/
+
+# Local machine configuration
 local.properties
+
+# IntelliJ / Android Studio
+.idea/
+
+# Kotlin / Compose caches
+.kotlin/
+
+# Android native build outputs
+.externalNativeBuild/
+.cxx/
+captures/
+
+# Firebase / Google service config
+app/google-services.json
+
+# Xcode user-specific state
+**/xcuserdata/
+**/*.xcuserstate

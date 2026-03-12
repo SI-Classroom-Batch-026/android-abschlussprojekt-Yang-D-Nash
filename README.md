@@ -26,21 +26,25 @@ Drohnen-Technologie: Intelligente Bildanalyse aus der Luft (Schilder lesen, Obje
 Spezial-Kameras: Einsatz in Industrie oder Smart Homes für echtes Umgebungsverständnis.
 
 ⚙️ Setup & API-Sicherheit
-Um modernen Sicherheitsstandards gerecht zu werden, wurde der API-Key konsequent vom Quellcode entkoppelt.
+Um modernen Sicherheitsstandards gerecht zu werden, werden API-Keys und Firebase-Konfiguration lokal gehalten und nicht im Repository versioniert.
 
-Secrets Management: Sensitive Daten werden lokal in der local.properties verwaltet (geschützt durch .gitignore).
+Secrets Management: Sensitive Daten liegen lokal in der `local.properties` und in `app/google-services.json`.
 
-Automated Build-Injection: Der Key wird während des Build-Vorgangs via Gradle injiziert.
+Automated Build-Injection: Die Cloud-Keys werden während des Build-Vorgangs per Gradle in `BuildConfig` injiziert.
 
-[WICHTIG] Hinweis zum API-Key: Ein Test-Key ist aktuell hinterlegt, wird jedoch in Kürze deaktiviert. Danach ist ein eigener Key erforderlich.
+Eigenes Setup hinterlegen:
 
-Eigenen API-Key hinterlegen:
+Google Cloud: Projekt erstellen und die benötigten APIs aktivieren.
 
-Google Cloud: Projekt erstellen und "Cloud Vision API" aktivieren.
+`local.properties`: Im Hauptverzeichnis die benötigten Einträge ergänzen:
 
-local.properties: Füge im Hauptverzeichnis folgende Zeile hinzu: VISION_API_KEY=dein_tatsächlicher_api_key_hier
+`CLOUD_VISION_API_KEY=dein_tatsächlicher_api_key_hier`
 
-Build: Projekt synchronisieren. Der Key wird automatisch via BuildConfig.VISION_API_KEY eingebunden.
+`CLOUD_TRANSLATE_API_KEY=dein_tatsächlicher_api_key_hier`
+
+Firebase: Die eigene Datei `google-services.json` nach `app/google-services.json` legen.
+
+Build: Projekt synchronisieren. Die Keys werden automatisch via `BuildConfig.CLOUD_VISION_API_KEY` und `BuildConfig.CLOUD_TRANSLATE_API_KEY` eingebunden.
 
 🏗 Projektstatus
 [x] Texte & Objekte erkennen: Voll funktionsfähig.
