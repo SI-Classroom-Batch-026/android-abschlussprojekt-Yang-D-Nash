@@ -26,6 +26,7 @@ class CameraXManager(
     private val context: Context,
     private val executor: Executor = Executors.newSingleThreadExecutor()
 ) : CameraManager {
+    override val platformName: String = "Android"
 
     private var imageCapture: ImageCapture? = null
     private var imageAnalyzer: ImageAnalysis? = null
@@ -152,7 +153,11 @@ class CameraXManager(
         }
     }
 
-    override fun openCamera() {
-        Log.d("CameraXManager", "openCamera() called but is not wired to a UI PreviewView. Use startCamera() in your Activity/Fragment.")
+    override fun openCamera(): String {
+        Log.d(
+            "CameraXManager",
+            "openCamera() called but is not wired to a UI PreviewView. Use startCamera() in your Activity/Fragment."
+        )
+        return "Android CameraX ist bereit. Die Vorschau wird in der nativen Android-UI geoffnet."
     }
 }

@@ -2,7 +2,16 @@ package com.example.yangdnashabschlussprojekt
 
 import androidx.compose.ui.window.ComposeUIViewController
 import com.example.yangdnashabschlussprojekt.shared.App
+import platform.UIKit.UIViewController
 
-fun mainViewController() = ComposeUIViewController {
-    App()
+object IOSViewControllerHolder {
+    var rootViewController: UIViewController? = null
+}
+
+fun mainViewController(): UIViewController {
+    val controller = ComposeUIViewController {
+        App()
+    }
+    IOSViewControllerHolder.rootViewController = controller
+    return controller
 }

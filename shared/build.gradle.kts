@@ -15,6 +15,7 @@ kotlin {
             jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
         }
     }
+    jvm("desktop")
 
     listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach {
         it.binaries.framework {
@@ -29,6 +30,7 @@ kotlin {
         val composeDeps = project.extensions.getByType<org.jetbrains.compose.ComposeExtension>().dependencies
 
         commonMain.dependencies {
+            implementation("dev.gitlive:firebase-app:1.13.0")
             implementation("dev.gitlive:firebase-auth:1.13.0")
             implementation("dev.gitlive:firebase-firestore:1.13.0")
             implementation("dev.gitlive:firebase-storage:1.13.0")
@@ -61,9 +63,12 @@ kotlin {
             implementation("io.insert-koin:koin-android:3.5.0") // oder deine Koin Version
         }
 
+        val desktopMain by getting
+
         val iosMain by getting {
             dependencies {
                 api(libs.koin.core)
+                implementation("io.ktor:ktor-client-darwin:2.3.12")
             }
         }
     }

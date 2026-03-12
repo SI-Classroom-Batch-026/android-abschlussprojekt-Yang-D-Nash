@@ -21,10 +21,6 @@ import com.example.yangdnashabschlussprojekt.ui.screen.RegistrationScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.SettingsScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.TextScreen
 import com.example.yangdnashabschlussprojekt.ui.screen.WelcomeScreen
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.AndroidWelcomeViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.HistoryViewModel
-import com.example.yangdnashabschlussprojekt.ui.viewmodel.shared.SettingsViewModel
-import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
@@ -59,7 +55,6 @@ fun AppNavHost(
         ) {
             composable<WelcomeRoute> {
                 WelcomeScreen(
-                    viewModel = koinViewModel<AndroidWelcomeViewModel>(),
                     onNavigateToOnboarding = { navController.navigate(OnboardingRoute) }
                 )
             }
@@ -73,7 +68,6 @@ fun AppNavHost(
             }
             composable<SettingsRoute> {
                 SettingsScreen(
-                    settingsViewModel = koinViewModel<SettingsViewModel>(),
                     onNavigateToRegister = { navController.navigate(RegisterRoute) },
                     onNavigateToHistory = { navController.navigate(HistoryRoute) },
                     onBack = { navController.popBackStack() }
@@ -81,13 +75,11 @@ fun AppNavHost(
             }
             composable<RegisterRoute> {
                 RegistrationScreen(
-                    viewModel = koinViewModel<SettingsViewModel>(),
                     onBack = { navController.popBackStack() }
                 )
             }
             composable<HistoryRoute> {
                 HistoryScreen(
-                    viewModel = koinViewModel<HistoryViewModel>(),
                     onBack = { navController.popBackStack() },
                     onHistoryItemSelected = {  }
                 )

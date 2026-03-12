@@ -9,9 +9,9 @@ import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository as SharedHistoryRepository
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
-import com.example.yangdnashabschlussprojekt.data.remote.repository.UserRepository
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
 import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
 import com.google.mlkit.nl.languageid.LanguageIdentification
@@ -27,7 +27,7 @@ import java.util.Locale
 
 class TextViewModel(
     private val visionRepository: VisionRepository,
-    private val userRepository: UserRepository,
+    private val historyRepository: SharedHistoryRepository,
     application: Application
 ) : AndroidViewModel(application), ImageAnalysis.Analyzer {
 
@@ -233,9 +233,9 @@ class TextViewModel(
 
     fun onSaveToCloudClicked() {
         viewModelScope.launch {
-            userRepository.saveToFirestore(_recognizedText.value, _translatedText.value)
-                .onSuccess { _uiEvent.emit("Backup erfolgreich gespeichert!") }
-                .onFailure { _uiEvent.emit("Fehler beim Cloud Backup") }
+            historyRepository.saveSnapshot(_recognizedText.value, _translatedText.value)
+                .onSuccess { _uiEvent.emit("Verlauf und Cloud-Backup gespeichert!") }
+                .onFailure { _uiEvent.emit(it.message ?: "Fehler beim Speichern") }
         }
     }
 

@@ -27,12 +27,21 @@ class UserRepository(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _userName = MutableStateFlow(firebaseAuth.currentUser?.displayName ?: "Gast")
     private val _currentUser = MutableStateFlow(firebaseAuth.currentUser?.let { firebaseToLocalUser(it) })
+    private val authStateListener = FirebaseAuth.AuthStateListener { auth ->
+        val user = auth.currentUser
+        _currentUser.value = user?.let(::firebaseToLocalUser)
+        _userName.value = user?.displayName ?: "Gast"
+    }
     val currentUser = _currentUser.asStateFlow()
     val isAuthenticated = _currentUser.map { it != null }.stateIn(
         scope = scope,
         started = SharingStarted.Eagerly,
         initialValue = firebaseAuth.currentUser != null
     )
+
+    init {
+        firebaseAuth.addAuthStateListener(authStateListener)
+    }
     fun registerUser(
         email: String,
         password: String,

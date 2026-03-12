@@ -4,7 +4,11 @@ import shared
 @main
 struct iOSApp: App {
     init() {
-        KoinHelperKt.startKoin()
+        if Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil {
+            KoinHelperKt.startKoinWithFirebase()
+        } else {
+            KoinHelperKt.startKoin()
+        }
     }
 
     var body: some Scene {
