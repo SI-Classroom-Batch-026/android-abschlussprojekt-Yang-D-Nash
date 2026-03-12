@@ -51,7 +51,7 @@ kotlin {
 
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
-            implementation("io.insert-koin:koin-compose-viewmodel:1.2.0-Beta4")
+            implementation(libs.koin.compose.viewmodel)
 
             implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization)
@@ -64,7 +64,7 @@ kotlin {
         androidMain.dependencies {
             implementation(libs.androidx.room.ktx)
             implementation(composeDeps.uiTooling)
-            implementation("io.insert-koin:koin-android:3.5.0") // oder deine Koin Version
+            implementation(libs.koin.android)
         }
 
         val desktopMain by getting

@@ -38,9 +38,7 @@ import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedHistoryView
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedSettingsViewModel
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedWelcomeViewModel
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.WelcomeViewModel
-import org.koin.compose.KoinContext
 import org.koin.compose.viewmodel.koinViewModel
-import org.koin.core.annotation.KoinExperimentalAPI
 
 private enum class SharedDestination {
     Home,
@@ -51,80 +49,77 @@ private enum class SharedDestination {
     History
 }
 
-@OptIn(KoinExperimentalAPI::class)
 @Composable
 fun App() {
-    KoinContext {
-        MaterialTheme {
-            val homeViewModel: WelcomeViewModel = koinViewModel()
-            val welcomeViewModel: SharedWelcomeViewModel = koinViewModel()
-            val settingsViewModel: SharedSettingsViewModel = koinViewModel()
-            val historyViewModel: SharedHistoryViewModel = koinViewModel()
+    MaterialTheme {
+        val homeViewModel: WelcomeViewModel = koinViewModel()
+        val welcomeViewModel: SharedWelcomeViewModel = koinViewModel()
+        val settingsViewModel: SharedSettingsViewModel = koinViewModel()
+        val historyViewModel: SharedHistoryViewModel = koinViewModel()
 
-            val homeText by homeViewModel.uiState.collectAsState()
-            val displayName by welcomeViewModel.displayName.collectAsState()
-            val currentUser by settingsViewModel.currentUser.collectAsState()
-            val authResult by settingsViewModel.authResult.collectAsState()
-            val historyItems by historyViewModel.historyState.collectAsState()
+        val homeText by homeViewModel.uiState.collectAsState()
+        val displayName by welcomeViewModel.displayName.collectAsState()
+        val currentUser by settingsViewModel.currentUser.collectAsState()
+        val authResult by settingsViewModel.authResult.collectAsState()
+        val historyItems by historyViewModel.historyState.collectAsState()
 
-            var destination by remember { mutableStateOf(SharedDestination.Home) }
+        var destination by remember { mutableStateOf(SharedDestination.Home) }
 
-            when (destination) {
-                SharedDestination.Home -> SharedHomeScreen(
-                    statusText = homeText,
-                    onCameraTest = homeViewModel::onCameraButtonClick,
-                    onSharedUiTest = {
-                        homeViewModel.updateText("Die gemeinsame KMP-Shell steuert jetzt Welcome, Settings und History.")
-                    },
-                    onOpenCapture = { destination = SharedDestination.Capture },
-                    onOpenWelcome = { destination = SharedDestination.Welcome },
-                    onOpenSettings = { destination = SharedDestination.Settings },
-                    onOpenHistory = { destination = SharedDestination.History }
-                )
-                SharedDestination.Capture -> SharedCaptureRoute(
-                    onBack = { destination = SharedDestination.Home },
-                    onOpenHistory = { destination = SharedDestination.History }
-                )
-                SharedDestination.Welcome -> SharedWelcomeScreen(
-                    displayName = displayName,
-                    onRestartOnboarding = {
-                        welcomeViewModel.restartOnboarding()
-                        settingsViewModel.showMessage("Onboarding-Status wurde zurueckgesetzt.")
-                        destination = SharedDestination.Home
-                    }
-                )
-                SharedDestination.Settings -> SharedSettingsScreen(
-                    currentUser = currentUser,
-                    authMessage = authResult,
-                    permissions = SettingsPermissionSnapshot(
-                        notificationsEnabled = true,
-                        cameraGranted = true,
-                        locationGranted = false,
-                        microphoneGranted = false
-                    ),
-                    onLogin = settingsViewModel::login,
-                    onLogout = settingsViewModel::logout,
-                    onOpenHistory = { destination = SharedDestination.History },
-                    onOpenRegister = { destination = SharedDestination.Registration },
-                    onOpenSystemSettings = {
-                        settingsViewModel.showMessage("Systemeinstellungen werden je Plattform als naechster Schritt verdrahtet.")
-                    },
-                    onBack = { destination = SharedDestination.Home },
-                    showRegisterAction = true
-                )
-                SharedDestination.Registration -> SharedRegistrationRoute(
-                    onBack = { destination = SharedDestination.Settings }
-                )
-                SharedDestination.History -> SharedHistoryScreen(
-                    historyItems = historyItems,
-                    onDelete = historyViewModel::deleteHistoryItem,
-                    onClearAll = historyViewModel::clearAllHistory,
-                    onOpenItem = {
-                        homeViewModel.updateText("Verlaufsdetail gewaehlt: ${it.recognizedText.take(30)}")
-                    },
-                    onBack = { destination = SharedDestination.Home }
-                )
-            }
+        when (destination) {
+            SharedDestination.Home -> SharedHomeScreen(
+                statusText = homeText,
+                onCameraTest = homeViewModel::onCameraButtonClick,
+                onSharedUiTest = {
+                    homeViewModel.updateText("Die gemeinsame KMP-Shell steuert jetzt Welcome, Settings und History.")
+                },
+                onOpenCapture = { destination = SharedDestination.Capture },
+                onOpenWelcome = { destination = SharedDestination.Welcome },
+                onOpenSettings = { destination = SharedDestination.Settings },
+                onOpenHistory = { destination = SharedDestination.History }
+            )
+            SharedDestination.Capture -> SharedCaptureRoute(
+                onBack = { destination = SharedDestination.Home },
+                onOpenHistory = { destination = SharedDestination.History }
+            )
+            SharedDestination.Welcome -> SharedWelcomeScreen(
+                displayName = displayName,
+                onRestartOnboarding = {
+                    welcomeViewModel.restartOnboarding()
+                    settingsViewModel.showMessage("Onboarding-Status wurde zurueckgesetzt.")
+                    destination = SharedDestination.Home
+                }
+            )
+            SharedDestination.Settings -> SharedSettingsScreen(
+                currentUser = currentUser,
+                authMessage = authResult,
+                permissions = SettingsPermissionSnapshot(
+                    notificationsEnabled = true,
+                    cameraGranted = true,
+                    locationGranted = false,
+                    microphoneGranted = false
+                ),
+                onLogin = settingsViewModel::login,
+                onLogout = settingsViewModel::logout,
+                onOpenHistory = { destination = SharedDestination.History },
+                onOpenRegister = { destination = SharedDestination.Registration },
+                onOpenSystemSettings = {
+                    settingsViewModel.showMessage("Systemeinstellungen werden je Plattform als naechster Schritt verdrahtet.")
+                },
+                onBack = { destination = SharedDestination.Home },
+                showRegisterAction = true
+            )
+            SharedDestination.Registration -> SharedRegistrationRoute(
+                onBack = { destination = SharedDestination.Settings }
+            )
+            SharedDestination.History -> SharedHistoryScreen(
+                historyItems = historyItems,
+                onDelete = historyViewModel::deleteHistoryItem,
+                onClearAll = historyViewModel::clearAllHistory,
+                onOpenItem = {
+                    homeViewModel.updateText("Verlaufsdetail gewaehlt: ${it.recognizedText.take(30)}")
+                },
+                onBack = { destination = SharedDestination.Home }
+            )
         }
     }
 }
