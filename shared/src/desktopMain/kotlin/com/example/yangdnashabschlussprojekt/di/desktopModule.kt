@@ -1,11 +1,15 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.companion.DesktopCompanionServer
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateRepository
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateTransport
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionConfig
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionRepository
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTransport
 import com.example.yangdnashabschlussprojekt.data.repository.InMemoryLocalHistoryStore
 import com.example.yangdnashabschlussprojekt.data.repository.LocalHistoryStore
+import com.example.yangdnashabschlussprojekt.data.repository.TargetLanguageProvider
 import com.example.yangdnashabschlussprojekt.feature.repository.CaptureGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.HistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.LocalCaptureGateway
@@ -18,13 +22,19 @@ import com.example.yangdnashabschlussprojekt.ui.camera.DesktopCameraManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import com.russhwolf.settings.Settings
 import org.koin.dsl.module
+import java.util.Locale
 
 val desktopModule = module {
     single<Settings> { Settings() }
     single<LocalHistoryStore> { InMemoryLocalHistoryStore() }
     single<CloudVisionConfig> { DesktopCloudVisionConfig() }
-    single<CloudVisionTransport> { DesktopCloudVisionTransport() }
+    single { DesktopCloudVisionTransport() }
+    single<CloudVisionTransport> { get<DesktopCloudVisionTransport>() }
+    single<CloudTranslateConfig> { DesktopCloudTranslateConfig() }
+    single<CloudTranslateTransport> { get<DesktopCloudVisionTransport>() }
+    single<TargetLanguageProvider> { DesktopTargetLanguageProvider() }
     single { CloudVisionRepository(config = get(), transport = get()) }
+    single { CloudTranslateRepository(config = get(), transport = get(), targetLanguageProvider = get()) }
     single { DesktopCompanionServer().apply { ensureStarted() } }
     single<SessionGateway> {
         UnavailableSessionGateway(
@@ -35,4 +45,8 @@ val desktopModule = module {
     single<HistoryGateway> { LocalHistoryGateway(get()) }
     single<CaptureGateway> { LocalCaptureGateway(get()) }
     single<CameraManager> { DesktopCameraManager() }
+}
+
+class DesktopTargetLanguageProvider : TargetLanguageProvider {
+    override fun currentLanguageCode(): String = Locale.getDefault().language.ifBlank { "en" }
 }

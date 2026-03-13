@@ -1,12 +1,16 @@
 package com.example.yangdnashabschlussprojekt.shared
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -22,9 +26,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessibilityNew
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Settings
 import com.example.yangdnashabschlussprojekt.feature.model.SettingsPermissionSnapshot
 import com.example.yangdnashabschlussprojekt.feature.ui.SharedHistoryScreen
 import com.example.yangdnashabschlussprojekt.feature.ui.SharedOnboardingScreen
@@ -53,12 +64,49 @@ private enum class SharedRoute {
 
 private enum class SharedTopLevelDestination(
     val route: SharedRoute,
-    val label: String
+    val label: String,
+    val icon: @Composable () -> Unit
 ) {
-    Welcome(SharedRoute.Welcome, "Welcome"),
-    Settings(SharedRoute.Settings, "Settings"),
-    Ar(SharedRoute.Ar, "AR"),
-    Text(SharedRoute.Text, "Text")
+    Welcome(
+        route = SharedRoute.Welcome,
+        label = "Smar",
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Home,
+                contentDescription = "Welcome"
+            )
+        }
+    ),
+    Settings(
+        route = SharedRoute.Settings,
+        label = "Settings",
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Settings,
+                contentDescription = "Settings"
+            )
+        }
+    ),
+    Ar(
+        route = SharedRoute.Ar,
+        label = "AR",
+        icon = {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "AR"
+            )
+        }
+    ),
+    Text(
+        route = SharedRoute.Text,
+        label = "Text",
+        icon = {
+            Icon(
+                imageVector = Icons.Default.AccessibilityNew,
+                contentDescription = "Text"
+            )
+        }
+    )
 }
 
 @Composable
@@ -89,7 +137,7 @@ fun App() {
 
     val currentRoute = route ?: if (onboardingComplete) SharedRoute.Welcome else SharedRoute.Onboarding
 
-    MaterialTheme {
+    SmartVisionSharedTheme {
         Scaffold(
             containerColor = Color.Transparent,
             bottomBar = {
@@ -194,23 +242,34 @@ private fun SharedBottomNavigationBar(
     onSelect: (SharedRoute) -> Unit
 ) {
     Surface(
-        color = Color(0xFF111316).copy(alpha = 0.96f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.06f))
+        modifier = Modifier
+            .padding(horizontal = 24.dp, vertical = 20.dp)
+            .navigationBarsPadding()
+            .clip(androidx.compose.foundation.shape.RoundedCornerShape(28.dp)),
+        color = Color(0xFF1C1B1F).copy(alpha = 0.85f),
+        border = BorderStroke(0.5.dp, Color.White.copy(alpha = 0.1f))
     ) {
         NavigationBar(
-            containerColor = Color.Transparent
+            containerColor = Color.Transparent,
+            modifier = Modifier.height(64.dp),
+            windowInsets = WindowInsets(0, 0, 0, 0)
         ) {
             SharedTopLevelDestination.entries.forEach { item ->
                 val selected = currentRoute == item.route
                 NavigationBarItem(
                     selected = selected,
                     onClick = { onSelect(item.route) },
-                    icon = { Text(item.label.take(1), fontWeight = FontWeight.ExtraBold) },
-                    label = { Text(item.label) },
+                    icon = item.icon,
+                    label = {
+                        Text(
+                            text = item.label,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Color.White,
                         selectedTextColor = Color.White,
-                        indicatorColor = Color(0xFF7DEBFF).copy(alpha = 0.18f),
+                        indicatorColor = Color.White.copy(alpha = 0.1f),
                         unselectedIconColor = Color.White.copy(alpha = 0.55f),
                         unselectedTextColor = Color.White.copy(alpha = 0.55f)
                     )

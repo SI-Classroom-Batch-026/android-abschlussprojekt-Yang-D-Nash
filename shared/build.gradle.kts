@@ -45,6 +45,7 @@ kotlin {
             implementation(composeDeps.material3)
             implementation(composeDeps.ui)
             implementation(composeDeps.components.resources)
+            implementation(composeDeps.materialIconsExtended)
 
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
             implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.2")

@@ -40,6 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.text.KeyboardOptions
 import com.example.yangdnashabschlussprojekt.feature.model.SharedUser
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedRegistrationViewModel
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionHeader
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -88,17 +91,17 @@ fun SharedRegistrationScreen(
 
     val textFieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = MaterialTheme.colorScheme.primary,
-        unfocusedBorderColor = Color.White.copy(alpha = 0.2f),
+        unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
         focusedLabelColor = MaterialTheme.colorScheme.primary,
-        unfocusedLabelColor = Color.Gray,
-        focusedTextColor = Color.White,
-        unfocusedTextColor = Color.White
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+        cursorColor = MaterialTheme.colorScheme.primary
     )
 
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
+            .then(SmartVisionScreenBackground())
     ) {
         Column(
             modifier = Modifier
@@ -108,29 +111,15 @@ fun SharedRegistrationScreen(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text("Zurueck", color = Color.White)
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = "Konto erstellen",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            SmartVisionHeader(
+                title = "Konto erstellen",
+                onBack = onBack
+            )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f))
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     OutlinedTextField(
@@ -189,7 +178,7 @@ fun SharedRegistrationScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = message,
-                            color = Color(0xFF7DEBFF),
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

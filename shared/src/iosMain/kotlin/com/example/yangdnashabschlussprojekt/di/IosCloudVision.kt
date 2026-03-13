@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateTransport
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTransport
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.darwin.Darwin
@@ -24,7 +26,17 @@ class IOSCloudVisionConfig : CloudVisionConfig {
     }
 }
 
-class IOSCloudVisionTransport : CloudVisionTransport {
+class IOSCloudTranslateConfig : CloudTranslateConfig {
+    override fun apiKey(): String? {
+        val infoPlistValue = NSBundle.mainBundle.objectForInfoDictionaryKey("CLOUD_TRANSLATE_API_KEY") as? String
+        if (!infoPlistValue.isNullOrBlank()) {
+            return infoPlistValue
+        }
+        return NSProcessInfo.processInfo.environment["CLOUD_TRANSLATE_API_KEY"] as? String
+    }
+}
+
+class IOSCloudVisionTransport : CloudVisionTransport, CloudTranslateTransport {
     private val client = HttpClient(Darwin) {
         install(HttpTimeout) {
             requestTimeoutMillis = 5_000

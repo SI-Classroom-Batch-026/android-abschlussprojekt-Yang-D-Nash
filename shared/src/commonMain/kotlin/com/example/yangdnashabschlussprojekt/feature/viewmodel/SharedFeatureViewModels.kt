@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.yangdnashabschlussprojekt.feature.model.SharedHistoryItem
 import com.example.yangdnashabschlussprojekt.feature.model.SharedUser
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionRepository
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateRepository
 import com.example.yangdnashabschlussprojekt.feature.repository.CaptureGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.HistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.OnboardingGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.SessionGateway
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
+import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.ImportedImageAsset
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -130,7 +132,8 @@ class SharedHistoryViewModel(
 
 class SharedArViewModel(
     private val cameraManager: CameraManager,
-    private val cloudVisionRepository: CloudVisionRepository
+    private val cloudVisionRepository: CloudVisionRepository,
+    private val cloudTranslateRepository: CloudTranslateRepository
 ) : ViewModel() {
     val platformName: String = cameraManager.platformName
     val canCaptureImages: Boolean = cameraManager.supportsDirectCapture
@@ -149,6 +152,9 @@ class SharedArViewModel(
 
     private val _primaryLabel = MutableStateFlow<String?>(null)
     val primaryLabel: StateFlow<String?> = _primaryLabel.asStateFlow()
+
+    private val _translationStatus = MutableStateFlow("")
+    val translationStatus: StateFlow<String> = _translationStatus.asStateFlow()
 
     private val _detectedCandidates = MutableStateFlow<List<String>>(emptyList())
     val detectedCandidates: StateFlow<List<String>> = _detectedCandidates.asStateFlow()
@@ -227,15 +233,88 @@ class SharedArViewModel(
             _isAnalyzingScene.value = true
             cloudVisionRepository.detectScene(base64Image)
                 .onSuccess { detection ->
-                    _primaryLabel.value = detection.primaryLabel
+                    _translationStatus.value = "KI uebersetzt..."
+                    val translatedLabel = cloudTranslateRepository.translate(
+                        text = detection.primaryLabel,
+                        sourceLanguage = "en"
+                    ).getOrElse { detection.primaryLabel }
+                    _primaryLabel.value = translatedLabel
                     _detectedCandidates.value = detection.candidates
+                    _translationStatus.value = ""
                     _statusMessage.value = "Objekterkennung abgeschlossen."
                 }
                 .onFailure { error ->
+                    _translationStatus.value = ""
                     _statusMessage.value = error.message ?: "Objekterkennung fehlgeschlagen."
                 }
             _isAnalyzingScene.value = false
         }
+    }
+
+    fun analyzeCapturedImage(image: ImportedImageAsset?) {
+        if (image == null) {
+            _statusMessage.value = "Keine Aufnahme erstellt."
+            return
+        }
+        handleSelectedImage(
+            image = image,
+            emptyMessage = "Keine Aufnahme erstellt.",
+            successPrefix = "Aufnahme bereit"
+        )
+        analyzeScene()
+    }
+
+    fun setCapturedImage(image: ImportedImageAsset?) {
+        if (image == null) {
+            _statusMessage.value = "Keine Aufnahme erstellt."
+            return
+        }
+        handleSelectedImage(
+            image = image,
+            emptyMessage = "Keine Aufnahme erstellt.",
+            successPrefix = "Aufnahme bereit"
+        )
+    }
+
+    fun applyLocalSceneDetection(
+        primaryLabel: String,
+        candidates: List<String>
+    ) {
+        val cleanPrimaryLabel = primaryLabel.trim()
+        if (cleanPrimaryLabel.isBlank()) {
+            _statusMessage.value = "Die lokale iOS-Objekterkennung hat kein klares Ergebnis geliefert."
+            return
+        }
+
+        viewModelScope.launch {
+            _translationStatus.value = "KI uebersetzt..."
+            val translatedLabel = cloudTranslateRepository.translate(
+                text = cleanPrimaryLabel,
+                sourceLanguage = "en"
+            ).getOrElse { cleanPrimaryLabel }
+
+            _primaryLabel.value = translatedLabel
+            _detectedCandidates.value = candidates
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .distinct()
+            _translationStatus.value = ""
+            _statusMessage.value = "Lokale iOS-Objekterkennung abgeschlossen."
+        }
+    }
+
+    fun showStatusMessage(message: String) {
+        _statusMessage.value = message
+    }
+
+    fun resetResults() {
+        selectedImageBase64 = null
+        _selectedImageName.value = null
+        _selectedImagePath.value = null
+        _primaryLabel.value = null
+        _detectedCandidates.value = emptyList()
+        _translationStatus.value = ""
+        _statusMessage.value = "AR-Ansicht wurde zurueckgesetzt."
     }
 
     private fun handleSelectedImage(
@@ -251,6 +330,7 @@ class SharedArViewModel(
             selectedImageBase64 = image.base64Content
             _primaryLabel.value = null
             _detectedCandidates.value = emptyList()
+            _translationStatus.value = ""
             "$successPrefix: ${image.fileName}. Du kannst jetzt die Objekterkennung starten."
         }
     }
@@ -259,7 +339,8 @@ class SharedArViewModel(
 class SharedCaptureViewModel(
     private val cameraManager: CameraManager,
     private val captureGateway: CaptureGateway,
-    private val cloudVisionRepository: CloudVisionRepository
+    private val cloudVisionRepository: CloudVisionRepository,
+    private val cloudTranslateRepository: CloudTranslateRepository
 ) : ViewModel() {
     val platformName: String = cameraManager.platformName
     val canCaptureImages: Boolean = cameraManager.supportsDirectCapture
@@ -271,6 +352,9 @@ class SharedCaptureViewModel(
 
     private val _translatedText = MutableStateFlow("")
     val translatedText: StateFlow<String> = _translatedText.asStateFlow()
+
+    private val _translationStatus = MutableStateFlow("")
+    val translationStatus: StateFlow<String> = _translationStatus.asStateFlow()
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
@@ -355,14 +439,46 @@ class SharedCaptureViewModel(
             cloudVisionRepository.extractDocumentText(base64Image)
                 .onSuccess { extractedText ->
                     _recognizedText.value = extractedText
-                    _translatedText.value = ""
-                    _statusMessage.value = "Cloud-OCR abgeschlossen. Text wurde uebernommen."
+                    translateRecognizedText(
+                        sourceText = extractedText,
+                        successMessage = "Cloud-OCR abgeschlossen. Text wurde uebernommen."
+                    )
                 }
                 .onFailure { error ->
+                    _translationStatus.value = ""
                     _statusMessage.value = error.message ?: "Cloud-OCR fehlgeschlagen."
                 }
             _isAnalyzingImportedImage.value = false
         }
+    }
+
+    fun analyzeCapturedImage(image: ImportedImageAsset?) {
+        if (image == null) {
+            _statusMessage.value = "Keine Aufnahme erstellt."
+            return
+        }
+        handleSelectedImage(
+            image = image,
+            emptyMessage = "Keine Aufnahme erstellt.",
+            successPrefix = "Foto bereit"
+        )
+        analyzeImportedImage()
+    }
+
+    fun setCapturedImage(image: ImportedImageAsset?) {
+        if (image == null) {
+            _statusMessage.value = "Keine Aufnahme erstellt."
+            return
+        }
+        handleSelectedImage(
+            image = image,
+            emptyMessage = "Keine Aufnahme erstellt.",
+            successPrefix = "Foto bereit"
+        )
+    }
+
+    fun showStatusMessage(message: String) {
+        _statusMessage.value = message
     }
 
     fun updateRecognizedText(text: String) {
@@ -371,6 +487,41 @@ class SharedCaptureViewModel(
 
     fun updateTranslatedText(text: String) {
         _translatedText.value = text
+    }
+
+    fun applyLocalRecognizedText(text: String) {
+        val cleanText = text.trim()
+        if (cleanText.isBlank()) {
+            _statusMessage.value = "Die lokale iOS-Texterkennung hat keinen Text gefunden."
+            return
+        }
+
+        _recognizedText.value = cleanText
+        viewModelScope.launch {
+            translateRecognizedText(
+                sourceText = cleanText,
+                successMessage = "Lokale iOS-Texterkennung abgeschlossen."
+            )
+        }
+    }
+
+    fun commitRecognizedTextEdit(text: String) {
+        val cleanText = text.trim()
+        _recognizedText.value = cleanText
+
+        if (cleanText.isBlank()) {
+            _translatedText.value = ""
+            _translationStatus.value = ""
+            _statusMessage.value = "Der erkannte Text wurde geleert."
+            return
+        }
+
+        viewModelScope.launch {
+            translateRecognizedText(
+                sourceText = cleanText,
+                successMessage = "Text aktualisiert und neu uebersetzt."
+            )
+        }
     }
 
     fun saveCapture() {
@@ -387,6 +538,28 @@ class SharedCaptureViewModel(
         _statusMessage.value = null
     }
 
+    fun resetResults() {
+        selectedImageBase64 = null
+        _recognizedText.value = ""
+        _translatedText.value = ""
+        _translationStatus.value = ""
+        _selectedImageName.value = null
+        _selectedImagePath.value = null
+        _statusMessage.value = "Textmodus wurde zurueckgesetzt."
+    }
+
+    private suspend fun translateRecognizedText(
+        sourceText: String,
+        successMessage: String
+    ) {
+        _translationStatus.value = "KI uebersetzt..."
+        val translated = cloudTranslateRepository.translate(sourceText)
+            .getOrElse { sourceText }
+        _translatedText.value = translated
+        _translationStatus.value = ""
+        _statusMessage.value = successMessage
+    }
+
     private fun handleSelectedImage(
         image: com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.ImportedImageAsset?,
         emptyMessage: String,
@@ -400,6 +573,7 @@ class SharedCaptureViewModel(
             selectedImageBase64 = image.base64Content
             _recognizedText.value = ""
             _translatedText.value = ""
+            _translationStatus.value = ""
             "$successPrefix: ${image.fileName}. Du kannst jetzt OCR starten oder den Text manuell anpassen."
         }
     }

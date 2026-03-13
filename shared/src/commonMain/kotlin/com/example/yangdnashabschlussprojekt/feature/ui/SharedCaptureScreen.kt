@@ -33,6 +33,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedCaptureViewModel
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionAccentCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionHeader
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionLiveScreenBackground
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionStatusCard
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -104,8 +110,7 @@ fun SharedCaptureScreen(
 ) {
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF081C24), Color.Black)))
+            .then(SmartVisionLiveScreenBackground())
     ) {
         Column(
             modifier = Modifier
@@ -114,40 +119,21 @@ fun SharedCaptureScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (onBack != null) {
-                    TextButton(onClick = onBack) {
-                        Text("Zurueck", color = Color.White)
-                    }
-                } else {
-                    Spacer(modifier = Modifier.height(1.dp))
-                }
-                Text(
-                    text = "Text-Scanner",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(1.dp))
-            }
+            SmartVisionHeader(
+                title = "Text-Scanner",
+                onBack = onBack
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = "Plattform: $platformName",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -158,7 +144,7 @@ fun SharedCaptureScreen(
                             "Dieser Bereich bildet den SmartVision-Textfluss ab: Kamera oeffnen, Bild importieren, OCR ausloesen, Text pruefen und im Verlauf sichern."
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.72f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                     )
                     Spacer(modifier = Modifier.height(18.dp))
                     if (canCaptureImages) {
@@ -209,22 +195,20 @@ fun SharedCaptureScreen(
 
             selectedImageName?.let { imageName ->
                 Spacer(modifier = Modifier.height(18.dp))
-                Surface(
+                SmartVisionAccentCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFF7DEBFF).copy(alpha = 0.12f)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
                             text = imageName,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         selectedImagePath?.let { path ->
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = path,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -249,32 +233,27 @@ fun SharedCaptureScreen(
 
             statusMessage?.let { message ->
                 Spacer(modifier = Modifier.height(18.dp))
-                Surface(
+                SmartVisionStatusCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFFFFD166).copy(alpha = 0.15f)
                 ) {
                     Text(
                         text = message,
                         modifier = Modifier.padding(16.dp),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = "Text erfassen",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(16.dp))

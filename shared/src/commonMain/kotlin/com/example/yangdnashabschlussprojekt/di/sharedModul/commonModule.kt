@@ -40,14 +40,16 @@ val commonModule = module {
     viewModel {
         SharedArViewModel(
             cameraManager = get(),
-            cloudVisionRepository = get()
+            cloudVisionRepository = get(),
+            cloudTranslateRepository = get()
         )
     }
     viewModel {
         SharedCaptureViewModel(
             cameraManager = get(),
             captureGateway = get(),
-            cloudVisionRepository = get()
+            cloudVisionRepository = get(),
+            cloudTranslateRepository = get()
         )
     }
 }

@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateTransport
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTransport
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -26,7 +28,23 @@ class DesktopCloudVisionConfig : CloudVisionConfig {
     }
 }
 
-class DesktopCloudVisionTransport : CloudVisionTransport {
+class DesktopCloudTranslateConfig : CloudTranslateConfig {
+    override fun apiKey(): String? {
+        System.getenv("CLOUD_TRANSLATE_API_KEY")
+            ?.takeIf { it.isNotBlank() }
+            ?.let { return it }
+
+        val localProps = File("local.properties")
+        if (!localProps.exists()) return null
+
+        val properties = Properties().apply {
+            localProps.inputStream().use(::load)
+        }
+        return properties.getProperty("CLOUD_TRANSLATE_API_KEY")?.takeIf { it.isNotBlank() }
+    }
+}
+
+class DesktopCloudVisionTransport : CloudVisionTransport, CloudTranslateTransport {
     override suspend fun postJson(url: String, body: String): String = withContext(Dispatchers.IO) {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"

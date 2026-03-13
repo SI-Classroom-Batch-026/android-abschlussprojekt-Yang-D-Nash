@@ -29,6 +29,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionAccentCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
 
 @Composable
 fun SharedWelcomeScreen(
@@ -41,8 +44,7 @@ fun SharedWelcomeScreen(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
+            .then(SmartVisionScreenBackground())
     ) {
         Column(
             modifier = Modifier
@@ -57,11 +59,8 @@ fun SharedWelcomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
             ) {
                 Column(
                     modifier = Modifier.padding(28.dp),
@@ -69,41 +68,46 @@ fun SharedWelcomeScreen(
                 ) {
                     Text(
                         text = "SMARTVISION",
-                        color = Color(0xFF7DEBFF),
+                        color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.labelSmall,
                         letterSpacing = 3.sp
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = "Hallo, $displayName",
                         style = MaterialTheme.typography.headlineMedium,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "SmartVision verbindet Live-Objekterkennung, Textscan, Uebersetzung und Verlauf zu einer mobilen Assistenz-App.",
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White.copy(alpha = 0.72f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = onRestartOnboarding,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7DEBFF))
+            SmartVisionAccentCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = "Onboarding erneut starten",
-                    color = Color.Black,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Button(
+                    onClick = onRestartOnboarding,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    Text(
+                        text = "Onboarding erneut starten",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+                }
             }
         }
     }

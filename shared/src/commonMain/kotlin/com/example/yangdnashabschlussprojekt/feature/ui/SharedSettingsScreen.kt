@@ -35,6 +35,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.feature.model.SettingsPermissionSnapshot
 import com.example.yangdnashabschlussprojekt.feature.model.SharedUser
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionAccentCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionHeader
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
 
 @Composable
 fun SharedSettingsScreen(
@@ -59,8 +63,7 @@ fun SharedSettingsScreen(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
+            .then(SmartVisionScreenBackground())
     ) {
         Column(
             modifier = Modifier
@@ -69,34 +72,15 @@ fun SharedSettingsScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (onBack != null) {
-                    TextButton(onClick = onBack) {
-                        Text("Zurueck", color = Color.White)
-                    }
-                } else {
-                    Spacer(modifier = Modifier.height(1.dp))
-                }
-                Text(
-                    text = "Einstellungen",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(1.dp))
-            }
+            SmartVisionHeader(
+                title = "Einstellungen",
+                onBack = onBack
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -105,14 +89,14 @@ fun SharedSettingsScreen(
                     Text(
                         text = currentUser?.displayName ?: "Gast",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = currentUser?.email ?: "Noch nicht angemeldet",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                     )
 
                     if (currentUser != null) {
@@ -126,7 +110,7 @@ fun SharedSettingsScreen(
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         TextButton(onClick = onLogout) {
-                            Text("Abmelden", color = Color(0xFFFF7A7A))
+                            Text("Abmelden", color = MaterialTheme.colorScheme.error)
                         }
                     }
                 }
@@ -134,32 +118,27 @@ fun SharedSettingsScreen(
 
             if (authMessage != null) {
                 Spacer(modifier = Modifier.height(20.dp))
-                Surface(
+                SmartVisionAccentCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color(0xFF7DEBFF).copy(alpha = 0.14f)
                 ) {
                     Text(
                         text = authMessage,
                         modifier = Modifier.padding(16.dp),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
             if (currentUser == null) {
                 Spacer(modifier = Modifier.height(24.dp))
-                Surface(
+                SmartVisionGlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
-                    color = Color.White.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(
                             text = "Anmeldung",
                             style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -203,19 +182,16 @@ fun SharedSettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Text(
-                        text = "Systemstatus",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                SmartVisionGlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "Systemstatus",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold
+                        )
                     Spacer(modifier = Modifier.height(16.dp))
                     PermissionRow("Benachrichtigungen", permissions.notificationsEnabled)
                     PermissionRow("Kamera", permissions.cameraGranted)
@@ -233,23 +209,20 @@ fun SharedSettingsScreen(
 
             if (companionHost != null && onCompanionHostChange != null && onConnectCompanion != null) {
                 Spacer(modifier = Modifier.height(24.dp))
-                Surface(
+                SmartVisionGlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
-                    color = Color.White.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(
                             text = "Desktop Companion",
                             style = MaterialTheme.typography.titleLarge,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = "Trage die Desktop-Adresse ein, damit SmartVision AR-, Text- und Verlaufsdaten live an deinen Rechner spiegeln kann.",
-                            color = Color.White.copy(alpha = 0.72f)
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         OutlinedTextField(
@@ -263,7 +236,7 @@ fun SharedSettingsScreen(
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = message,
-                                color = Color(0xFF7DEBFF)
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -289,10 +262,10 @@ private fun PermissionRow(label: String, enabled: Boolean) {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, color = Color.White)
+        Text(text = label, color = MaterialTheme.colorScheme.onBackground)
         Text(
             text = if (enabled) "Aktiv" else "Aus",
-            color = if (enabled) Color(0xFF7DEBFF) else Color.White.copy(alpha = 0.55f),
+            color = if (enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.55f),
             fontWeight = FontWeight.Bold
         )
     }

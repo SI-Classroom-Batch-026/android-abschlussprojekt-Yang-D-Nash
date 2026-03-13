@@ -30,6 +30,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedArViewModel
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionAccentCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionHeader
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionLiveScreenBackground
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionStatusCard
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
@@ -92,8 +98,7 @@ fun SharedArScreen(
 ) {
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
+            .then(SmartVisionLiveScreenBackground())
     ) {
         Column(
             modifier = Modifier
@@ -102,36 +107,25 @@ fun SharedArScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Spacer(modifier = Modifier.height(1.dp))
-                Text(
-                    text = "AR-Modus",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                TextButton(onClick = onOpenTextMode) {
-                    Text("Zum Textmodus", color = Color(0xFF7DEBFF))
+            SmartVisionHeader(
+                title = "AR-Modus",
+                trailing = {
+                    TextButton(onClick = onOpenTextMode) {
+                        Text("Zum Textmodus", color = MaterialTheme.colorScheme.primary)
+                    }
                 }
-            }
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            Surface(
+            SmartVisionGlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
                         text = "Plattform: $platformName",
                         style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -142,7 +136,7 @@ fun SharedArScreen(
                             "Dieser Bereich nutzt die vorhandene Kamera-Bridge und Cloud-Erkennung, um ein Objektbild auszuwerten und das erkannte Motiv sofort anzuzeigen."
                         },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.72f)
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.72f)
                     )
                     Spacer(modifier = Modifier.height(18.dp))
                     if (canCaptureImages) {
@@ -193,22 +187,20 @@ fun SharedArScreen(
 
             selectedImageName?.let { imageName ->
                 Spacer(modifier = Modifier.height(18.dp))
-                Surface(
+                SmartVisionAccentCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFF7DEBFF).copy(alpha = 0.12f)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
                         Text(
                             text = imageName,
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onBackground,
                             fontWeight = FontWeight.Bold
                         )
                         selectedImagePath?.let { path ->
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = path,
-                                color = Color.White.copy(alpha = 0.7f),
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -233,26 +225,21 @@ fun SharedArScreen(
 
             statusMessage?.let { message ->
                 Spacer(modifier = Modifier.height(18.dp))
-                Surface(
+                SmartVisionStatusCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFFFFD166).copy(alpha = 0.15f)
                 ) {
                     Text(
                         text = message,
                         modifier = Modifier.padding(16.dp),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
 
             primaryLabel?.let { label ->
                 Spacer(modifier = Modifier.height(18.dp))
-                Surface(
+                SmartVisionGlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(32.dp),
-                    color = Color.White.copy(alpha = 0.05f),
-                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
                 ) {
                     Column(modifier = Modifier.padding(24.dp)) {
                         Text(

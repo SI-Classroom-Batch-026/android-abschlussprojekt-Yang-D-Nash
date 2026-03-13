@@ -26,3 +26,6 @@ app/google-services.json
 # Xcode user-specific state
 **/xcuserdata/
 **/*.xcuserstate
+
+# CocoaPods artifacts
+iosApp/Pods/

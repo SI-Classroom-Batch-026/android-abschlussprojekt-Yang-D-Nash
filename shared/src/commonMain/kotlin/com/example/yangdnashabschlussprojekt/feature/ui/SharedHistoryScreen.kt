@@ -36,6 +36,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.yangdnashabschlussprojekt.feature.model.SharedHistoryItem
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionGlassCard
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionHeader
+import com.example.yangdnashabschlussprojekt.shared.SmartVisionScreenBackground
 
 @Composable
 fun SharedHistoryScreen(
@@ -50,40 +53,26 @@ fun SharedHistoryScreen(
 
     Box(
         modifier = modifier
-            .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
+            .then(SmartVisionScreenBackground())
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(20.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (onBack != null) {
-                    TextButton(onClick = onBack) {
-                        Text("Zurueck", color = Color.White)
+            SmartVisionHeader(
+                title = "Verlauf",
+                onBack = onBack,
+                trailing = {
+                    if (historyItems.isNotEmpty()) {
+                        TextButton(onClick = onClearAll) {
+                            Text("Alles loeschen", color = MaterialTheme.colorScheme.error)
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.height(1.dp))
                     }
-                } else {
-                    Spacer(modifier = Modifier.height(1.dp))
                 }
-                Text(
-                    text = "Verlauf",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                if (historyItems.isNotEmpty()) {
-                    TextButton(onClick = onClearAll) {
-                        Text("Alles loeschen", color = Color(0xFFFF7A7A))
-                    }
-                } else {
-                    Spacer(modifier = Modifier.height(1.dp))
-                }
-            }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -144,11 +133,8 @@ fun SharedHistoryScreen(
 
 @Composable
 private fun EmptyHistoryCard() {
-    Surface(
+    SmartVisionGlassCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
-        color = Color.White.copy(alpha = 0.05f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
     ) {
         Column(
             modifier = Modifier.padding(24.dp),
@@ -157,13 +143,13 @@ private fun EmptyHistoryCard() {
             Text(
                 text = "Noch keine Eintraege",
                 style = MaterialTheme.typography.titleLarge,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "Sobald OCR-, Uebersetzungs- oder Kameraaktionen gespeichert werden, tauchen sie hier plattformuebergreifend auf.",
-                color = Color.White.copy(alpha = 0.7f)
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             )
         }
     }
@@ -175,13 +161,10 @@ private fun HistoryCard(
     onDelete: () -> Unit,
     onSelect: () -> Unit
 ) {
-    Surface(
+    SmartVisionGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onSelect),
-        shape = RoundedCornerShape(24.dp),
-        color = Color.White.copy(alpha = 0.05f),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -197,7 +180,7 @@ private fun HistoryCard(
                 Text(
                     text = item.recognizedText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onBackground,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -206,14 +189,14 @@ private fun HistoryCard(
                     Text(
                         text = item.translatedText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF7DEBFF),
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
             }
             TextButton(onClick = onDelete) {
-                Text("Loeschen", color = Color(0xFFFF7A7A))
+                Text("Loeschen", color = MaterialTheme.colorScheme.error)
             }
         }
     }

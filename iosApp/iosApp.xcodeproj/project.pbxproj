@@ -7,20 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27C84557B78899DD00BBA0C3 /* Pods_iosApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9C9E931B3CC6442572D12EB8 /* Pods_iosApp.framework */; };
 		3D41A18A310B100100A1F001 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18B310B100100A1F001 /* FirebaseCore */; };
 		3D41A18C310B100100A1F001 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18D310B100100A1F001 /* FirebaseAuth */; };
 		3D41A18E310B100100A1F001 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A18F310B100100A1F001 /* FirebaseFirestore */; };
 		3D41A190310B100100A1F001 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 3D41A191310B100100A1F001 /* FirebaseStorage */; };
 		907F1B2A2EF48367003215D2 /* shared.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 907F1B292EF48367003215D2 /* shared.framework */; };
 		907F1B2C2EF485FE003215D2 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 907F1B2B2EF485FE003215D2 /* ContentView.swift */; };
+		975648603BE11D44004C4A01 /* IOSMLKitObjectBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9756485F3BE11D44004C4A01 /* IOSMLKitObjectBridge.swift */; };
+		975648623BE1237F004C4A01 /* IOSMLKitRuntimeHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 975648613BE1237F004C4A01 /* IOSMLKitRuntimeHost.swift */; };
+		9A0C2FDD3BE0A2A9004C4A01 /* IOSMLKitTextBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A0C2FDC3BE0A2A9004C4A01 /* IOSMLKitTextBridge.swift */; };
 		A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93A953A29CC810C00F8E227 /* iosApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		907F1B292EF48367003215D2 /* shared.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = shared.framework; path = ../shared/build/bin/iosSimulatorArm64/debugFramework/shared.framework; sourceTree = "<group>"; };
 		907F1B2B2EF485FE003215D2 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		9756485F3BE11D44004C4A01 /* IOSMLKitObjectBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSMLKitObjectBridge.swift; sourceTree = "<group>"; };
+		975648613BE1237F004C4A01 /* IOSMLKitRuntimeHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSMLKitRuntimeHost.swift; sourceTree = "<group>"; };
+		9A0C2FDC3BE0A2A9004C4A01 /* IOSMLKitTextBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSMLKitTextBridge.swift; sourceTree = "<group>"; };
+		9C9E931B3CC6442572D12EB8 /* Pods_iosApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_iosApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A93A953729CC810C00F8E227 /* Multiplatform App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Multiplatform App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		A93A953A29CC810C00F8E227 /* iosApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iosApp.swift; sourceTree = "<group>"; };
+		ACDA8BBB64FF41F18231C43F /* Pods-iosApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.debug.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.debug.xcconfig"; sourceTree = "<group>"; };
+		D8C5E6ECC5DC9F919D7FC63E /* Pods-iosApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-iosApp.release.xcconfig"; path = "Target Support Files/Pods-iosApp/Pods-iosApp.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,18 +43,30 @@
 				3D41A18E310B100100A1F001 /* FirebaseFirestore in Frameworks */,
 				3D41A190310B100100A1F001 /* FirebaseStorage in Frameworks */,
 				907F1B2A2EF48367003215D2 /* shared.framework in Frameworks */,
+				27C84557B78899DD00BBA0C3 /* Pods_iosApp.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9CBA41F0DAA2FE07766C9F65 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				ACDA8BBB64FF41F18231C43F /* Pods-iosApp.debug.xcconfig */,
+				D8C5E6ECC5DC9F919D7FC63E /* Pods-iosApp.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		A93A952E29CC810C00F8E227 = {
 			isa = PBXGroup;
 			children = (
 				A93A953929CC810C00F8E227 /* iosApp */,
 				A93A953829CC810C00F8E227 /* Products */,
 				C4127409AE3703430489E7BC /* Frameworks */,
+				9CBA41F0DAA2FE07766C9F65 /* Pods */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +82,9 @@
 			isa = PBXGroup;
 			children = (
 				907F1B2B2EF485FE003215D2 /* ContentView.swift */,
+				9756485F3BE11D44004C4A01 /* IOSMLKitObjectBridge.swift */,
+				975648613BE1237F004C4A01 /* IOSMLKitRuntimeHost.swift */,
+				9A0C2FDC3BE0A2A9004C4A01 /* IOSMLKitTextBridge.swift */,
 				A93A953A29CC810C00F8E227 /* iosApp.swift */,
 			);
 			path = iosApp;
@@ -69,6 +94,7 @@
 			isa = PBXGroup;
 			children = (
 				907F1B292EF48367003215D2 /* shared.framework */,
+				9C9E931B3CC6442572D12EB8 /* Pods_iosApp.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -80,9 +106,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = A93A954529CC810D00F8E227 /* Build configuration list for PBXNativeTarget "iosApp" */;
 			buildPhases = (
+				F1FAE89A3AD46C8A83DE0D95 /* [CP] Check Pods Manifest.lock */,
 				A9D80A052AAB5CDE006C8738 /* ShellScript */,
 				A93A953329CC810C00F8E227 /* Sources */,
 				A93A953429CC810C00F8E227 /* Frameworks */,
+				DD795E29D1200A076F0AD2CD /* [CP] Embed Pods Frameworks */,
+				1FB3DCA6EF14375CA7D6D1E2 /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -123,12 +152,12 @@
 				Base,
 			);
 			mainGroup = A93A952E29CC810C00F8E227;
-			productRefGroup = A93A953829CC810C00F8E227 /* Products */;
-			projectDirPath = "";
-			projectRoot = "";
 			packageReferences = (
 				3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
+			productRefGroup = A93A953829CC810C00F8E227 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				A93A953629CC810C00F8E227 /* iosApp */,
 			);
@@ -136,6 +165,23 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		1FB3DCA6EF14375CA7D6D1E2 /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
 		A9D80A052AAB5CDE006C8738 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -154,6 +200,45 @@
 			shellPath = /bin/sh;
 			shellScript = "export JAVA_HOME=\"/Applications/Android Studio.app/Contents/jbr/Contents/Home\"\ncd \"$SRCROOT/..\"\n./gradlew :shared:embedAndSignAppleFrameworkForXcode\n";
 		};
+		DD795E29D1200A076F0AD2CD /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-iosApp/Pods-iosApp-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		F1FAE89A3AD46C8A83DE0D95 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-iosApp-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -162,45 +247,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				907F1B2C2EF485FE003215D2 /* ContentView.swift in Sources */,
+				975648603BE11D44004C4A01 /* IOSMLKitObjectBridge.swift in Sources */,
+				975648623BE1237F004C4A01 /* IOSMLKitRuntimeHost.swift in Sources */,
+				9A0C2FDD3BE0A2A9004C4A01 /* IOSMLKitTextBridge.swift in Sources */,
 				A93A953B29CC810C00F8E227 /* iosApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 11.0.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		3D41A18B310B100100A1F001 /* FirebaseCore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseCore;
-		};
-		3D41A18D310B100100A1F001 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		3D41A18F310B100100A1F001 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
-		3D41A191310B100100A1F001 /* FirebaseStorage */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseStorage;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A93A954329CC810D00F8E227 /* Debug */ = {
@@ -323,12 +377,16 @@
 		};
 		A93A954629CC810D00F8E227 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = ACDA8BBB64FF41F18231C43F /* Pods-iosApp.debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -348,12 +406,16 @@
 		};
 		A93A954729CC810D00F8E227 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = D8C5E6ECC5DC9F919D7FC63E /* Pods-iosApp.release.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/../shared/build/bin/iosSimulatorArm64/debugFramework",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -393,6 +455,40 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		3D41A18B310B100100A1F001 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		3D41A18D310B100100A1F001 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		3D41A18F310B100100A1F001 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		3D41A191310B100100A1F001 /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 3D41A189310B100100A1F001 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A93A952F29CC810C00F8E227 /* Project object */;
 }

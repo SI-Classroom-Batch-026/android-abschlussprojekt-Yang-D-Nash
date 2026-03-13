@@ -1,0 +1,8 @@
+platform :ios, '17.2'
+
+target 'iosApp' do
+  use_frameworks!
+
+  pod 'GoogleMLKit/TextRecognition'
+  pod 'GoogleMLKit/ObjectDetection'
+end
