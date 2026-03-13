@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.ui.viewmodel
 
 import android.app.Application
+import android.os.Build
 import android.speech.tts.TextToSpeech
 import androidx.annotation.OptIn
 import androidx.camera.core.ExperimentalGetImage
@@ -9,10 +10,14 @@ import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.companion.DesktopCompanionClient
 import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository as SharedHistoryRepository
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.feature.model.CompanionHistoryEntry
+import com.example.yangdnashabschlussprojekt.feature.model.CompanionMode
+import com.example.yangdnashabschlussprojekt.feature.model.CompanionSnapshot
 import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.vision.common.InputImage
@@ -28,6 +33,7 @@ import java.util.Locale
 class TextViewModel(
     private val visionRepository: VisionRepository,
     private val historyRepository: SharedHistoryRepository,
+    private val desktopCompanionClient: DesktopCompanionClient,
     application: Application
 ) : AndroidViewModel(application), ImageAnalysis.Analyzer {
 
@@ -105,6 +111,7 @@ class TextViewModel(
                     if (visionText.text.isNotBlank()) {
                         val cleanText = formatText(visionText.text)
                         _recognizedText.value = cleanText
+                        publishTextSnapshot(statusMessage = "Lokaler Textscan abgeschlossen.")
                         viewModelScope.launch { _uiEvent.emit("Text gefunden!") }
                         translateAndSpeak(cleanText)
                     } else {
@@ -128,6 +135,7 @@ class TextViewModel(
         _translatedText.value = ""
         _translationStatus.value = ""
         _isAnalyzing.value = true
+        publishTextSnapshot(statusMessage = "Lokaler Live-Scan gestartet.")
     }
 
     fun recognizeTextViaCloud(base64Image: String) {
@@ -165,6 +173,7 @@ class TextViewModel(
                 val cleanText = formatCloudText(annotation.text)
                 _recognizedText.value = cleanText
                 _cloudRecognitionState.value = CloudRecognitionState.Success(cleanText)
+                publishTextSnapshot(statusMessage = "Cloud-OCR abgeschlossen.")
                 _uiEvent.emit("Text erfolgreich erkannt!")
 
                 translateAndSpeak(cleanText)
@@ -202,6 +211,7 @@ class TextViewModel(
                     onResult = { translation ->
                         _translatedText.value = translation
                         _translationStatus.value = ""
+                        publishTextSnapshot(statusMessage = "Uebersetzung abgeschlossen.")
                         tts?.speak(translation, TextToSpeech.QUEUE_FLUSH, null, null)
                     }
                 )
@@ -229,12 +239,25 @@ class TextViewModel(
         _translationStatus.value = ""
         _cloudRecognitionState.value = CloudRecognitionState.Idle
         _isSingleBlockMode.value = false
+        publishTextSnapshot(statusMessage = "Textmodus wurde zurueckgesetzt.")
     }
 
     fun onSaveToCloudClicked() {
         viewModelScope.launch {
             historyRepository.saveSnapshot(_recognizedText.value, _translatedText.value)
-                .onSuccess { _uiEvent.emit("Verlauf und Cloud-Backup gespeichert!") }
+                .onSuccess {
+                    publishTextSnapshot(
+                        statusMessage = "Verlauf und Cloud-Backup gespeichert!",
+                        historyItems = listOf(
+                            CompanionHistoryEntry(
+                                recognizedText = _recognizedText.value,
+                                translatedText = _translatedText.value,
+                                timestampMillis = System.currentTimeMillis()
+                            )
+                        )
+                    )
+                    _uiEvent.emit("Verlauf und Cloud-Backup gespeichert!")
+                }
                 .onFailure { _uiEvent.emit(it.message ?: "Fehler beim Speichern") }
         }
     }
@@ -243,6 +266,7 @@ class TextViewModel(
         if (newText.isNotBlank()) {
             val cleanText = formatText(newText)
             _recognizedText.value = cleanText
+            publishTextSnapshot(statusMessage = "Text manuell aktualisiert.")
             translateAndSpeak(cleanText)
         }
     }
@@ -253,5 +277,25 @@ class TextViewModel(
         tts?.shutdown()
         localRecognizer.close()
         languageIdentifier.close()
+    }
+
+    private fun publishTextSnapshot(
+        statusMessage: String,
+        historyItems: List<CompanionHistoryEntry> = emptyList()
+    ) {
+        viewModelScope.launch {
+            desktopCompanionClient.publishSnapshot(
+                CompanionSnapshot(
+                    deviceName = Build.MODEL ?: "Android",
+                    sourcePlatform = "Android",
+                    activeMode = CompanionMode.TEXT,
+                    updatedAtEpochMillis = System.currentTimeMillis(),
+                    statusMessage = statusMessage,
+                    recognizedText = _recognizedText.value.takeIf { it.isNotBlank() },
+                    translatedText = _translatedText.value.takeIf { it.isNotBlank() },
+                    historyItems = historyItems
+                )
+            )
+        }
     }
 }

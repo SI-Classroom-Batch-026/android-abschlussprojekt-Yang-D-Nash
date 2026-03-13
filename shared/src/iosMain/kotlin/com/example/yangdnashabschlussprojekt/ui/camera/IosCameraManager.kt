@@ -18,6 +18,7 @@ import platform.UIKit.UIImagePickerController
 import platform.UIKit.UIImagePickerControllerDelegateProtocol
 import platform.UIKit.UIImagePickerControllerEditedImage
 import platform.UIKit.UIImagePickerControllerOriginalImage
+import platform.UIKit.UIImagePickerControllerSourceType
 import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.UIKit.UIViewController
 import platform.darwin.NSObject
@@ -30,19 +31,46 @@ import kotlin.coroutines.resumeWithException
 @OptIn(ExperimentalForeignApi::class, ExperimentalEncodingApi::class)
 class IOSCameraManager : CameraManager {
     override val platformName: String = "iOS"
+    override val supportsDirectCapture: Boolean = true
     override val supportsImageImport: Boolean = true
 
     override fun openCamera(): String {
-        return "iOS nutzt aktuell den nativen Foto-Import. Eine Live-Kamera per AVFoundation ist als naechster Schritt vorbereitet."
+        return "iOS nutzt fuer den Text-Scanner jetzt die native Aufnahme oder Foto-Auswahl. Eine Live-Kamera per AVFoundation folgt als naechster Schritt fuer den AR-Flow."
     }
 
-    override suspend fun importImage(): ImportedImageAsset? = suspendCancellableCoroutine { continuation ->
+    override suspend fun captureImage(): ImportedImageAsset? = presentImagePicker(
+        preferredSourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypeCamera,
+        fallbackSourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypePhotoLibrary,
+        unavailableMessage = "Auf diesem Geraet ist weder Kamera noch Fotoauswahl verfuegbar."
+    )
+
+    override suspend fun importImage(): ImportedImageAsset? = presentImagePicker(
+        preferredSourceType = UIImagePickerControllerSourceType.UIImagePickerControllerSourceTypePhotoLibrary,
+        fallbackSourceType = null,
+        unavailableMessage = "Die iOS-Fotoauswahl ist auf diesem Geraet nicht verfuegbar."
+    )
+
+    private suspend fun presentImagePicker(
+        preferredSourceType: UIImagePickerControllerSourceType,
+        fallbackSourceType: UIImagePickerControllerSourceType?,
+        unavailableMessage: String
+    ): ImportedImageAsset? = suspendCancellableCoroutine { continuation ->
         val presenter = IOSViewControllerHolder.rootViewController?.topMostPresentedViewController()
         if (presenter == null) {
             continuation.resumeWithException(
-                IllegalStateException("Kein iOS-ViewController fuer den Bildimport verfuegbar.")
+                IllegalStateException("Kein iOS-ViewController fuer die Bildaufnahme verfuegbar.")
             )
             return@suspendCancellableCoroutine
+        }
+
+        val sourceType = when {
+            UIImagePickerController.isSourceTypeAvailable(preferredSourceType) -> preferredSourceType
+            fallbackSourceType != null &&
+                UIImagePickerController.isSourceTypeAvailable(fallbackSourceType) -> fallbackSourceType
+            else -> {
+                continuation.resumeWithException(IllegalStateException(unavailableMessage))
+                return@suspendCancellableCoroutine
+            }
         }
 
         val delegate = IOSImagePickerDelegate { result ->
@@ -55,6 +83,7 @@ class IOSCameraManager : CameraManager {
 
         val picker = UIImagePickerController().apply {
             setDelegate(delegate)
+            setSourceType(sourceType)
         }
 
         presenter.presentViewController(picker, animated = true, completion = null)

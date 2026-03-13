@@ -3,6 +3,7 @@ package com.example.yangdnashabschlussprojekt.ui.viewmodel
 import android.app.Application
 import android.media.AudioManager
 import android.media.ToneGenerator
+import android.os.Build
 import android.util.Log
 import android.util.Size
 import androidx.annotation.OptIn
@@ -12,9 +13,12 @@ import androidx.camera.core.ImageProxy
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.yangdnashabschlussprojekt.data.companion.DesktopCompanionClient
 import com.example.yangdnashabschlussprojekt.data.local.database.model.box.TimedBoundingBox
 import com.example.yangdnashabschlussprojekt.data.remote.model.vision.Feature
 import com.example.yangdnashabschlussprojekt.data.remote.repository.VisionRepository
+import com.example.yangdnashabschlussprojekt.feature.model.CompanionMode
+import com.example.yangdnashabschlussprojekt.feature.model.CompanionSnapshot
 import com.example.yangdnashabschlussprojekt.util.notification.TranslatorUtil
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.objects.ObjectDetection
@@ -26,6 +30,7 @@ import java.util.Locale
 
 class ARViewModel(
     private val visionRepository: VisionRepository,
+    private val desktopCompanionClient: DesktopCompanionClient,
     application: Application
 ) : AndroidViewModel(application), ImageAnalysis.Analyzer {
 
@@ -50,6 +55,7 @@ class ARViewModel(
     private val trackedObjectsMap = mutableMapOf<Int, TimedBoundingBox>()
 
     private var lastEnglishLabel = ""
+    private var lastSceneCandidates = emptyList<String>()
 
     private val objectDetector = ObjectDetection.getClient(
         ObjectDetectorOptions.Builder()
@@ -128,6 +134,7 @@ class ARViewModel(
                 val upperResult = translated.uppercase()
                 _detectedObjectLabel.value = upperResult
                 _translationStatus.value = ""
+                publishArSnapshot(recognizedObject = upperResult, statusMessage = "AR-Ergebnis live gespiegelt.")
 
                 // Live-Update der aktuellen Boxen in der Liste
                 _boundingBoxes.value = _boundingBoxes.value.map { box ->
@@ -157,6 +164,15 @@ class ARViewModel(
                 val finalEnglishLabel = (logoText ?: cloudObjects?.firstOrNull()?.name ?: labelText ?: "OBJECT")
 
                 translateLiveResult(finalEnglishLabel)
+                lastSceneCandidates = buildList {
+                    logoText?.let(::add)
+                    cloudObjects?.mapTo(this) { it.name }
+                    labelText?.let(::add)
+                }.filter { it.isNotBlank() }.distinct()
+                publishArSnapshot(
+                    recognizedObject = finalEnglishLabel,
+                    statusMessage = "Cloud-Objekterkennung abgeschlossen."
+                )
                 _isCloudResult.value = true
 
                 val cloudBoxes = cloudObjects?.map { obj ->
@@ -194,7 +210,28 @@ class ARViewModel(
         _detectedObjectLabel.value = ""
         _translationStatus.value = ""
         lastEnglishLabel = ""
+        lastSceneCandidates = emptyList()
         trackedObjectsMap.clear()
         _boundingBoxes.value = emptyList()
+        publishArSnapshot(recognizedObject = null, statusMessage = "AR-Ansicht wurde zurueckgesetzt.")
+    }
+
+    private fun publishArSnapshot(
+        recognizedObject: String?,
+        statusMessage: String
+    ) {
+        viewModelScope.launch {
+            desktopCompanionClient.publishSnapshot(
+                CompanionSnapshot(
+                    deviceName = Build.MODEL ?: "Android",
+                    sourcePlatform = "Android",
+                    activeMode = CompanionMode.AR,
+                    updatedAtEpochMillis = System.currentTimeMillis(),
+                    statusMessage = statusMessage,
+                    recognizedObject = recognizedObject,
+                    objectCandidates = lastSceneCandidates
+                )
+            )
+        }
     }
 }

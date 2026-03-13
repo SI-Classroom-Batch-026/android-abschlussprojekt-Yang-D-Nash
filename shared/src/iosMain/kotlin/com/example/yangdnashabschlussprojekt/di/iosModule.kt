@@ -10,22 +10,33 @@ import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTranspor
 import com.example.yangdnashabschlussprojekt.feature.repository.HistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.OnboardingGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.CaptureGateway
+import com.example.yangdnashabschlussprojekt.feature.repository.LocalCaptureGateway
+import com.example.yangdnashabschlussprojekt.feature.repository.LocalHistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.RepositoryCaptureGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.RepositoryHistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.RepositorySessionGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.SessionGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.SettingsOnboardingGateway
-import com.example.yangdnashabschlussprojekt.feature.repository.demoFeatureModule
+import com.example.yangdnashabschlussprojekt.feature.repository.UnavailableSessionGateway
 import com.example.yangdnashabschlussprojekt.ui.camera.IOSCameraManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import com.russhwolf.settings.Settings
 import org.koin.dsl.module
 
-val iosDemoModule = module {
-    includes(demoFeatureModule("iOS"))
+val iosLocalModule = module {
+    single<Settings> { Settings() }
+    single<LocalHistoryStore> { InMemoryLocalHistoryStore() }
     single<CloudVisionConfig> { IOSCloudVisionConfig() }
     single<CloudVisionTransport> { IOSCloudVisionTransport() }
     single { CloudVisionRepository(config = get(), transport = get()) }
+    single<SessionGateway> {
+        UnavailableSessionGateway(
+            unavailableMessage = "Firebase ist auf iOS noch nicht konfiguriert. Fuege GoogleService-Info.plist hinzu, damit Login und Cloud-Verlauf live verfuegbar sind."
+        )
+    }
+    single<OnboardingGateway> { SettingsOnboardingGateway(get()) }
+    single<HistoryGateway> { LocalHistoryGateway(get()) }
+    single<CaptureGateway> { LocalCaptureGateway(get()) }
     single<CameraManager> { IOSCameraManager() }
 }
 

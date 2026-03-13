@@ -6,6 +6,8 @@
 	<true/>
 	<key>CLOUD_VISION_API_KEY</key>
 	<string></string>
+	<key>NSCameraUsageDescription</key>
+	<string>Die App braucht Zugriff auf die Kamera, um Dokumente und Texte direkt aufzunehmen.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Die App braucht Zugriff auf deine Fotos, um Bilder fuer OCR zu importieren.</string>
 </dict>

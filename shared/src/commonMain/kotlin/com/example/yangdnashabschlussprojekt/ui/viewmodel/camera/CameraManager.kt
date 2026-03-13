@@ -9,8 +9,11 @@ data class ImportedImageAsset(
 interface CameraManager {
     val platformName: String
     fun openCamera(): String
+    val supportsDirectCapture: Boolean
+        get() = false
     val supportsImageImport: Boolean
         get() = false
 
+    suspend fun captureImage(): ImportedImageAsset? = null
     suspend fun importImage(): ImportedImageAsset? = null
 }

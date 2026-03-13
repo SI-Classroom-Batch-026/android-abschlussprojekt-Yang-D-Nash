@@ -140,6 +140,7 @@ dependencies {
     implementation(libs.mlkit.translate)
     implementation(libs.arcore)
     implementation(libs.firebase.auth)
+    implementation(libs.kotlinx.serialization)
 
     // ❌ libs.kotlinx.serialization WIRD HIER ENTFERNT (Wandert ins shared/commonMain)
     implementation(libs.retrofit)

@@ -48,7 +48,11 @@ fun SharedSettingsScreen(
     onOpenSystemSettings: () -> Unit,
     modifier: Modifier = Modifier,
     onBack: (() -> Unit)? = null,
-    showRegisterAction: Boolean = true
+    showRegisterAction: Boolean = true,
+    companionHost: String? = null,
+    companionStatusMessage: String? = null,
+    onCompanionHostChange: ((String) -> Unit)? = null,
+    onConnectCompanion: (() -> Unit)? = null
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -223,6 +227,53 @@ fun SharedSettingsScreen(
                         shape = RoundedCornerShape(18.dp)
                     ) {
                         Text("Systemeinstellungen oeffnen")
+                    }
+                }
+            }
+
+            if (companionHost != null && onCompanionHostChange != null && onConnectCompanion != null) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(32.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "Desktop Companion",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Trage die Desktop-Adresse ein, damit SmartVision AR-, Text- und Verlaufsdaten live an deinen Rechner spiegeln kann.",
+                            color = Color.White.copy(alpha = 0.72f)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = companionHost,
+                            onValueChange = onCompanionHostChange,
+                            modifier = Modifier.fillMaxWidth(),
+                            label = { Text("Desktop-Adresse") },
+                            singleLine = true
+                        )
+                        companionStatusMessage?.takeIf { it.isNotBlank() }?.let { message ->
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = message,
+                                color = Color(0xFF7DEBFF)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onConnectCompanion,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(18.dp)
+                        ) {
+                            Text("Desktop verbinden")
+                        }
                     }
                 }
             }

@@ -128,23 +128,15 @@ class SharedHistoryViewModel(
     }
 }
 
-class SharedCaptureViewModel(
+class SharedArViewModel(
     private val cameraManager: CameraManager,
-    private val captureGateway: CaptureGateway,
     private val cloudVisionRepository: CloudVisionRepository
 ) : ViewModel() {
     val platformName: String = cameraManager.platformName
+    val canCaptureImages: Boolean = cameraManager.supportsDirectCapture
     val canImportImages: Boolean = cameraManager.supportsImageImport
+
     private var selectedImageBase64: String? = null
-
-    private val _recognizedText = MutableStateFlow("")
-    val recognizedText: StateFlow<String> = _recognizedText.asStateFlow()
-
-    private val _translatedText = MutableStateFlow("")
-    val translatedText: StateFlow<String> = _translatedText.asStateFlow()
-
-    private val _statusMessage = MutableStateFlow<String?>(null)
-    val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
 
     private val _selectedImageName = MutableStateFlow<String?>(null)
     val selectedImageName: StateFlow<String?> = _selectedImageName.asStateFlow()
@@ -152,14 +144,51 @@ class SharedCaptureViewModel(
     private val _selectedImagePath = MutableStateFlow<String?>(null)
     val selectedImagePath: StateFlow<String?> = _selectedImagePath.asStateFlow()
 
+    private val _statusMessage = MutableStateFlow<String?>(null)
+    val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
+
+    private val _primaryLabel = MutableStateFlow<String?>(null)
+    val primaryLabel: StateFlow<String?> = _primaryLabel.asStateFlow()
+
+    private val _detectedCandidates = MutableStateFlow<List<String>>(emptyList())
+    val detectedCandidates: StateFlow<List<String>> = _detectedCandidates.asStateFlow()
+
+    private val _isCapturingImage = MutableStateFlow(false)
+    val isCapturingImage: StateFlow<Boolean> = _isCapturingImage.asStateFlow()
+
     private val _isImportingImage = MutableStateFlow(false)
     val isImportingImage: StateFlow<Boolean> = _isImportingImage.asStateFlow()
 
-    private val _isAnalyzingImportedImage = MutableStateFlow(false)
-    val isAnalyzingImportedImage: StateFlow<Boolean> = _isAnalyzingImportedImage.asStateFlow()
+    private val _isAnalyzingScene = MutableStateFlow(false)
+    val isAnalyzingScene: StateFlow<Boolean> = _isAnalyzingScene.asStateFlow()
 
     fun openCamera() {
         _statusMessage.value = cameraManager.openCamera()
+    }
+
+    fun captureImage() {
+        if (!canCaptureImages) {
+            _statusMessage.value = "Direkte Bildaufnahme ist auf $platformName noch nicht verfuegbar."
+            return
+        }
+
+        viewModelScope.launch {
+            _isCapturingImage.value = true
+            val capturedImage = runCatching {
+                cameraManager.captureImage()
+            }.getOrElse { error ->
+                _statusMessage.value = error.message ?: "Bildaufnahme fehlgeschlagen."
+                _isCapturingImage.value = false
+                return@launch
+            }
+
+            handleSelectedImage(
+                image = capturedImage,
+                emptyMessage = "Keine Aufnahme erstellt.",
+                successPrefix = "Aufnahme bereit"
+            )
+            _isCapturingImage.value = false
+        }
     }
 
     fun importImage() {
@@ -178,16 +207,139 @@ class SharedCaptureViewModel(
                 return@launch
             }
 
-            _statusMessage.value = if (importedImage == null) {
-                "Keine Bilddatei ausgewaehlt."
-            } else {
-                _selectedImageName.value = importedImage.fileName
-                _selectedImagePath.value = importedImage.absolutePath
-                selectedImageBase64 = importedImage.base64Content
-                _recognizedText.value = ""
-                _translatedText.value = ""
-                "Bild bereit: ${importedImage.fileName}. Du kannst jetzt OCR starten oder den Text manuell anpassen."
+            handleSelectedImage(
+                image = importedImage,
+                emptyMessage = "Keine Bilddatei ausgewaehlt.",
+                successPrefix = "Bild bereit"
+            )
+            _isImportingImage.value = false
+        }
+    }
+
+    fun analyzeScene() {
+        val base64Image = selectedImageBase64
+        if (base64Image.isNullOrBlank()) {
+            _statusMessage.value = "Bitte zuerst ein Bild aufnehmen oder importieren."
+            return
+        }
+
+        viewModelScope.launch {
+            _isAnalyzingScene.value = true
+            cloudVisionRepository.detectScene(base64Image)
+                .onSuccess { detection ->
+                    _primaryLabel.value = detection.primaryLabel
+                    _detectedCandidates.value = detection.candidates
+                    _statusMessage.value = "Objekterkennung abgeschlossen."
+                }
+                .onFailure { error ->
+                    _statusMessage.value = error.message ?: "Objekterkennung fehlgeschlagen."
+                }
+            _isAnalyzingScene.value = false
+        }
+    }
+
+    private fun handleSelectedImage(
+        image: com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.ImportedImageAsset?,
+        emptyMessage: String,
+        successPrefix: String
+    ) {
+        _statusMessage.value = if (image == null) {
+            emptyMessage
+        } else {
+            _selectedImageName.value = image.fileName
+            _selectedImagePath.value = image.absolutePath
+            selectedImageBase64 = image.base64Content
+            _primaryLabel.value = null
+            _detectedCandidates.value = emptyList()
+            "$successPrefix: ${image.fileName}. Du kannst jetzt die Objekterkennung starten."
+        }
+    }
+}
+
+class SharedCaptureViewModel(
+    private val cameraManager: CameraManager,
+    private val captureGateway: CaptureGateway,
+    private val cloudVisionRepository: CloudVisionRepository
+) : ViewModel() {
+    val platformName: String = cameraManager.platformName
+    val canCaptureImages: Boolean = cameraManager.supportsDirectCapture
+    val canImportImages: Boolean = cameraManager.supportsImageImport
+    private var selectedImageBase64: String? = null
+
+    private val _recognizedText = MutableStateFlow("")
+    val recognizedText: StateFlow<String> = _recognizedText.asStateFlow()
+
+    private val _translatedText = MutableStateFlow("")
+    val translatedText: StateFlow<String> = _translatedText.asStateFlow()
+
+    private val _statusMessage = MutableStateFlow<String?>(null)
+    val statusMessage: StateFlow<String?> = _statusMessage.asStateFlow()
+
+    private val _selectedImageName = MutableStateFlow<String?>(null)
+    val selectedImageName: StateFlow<String?> = _selectedImageName.asStateFlow()
+
+    private val _selectedImagePath = MutableStateFlow<String?>(null)
+    val selectedImagePath: StateFlow<String?> = _selectedImagePath.asStateFlow()
+
+    private val _isCapturingImage = MutableStateFlow(false)
+    val isCapturingImage: StateFlow<Boolean> = _isCapturingImage.asStateFlow()
+
+    private val _isImportingImage = MutableStateFlow(false)
+    val isImportingImage: StateFlow<Boolean> = _isImportingImage.asStateFlow()
+
+    private val _isAnalyzingImportedImage = MutableStateFlow(false)
+    val isAnalyzingImportedImage: StateFlow<Boolean> = _isAnalyzingImportedImage.asStateFlow()
+
+    fun openCamera() {
+        _statusMessage.value = cameraManager.openCamera()
+    }
+
+    fun captureImage() {
+        if (!canCaptureImages) {
+            _statusMessage.value = "Direkte Bildaufnahme ist auf $platformName noch nicht verfuegbar."
+            return
+        }
+
+        viewModelScope.launch {
+            _isCapturingImage.value = true
+            val capturedImage = runCatching {
+                cameraManager.captureImage()
+            }.getOrElse { error ->
+                _statusMessage.value = error.message ?: "Bildaufnahme fehlgeschlagen."
+                _isCapturingImage.value = false
+                return@launch
             }
+
+            handleSelectedImage(
+                image = capturedImage,
+                emptyMessage = "Keine Aufnahme erstellt.",
+                successPrefix = "Foto bereit"
+            )
+            _isCapturingImage.value = false
+        }
+    }
+
+    fun importImage() {
+        if (!canImportImages) {
+            _statusMessage.value = "Bildimport ist auf $platformName noch nicht verfuegbar."
+            return
+        }
+
+        viewModelScope.launch {
+            _isImportingImage.value = true
+            val importedImage = runCatching {
+                cameraManager.importImage()
+            }.getOrElse { error ->
+                _statusMessage.value = error.message ?: "Bildimport fehlgeschlagen."
+                _isImportingImage.value = false
+                return@launch
+            }
+
+            handleSelectedImage(
+                image = importedImage,
+                emptyMessage = "Keine Bilddatei ausgewaehlt.",
+                successPrefix = "Bild bereit"
+            )
             _isImportingImage.value = false
         }
     }
@@ -195,7 +347,7 @@ class SharedCaptureViewModel(
     fun analyzeImportedImage() {
         val base64Image = selectedImageBase64
         if (base64Image.isNullOrBlank()) {
-            _statusMessage.value = "Bitte zuerst ein Bild importieren."
+            _statusMessage.value = "Bitte zuerst ein Bild aufnehmen oder importieren."
             return
         }
         viewModelScope.launch {
@@ -233,5 +385,22 @@ class SharedCaptureViewModel(
 
     fun clearStatus() {
         _statusMessage.value = null
+    }
+
+    private fun handleSelectedImage(
+        image: com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.ImportedImageAsset?,
+        emptyMessage: String,
+        successPrefix: String
+    ) {
+        _statusMessage.value = if (image == null) {
+            emptyMessage
+        } else {
+            _selectedImageName.value = image.fileName
+            _selectedImagePath.value = image.absolutePath
+            selectedImageBase64 = image.base64Content
+            _recognizedText.value = ""
+            _translatedText.value = ""
+            "$successPrefix: ${image.fileName}. Du kannst jetzt OCR starten oder den Text manuell anpassen."
+        }
     }
 }

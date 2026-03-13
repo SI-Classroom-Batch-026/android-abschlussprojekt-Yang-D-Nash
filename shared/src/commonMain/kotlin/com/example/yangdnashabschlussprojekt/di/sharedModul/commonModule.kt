@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.di.sharedModul
 
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedHistoryViewModel
+import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedArViewModel
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedCaptureViewModel
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedRegistrationViewModel
 import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedSettingsViewModel
@@ -34,6 +35,12 @@ val commonModule = module {
     viewModel {
         SharedHistoryViewModel(
             historyGateway = get()
+        )
+    }
+    viewModel {
+        SharedArViewModel(
+            cameraManager = get(),
+            cloudVisionRepository = get()
         )
     }
     viewModel {

@@ -1,6 +1,7 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import androidx.room.Room
+import com.example.yangdnashabschlussprojekt.data.companion.DesktopCompanionClient
 import com.example.yangdnashabschlussprojekt.data.repository.HistoryRepository as SharedHistoryRepository
 import com.example.yangdnashabschlussprojekt.data.repository.LocalHistoryStore
 import com.example.yangdnashabschlussprojekt.data.repository.UserRepository as SharedUserRepository
@@ -18,6 +19,7 @@ import com.example.yangdnashabschlussprojekt.domain.usecase.ManageHistoryUseCase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
+import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 import retrofit2.Retrofit
@@ -30,6 +32,7 @@ val appModule = module {
     single { FirebaseAuth.getInstance() }
     single { FirebaseFirestore.getInstance() }
     single { FirebaseStorage.getInstance() }
+    single { OkHttpClient.Builder().build() }
 
     single<VisionApiService> {
         Retrofit.Builder()
@@ -51,6 +54,7 @@ val appModule = module {
     single { HistoryRepository(get(), get()) }
     single<IHistoryDataSource> { HistoryDataSourceImpl(get()) }
     single { SettingsRepository(androidContext()) }
+    single { DesktopCompanionClient(settingsRepository = get(), okHttpClient = get()) }
     single<LocalHistoryStore> { AndroidLocalHistoryStore(get()) }
     single { SharedUserRepository() }
     single { SharedHistoryRepository(localHistoryStore = get(), userRepository = get()) }

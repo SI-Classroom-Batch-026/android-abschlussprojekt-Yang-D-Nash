@@ -7,13 +7,25 @@ import com.example.yangdnashabschlussprojekt.domain.model.TextHistory
 import com.example.yangdnashabschlussprojekt.domain.usecase.IHistoryDataSource
 import com.example.yangdnashabschlussprojekt.feature.repository.OnboardingGateway
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 
 class AndroidOnboardingGateway(
     private val settingsRepository: SettingsRepository
 ) : OnboardingGateway {
+    private val onboardingState = MutableStateFlow(settingsRepository.isOnboardingComplete())
+
+    override val isOnboardingComplete: Flow<Boolean> = onboardingState.asStateFlow()
+
+    override fun completeOnboarding() {
+        settingsRepository.setOnboardingComplete(true)
+        onboardingState.value = true
+    }
+
     override fun restartOnboarding() {
         settingsRepository.setOnboardingComplete(false)
+        onboardingState.value = false
     }
 }
 

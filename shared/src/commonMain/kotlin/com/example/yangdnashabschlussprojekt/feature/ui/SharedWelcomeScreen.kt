@@ -82,7 +82,7 @@ fun SharedWelcomeScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Der Welcome-Flow lebt jetzt im Shared-Code und kann auf Android, iOS und Desktop gleich aussehen.",
+                        text = "SmartVision verbindet Live-Objekterkennung, Textscan, Uebersetzung und Verlauf zu einer mobilen Assistenz-App.",
                         style = MaterialTheme.typography.bodyLarge,
                         color = Color.White.copy(alpha = 0.72f)
                     )

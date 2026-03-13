@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -30,82 +28,72 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
-import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedCaptureViewModel
+import com.example.yangdnashabschlussprojekt.feature.viewmodel.SharedArViewModel
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.annotation.KoinExperimentalAPI
 
 @OptIn(KoinExperimentalAPI::class)
 @Composable
-fun SharedCaptureRoute(
-    onBack: (() -> Unit)? = null,
-    onOpenHistory: () -> Unit,
+fun SharedArRoute(
+    onOpenTextMode: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SharedCaptureViewModel = koinViewModel()
+    viewModel: SharedArViewModel = koinViewModel()
 ) {
-    val recognizedText by viewModel.recognizedText.collectAsState()
-    val translatedText by viewModel.translatedText.collectAsState()
-    val statusMessage by viewModel.statusMessage.collectAsState()
     val selectedImageName by viewModel.selectedImageName.collectAsState()
     val selectedImagePath by viewModel.selectedImagePath.collectAsState()
+    val statusMessage by viewModel.statusMessage.collectAsState()
+    val primaryLabel by viewModel.primaryLabel.collectAsState()
+    val detectedCandidates by viewModel.detectedCandidates.collectAsState()
     val isCapturingImage by viewModel.isCapturingImage.collectAsState()
     val isImportingImage by viewModel.isImportingImage.collectAsState()
-    val isAnalyzingImportedImage by viewModel.isAnalyzingImportedImage.collectAsState()
+    val isAnalyzingScene by viewModel.isAnalyzingScene.collectAsState()
 
-    SharedCaptureScreen(
+    SharedArScreen(
         platformName = viewModel.platformName,
-        recognizedText = recognizedText,
-        translatedText = translatedText,
-        statusMessage = statusMessage,
         selectedImageName = selectedImageName,
         selectedImagePath = selectedImagePath,
+        statusMessage = statusMessage,
+        primaryLabel = primaryLabel,
+        detectedCandidates = detectedCandidates,
         canCaptureImages = viewModel.canCaptureImages,
         canImportImages = viewModel.canImportImages,
         isCapturingImage = isCapturingImage,
         isImportingImage = isImportingImage,
-        isAnalyzingImportedImage = isAnalyzingImportedImage,
-        onRecognizedTextChange = viewModel::updateRecognizedText,
-        onTranslatedTextChange = viewModel::updateTranslatedText,
+        isAnalyzingScene = isAnalyzingScene,
         onCaptureImage = viewModel::captureImage,
-        onOpenCamera = viewModel::openCamera,
         onImportImage = viewModel::importImage,
-        onAnalyzeImage = viewModel::analyzeImportedImage,
-        onSave = viewModel::saveCapture,
-        onOpenHistory = onOpenHistory,
-        onBack = onBack,
+        onOpenCamera = viewModel::openCamera,
+        onAnalyzeScene = viewModel::analyzeScene,
+        onOpenTextMode = onOpenTextMode,
         modifier = modifier
     )
 }
 
 @Composable
-fun SharedCaptureScreen(
+fun SharedArScreen(
     platformName: String,
-    recognizedText: String,
-    translatedText: String,
-    statusMessage: String?,
     selectedImageName: String?,
     selectedImagePath: String?,
+    statusMessage: String?,
+    primaryLabel: String?,
+    detectedCandidates: List<String>,
     canCaptureImages: Boolean,
     canImportImages: Boolean,
     isCapturingImage: Boolean,
     isImportingImage: Boolean,
-    isAnalyzingImportedImage: Boolean,
-    onRecognizedTextChange: (String) -> Unit,
-    onTranslatedTextChange: (String) -> Unit,
+    isAnalyzingScene: Boolean,
     onCaptureImage: () -> Unit,
-    onOpenCamera: () -> Unit,
     onImportImage: () -> Unit,
-    onAnalyzeImage: () -> Unit,
-    onSave: () -> Unit,
-    onOpenHistory: () -> Unit,
-    onBack: (() -> Unit)? = null,
+    onOpenCamera: () -> Unit,
+    onAnalyzeScene: () -> Unit,
+    onOpenTextMode: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(listOf(Color(0xFF081C24), Color.Black)))
+            .background(Brush.verticalGradient(listOf(Color(0xFF001214), Color.Black)))
     ) {
         Column(
             modifier = Modifier
@@ -119,20 +107,16 @@ fun SharedCaptureScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (onBack != null) {
-                    TextButton(onClick = onBack) {
-                        Text("Zurueck", color = Color.White)
-                    }
-                } else {
-                    Spacer(modifier = Modifier.height(1.dp))
-                }
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(
-                    text = "Text-Scanner",
+                    text = "AR-Modus",
                     style = MaterialTheme.typography.headlineSmall,
                     color = Color.White,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(1.dp))
+                TextButton(onClick = onOpenTextMode) {
+                    Text("Zum Textmodus", color = Color(0xFF7DEBFF))
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -153,9 +137,9 @@ fun SharedCaptureScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = if (canCaptureImages) {
-                            "Dieser Bereich bildet den SmartVision-Textfluss ab: Foto aufnehmen, alternativ Bilder waehlen, OCR ausloesen, Text pruefen und im Verlauf sichern."
+                            "Dieser Bereich bringt den SmartVision-AR-Flow auf Bildbasis live: Objekt aufnehmen, alternativ importieren, Cloud-Erkennung starten und das Motiv direkt im Ergebnis pruefen."
                         } else {
-                            "Dieser Bereich bildet den SmartVision-Textfluss ab: Kamera oeffnen, Bild importieren, OCR ausloesen, Text pruefen und im Verlauf sichern."
+                            "Dieser Bereich nutzt die vorhandene Kamera-Bridge und Cloud-Erkennung, um ein Objektbild auszuwerten und das erkannte Motiv sofort anzuzeigen."
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White.copy(alpha = 0.72f)
@@ -172,7 +156,7 @@ fun SharedCaptureScreen(
                                 if (isCapturingImage) {
                                     "Kamera startet..."
                                 } else {
-                                    "Foto aufnehmen"
+                                    "Objekt aufnehmen"
                                 }
                             )
                         }
@@ -232,16 +216,16 @@ fun SharedCaptureScreen(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Button(
-                    onClick = onAnalyzeImage,
-                    enabled = !isAnalyzingImportedImage,
+                    onClick = onAnalyzeScene,
+                    enabled = !isAnalyzingScene,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(18.dp)
                 ) {
                     Text(
-                        if (isAnalyzingImportedImage) {
-                            "Cloud OCR laeuft..."
+                        if (isAnalyzingScene) {
+                            "Objekterkennung laeuft..."
                         } else {
-                            "Cloud OCR aus Bild starten"
+                            "Objekt im Bild erkennen"
                         }
                     )
                 }
@@ -262,60 +246,42 @@ fun SharedCaptureScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(32.dp),
-                color = Color.White.copy(alpha = 0.05f),
-                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
-            ) {
-                Column(modifier = Modifier.padding(24.dp)) {
-                    Text(
-                        text = "Text erfassen",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedTextField(
-                        value = recognizedText,
-                        onValueChange = onRecognizedTextChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Erkannter Text") },
-                        minLines = 4,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    OutlinedTextField(
-                        value = translatedText,
-                        onValueChange = onTranslatedTextChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        label = { Text("Uebersetzung") },
-                        minLines = 4,
-                        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences)
-                    )
-                    Spacer(modifier = Modifier.height(18.dp))
-                    Button(
-                        onClick = onSave,
-                        enabled = recognizedText.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Text("In Verlauf speichern")
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedButton(
-                        onClick = onOpenHistory,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp)
-                    ) {
-                        Text("Verlauf ansehen")
+            primaryLabel?.let { label ->
+                Spacer(modifier = Modifier.height(18.dp))
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(32.dp),
+                    color = Color.White.copy(alpha = 0.05f),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.08f))
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = "Erkanntes Hauptobjekt",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = label,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = Color(0xFF7DEBFF),
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        if (detectedCandidates.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(18.dp))
+                            detectedCandidates.forEach { candidate ->
+                                Text(
+                                    text = "• $candidate",
+                                    color = Color.White.copy(alpha = 0.82f),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+                        }
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }

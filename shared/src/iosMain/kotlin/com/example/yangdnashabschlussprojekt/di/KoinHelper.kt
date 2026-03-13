@@ -11,7 +11,7 @@ import kotlin.native.ObjCName
 @ObjCName("startKoin")
 fun initKoin() {
     startKoin {
-        modules(commonModule, iosDemoModule)
+        modules(commonModule, iosLocalModule)
     }
 }
 
