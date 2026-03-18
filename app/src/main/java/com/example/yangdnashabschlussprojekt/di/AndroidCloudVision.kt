@@ -1,6 +1,8 @@
 package com.example.yangdnashabschlussprojekt.di
 
 import com.example.yangdnashabschlussprojekt.BuildConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateTransport
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionConfig
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTransport
 import kotlinx.coroutines.Dispatchers
@@ -13,7 +15,11 @@ class AndroidCloudVisionConfig : CloudVisionConfig {
     override fun apiKey(): String? = BuildConfig.CLOUD_VISION_API_KEY.takeIf { it.isNotBlank() }
 }
 
-class AndroidCloudVisionTransport : CloudVisionTransport {
+class AndroidCloudTranslateConfig : CloudTranslateConfig {
+    override fun apiKey(): String? = BuildConfig.CLOUD_TRANSLATE_API_KEY.takeIf { it.isNotBlank() }
+}
+
+class AndroidCloudVisionTransport : CloudVisionTransport, CloudTranslateTransport {
     override suspend fun postJson(url: String, body: String): String = withContext(Dispatchers.IO) {
         val connection = (URL(url).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"

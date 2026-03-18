@@ -7,9 +7,14 @@ import com.example.yangdnashabschlussprojekt.feature.repository.CaptureGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.HistoryGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.OnboardingGateway
 import com.example.yangdnashabschlussprojekt.feature.repository.SessionGateway
+import com.example.yangdnashabschlussprojekt.feature.repository.SettingsGateway
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateConfig
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateRepository
+import com.example.yangdnashabschlussprojekt.data.repository.CloudTranslateTransport
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionConfig
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionRepository
 import com.example.yangdnashabschlussprojekt.data.repository.CloudVisionTransport
+import com.example.yangdnashabschlussprojekt.data.repository.TargetLanguageProvider
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.CameraXManager
 import com.example.yangdnashabschlussprojekt.ui.viewmodel.camera.CameraManager
 import org.koin.android.ext.koin.androidContext
@@ -22,10 +27,16 @@ val platformModule = module {
     single { CameraXManager(context = androidContext(), executor = get()) }
     single<CameraManager> { get<CameraXManager>() }
     single<CloudVisionConfig> { AndroidCloudVisionConfig() }
-    single<CloudVisionTransport> { AndroidCloudVisionTransport() }
+    single<CloudTranslateConfig> { AndroidCloudTranslateConfig() }
+    single { AndroidCloudVisionTransport() }
+    single<CloudVisionTransport> { get<AndroidCloudVisionTransport>() }
+    single<CloudTranslateTransport> { get<AndroidCloudVisionTransport>() }
+    single<TargetLanguageProvider> { AndroidTargetLanguageProvider() }
     single { CloudVisionRepository(config = get(), transport = get()) }
+    single { CloudTranslateRepository(config = get(), transport = get(), targetLanguageProvider = get()) }
     single<SessionGateway> { RepositorySessionGateway(get()) }
     single<OnboardingGateway> { AndroidOnboardingGateway(get()) }
     single<HistoryGateway> { RepositoryHistoryGateway(get()) }
     single<CaptureGateway> { RepositoryCaptureGateway(get()) }
+    single<SettingsGateway> { AndroidSettingsGateway(androidContext(), get(), get()) }
 }
